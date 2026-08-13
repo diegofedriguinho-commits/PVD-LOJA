@@ -11,7 +11,7 @@
 body{padding-bottom:80px}
 .btn-mobile{font-size:18px;padding:14px}
 .card-prod:active{transform:scale(0.95)}
-input,select{font-size:16px} /* evita zoom no iPhone */
+input,select{font-size:16px}
 </style>
 </head>
 <body class="bg-gray-100">
@@ -36,7 +36,7 @@ input,select{font-size:16px} /* evita zoom no iPhone */
     </header>
     
     <main class="p-2">
-        <!-- 1. VENDAS / PDV -->
+        <!-- 1. VENDAS -->
         <div id="aba-venda">
             <select id="clienteVenda" class="w-full p-3 border rounded mb-2"><option value="">Cliente Avulso</option></select>
             <input id="busca" onkeyup="buscar()" placeholder="🔍 Buscar Produto..." class="w-full p-3 border rounded mb-2 sticky top-16 bg-white z-10">
@@ -98,7 +98,7 @@ input,select{font-size:16px} /* evita zoom no iPhone */
             <div id="tabelaFor" class="bg-white p-3 rounded shadow"></div>
         </div>
 
-        <!-- 5. NOME LOJA -->
+        <!-- 5. LOJA -->
         <div id="aba-loja" class="hidden">
             <div class="bg-white p-3 rounded shadow">
                 <h2 class="font-bold mb-2">Dados da Loja</h2>
@@ -109,7 +109,6 @@ input,select{font-size:16px} /* evita zoom no iPhone */
                 <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
             </div>
         </div>
-
         <!-- 6. CONTAS A PAGAR -->
         <div id="aba-pagar" class="hidden">
             <div class="bg-white p-3 rounded shadow mb-3">
@@ -153,17 +152,20 @@ input,select{font-size:16px} /* evita zoom no iPhone */
                 <h2 class="font-bold mb-2">Fechamento do Caixa</h2>
                 <p class="text-3xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
                 <button onclick="fecharCaixa()" class="w-full bg-purple-600 text-white p-3 rounded mt-4 btn-mobile font-bold">GERAR FECHAMENTO</button>
-                <button onclick="backup()" class="w-full bg-gray-500 text-white p-3 rounded mt-2">BAIXAR BACKUP .JSON</button>
                 <div id="detalheCaixa" class="mt-4"></div>
             </div>
         </div>
     </main>
 
-    <!-- MENU INFERIOR FIXO -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-2xl grid-cols-5 border-t">
+    <!-- MENU INFERIOR FIXO COM 9 BOTÕES -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-2xl grid grid-cols-5 border-t text-center">
         <button onclick="aba('venda')" id="btn-venda" class="py-3 text-xs aba-ativa">VENDAS</button>
-        <button onclick="aba('produtos')" id="btn-produtos" class="py-3 text-xs">PRODUTOS</button>
-        <button onclick="aba('clientes')" id="btn-clientes" class="py-3 text-xs">CLIENTES</button>
+        <button onclick="aba('produtos')" id="btn-produtos" class="py-3 text-xs">PROD</button>
+        <button onclick="aba('clientes')" id="btn-clientes" class="py-3 text-xs">CLI</button>
+        <button onclick="aba('fornecedores')" id="btn-fornecedores" class="py-3 text-xs">FOR</button>
+        <button onclick="aba('loja')" id="btn-loja" class="py-3 text-xs">LOJA</button>
+        <button onclick="aba('pagar')" id="btn-pagar" class="py-3 text-xs">PAGAR</button>
+        <button onclick="aba('receber')" id="btn-receber" class="py-3 text-xs">RECEB</button>
         <button onclick="aba('relatorio')" id="btn-relatorio" class="py-3 text-xs">REL</button>
         <button onclick="aba('caixa')" id="btn-caixa" class="py-3 text-xs">CAIXA</button>
     </nav>
@@ -172,7 +174,7 @@ input,select{font-size:16px} /* evita zoom no iPhone */
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
@@ -217,7 +219,7 @@ window.vender = async () => { if(carrinho.length==0)return; const total=+$('tota
 
 // 2. PRODUTOS
 window.salvarProd = async () => { const data={cod:$('cod').value,nome:$('nome').value,custo:+$('custo').value,preco:+$('preco').value,estoque:+$('estoque').value}; if($('idProd').value){await updateDoc(doc(db,"produtos",$('idProd').value),data)}else{await addDoc(collection(db,"produtos"),data)} alert("Salvo!"); limparProd(); carregarTudo() }
-function listarProd(){ $('tabelaProd').innerHTML = produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome}<br><small>Est:${p.estoque}</small></span><div><button onclick="editarProd('${p.id}')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">E</button></div></div>`).join('') }
+function listarProd(){ $('tabelaProd').innerHTML = produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome}<br><small>Est:${p.estoque}</small></span><button onclick="editarProd('${p.id}')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">E</button></div>`).join('') }
 window.editarProd = id => {const p=produtos.find(x=>x.id==id); $('idProd').value=p.id;$('cod').value=p.cod;$('nome').value=p.nome;$('custo').value=p.custo;$('preco').value=p.preco;$('estoque').value=p.estoque;$('btnProd').innerText='ATUALIZAR'}
 function limparProd(){$('idProd').value='';$('cod').value='';$('nome').value='';$('custo').value='';$('preco').value='';$('estoque').value='';$('btnProd').innerText='SALVAR'}
 
@@ -252,7 +254,6 @@ window.gerarRel = async () => { let t=0; vendas.forEach(d=>t+=d.total); $('resum
 // 9. CAIXA
 async function caixaSaldo(){ let t=0; vendas.forEach(d=>t+=d.total); $('saldoCaixa').innerText=t.toFixed(2) }
 window.fecharCaixa = () => { $('detalheCaixa').innerHTML = `<p class="text-center">Fechamento gerado em ${new Date().toLocaleString()}</p>` }
-window.backup = async () => { const dados = {produtos, clientes, fornecedores, vendas}; const blob = new Blob([JSON.stringify(dados)],{type:"application/json"}); const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="backup_pdv.json"; a.click(); }
 </script>
 </body>
 </html>
