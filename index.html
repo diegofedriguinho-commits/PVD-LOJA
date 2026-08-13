@@ -12,14 +12,13 @@
       appId: "1:985739667688:web:742dab33141e39fd97815d"
     };
 
-    // AQUI ESTAVAM FALTANDO ESSAS 4 LINHAS
-    const app = initializeApp(firebaseConfig); // 1
-    const auth = getAuth(app); // 2
-    const db = getFirestore(app); // 3
-    let carrinho = []; // 4
-    let produtos = []; // 5
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let carrinho = [];
+    let produtos = [];
 
-   // LOGIN CORRIGIDO
+    // LOGIN
     window.logar = () => { 
         const email = document.getElementById('email').value; 
         const senha = document.getElementById('password').value; 
@@ -33,9 +32,18 @@
         createUserWithEmailAndPassword(auth, email, senha)
         .catch(erro => document.getElementById('auth-error').innerText = erro.message); 
     }
-
     window.sair = () => signOut(auth);
-    onAuthStateChanged(auth, user => { if(user){document.getElementById('auth-container').classList.add('hidden');document.getElementById('app-container').classList.remove('hidden');carregarTudo();}else{document.getElementById('auth-container').classList.remove('hidden');document.getElementById('app-container').classList.add('hidden');}});
+
+    onAuthStateChanged(auth, user => { 
+        if(user){
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            carregarTudo();
+        }else{
+            document.getElementById('auth-container').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+        }
+    });
 
     // ABAS
     window.trocarAba = (aba) => {
@@ -50,7 +58,8 @@
         const snap = await getDocs(collection(db, "produtos"));
         produtos = snap.docs.map(d => ({id: d.id, ...d.data()}));
         renderizarProdutos();
-    }
+    } // <-- FALTAVA ESSA CHAVE AQUI
+
     window.renderizarProdutos = () => {
         const div = document.getElementById('listaProdutos');
         div.innerHTML = '';
@@ -58,13 +67,23 @@
             div.innerHTML += `<button onclick="addCarrinho('${p.id}')" class="bg-gray-200 p-2 rounded hover:bg-blue-200"><b>${p.nome}</b><br>R$${p.preco}<br>Est:${p.estoque}</button>`;
         });
     }
+    
     window.buscarProduto = () => {
         const termo = document.getElementById('buscaProd').value.toLowerCase();
         const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(termo));
         document.getElementById('listaProdutos').innerHTML = '';
         filtrados.forEach(p => { document.getElementById('listaProdutos').innerHTML += `<button onclick="addCarrinho('${p.id}')" class="bg-gray-200 p-2 rounded hover:bg-blue-200"><b>${p.nome}</b><br>R$${p.preco}<br>Est:${p.estoque}</button>`; });
     }
-    window.addProduto = async () => { await addDoc(collection(db, "produtos"), {nome:document.getElementById('nomeProd').value, preco:parseFloat(document.getElementById('precoProd').value), estoque:parseInt(document.getElementById('estoqueProd').value)}); alert("Salvo!"); carregarTudo(); }
+    
+    window.addProduto = async () => { 
+        await addDoc(collection(db, "produtos"), {
+            nome:document.getElementById('nomeProd').value, 
+            preco:parseFloat(document.getElementById('precoProd').value), 
+            estoque:parseInt(document.getElementById('estoqueProd').value)
+        }); 
+        alert("Salvo!"); 
+        carregarTudo(); 
+    }
 
     // CARRINHO E VENDA
     window.addCarrinho = (id) => {
@@ -72,6 +91,7 @@
         carrinho.push(prod);
         atualizarCarrinho();
     }
+    
     function atualizarCarrinho(){
         const div = document.getElementById('carrinho');
         let total = 0;
@@ -82,10 +102,10 @@
         });
         document.getElementById('total').innerText = total.toFixed(2);
     }
+    
     window.fecharVenda = async () => {
         const total = carrinho.reduce((s,p)=>s+p.preco,0);
         await addDoc(collection(db, "vendas"), {itens: carrinho, total: total, data: Timestamp.now()});
-        // Baixa estoque
         for(const item of carrinho){ const prodRef = doc(db, "produtos", item.id); await updateDoc(prodRef, {estoque: item.estoque - 1}); }
         alert("Venda R$"+total.toFixed(2)+" finalizada!");
         carrinho = [];
