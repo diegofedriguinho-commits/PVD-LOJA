@@ -3,206 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV Online v11.8.1</title>
+<title>PDV Web</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-  body{background:#f0f2f5}
-  .login{display:flex;justify-content:center;align-items:center;height:100vh}
-  .login-box{background:#fff;padding:30px;border-radius:8px;box-shadow:0 2px 10px #0001;width:350px}
-  .login-box h2{text-align:center;margin-bottom:20px}
-  input,button,select{width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:5px;font-size:16px}
-  button{background:#28a745;color:#fff;border:none;cursor:pointer;font-weight:bold}
-  button:hover{opacity:0.9}
-  .header{background:#343a40;color:#fff;padding:15px;display:flex;justify-content:space-between}
-  .menu{display:flex;gap:10px;background:#fff;padding:10px;box-shadow:0 2px 5px #0001;flex-wrap:wrap}
-  .menu button{background:#007bff}
-  .container{padding:20px}
-  .card{background:#fff;padding:20px;border-radius:8px;margin-bottom:15px}
-  table{width:100%;border-collapse:collapse;margin-top:10px}
-  th,td{border:1px solid #ddd;padding:10px;text-align:left}
-  th{background:#f8f9fa}
-  .carrinho-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee}
-  .total{font-size:24px;font-weight:bold;text-align:right;margin-top:10px}
-  .hidden{display:none}
+    body { font-family: 'Inter', sans-serif; }
+    .hidden { display: none; }
 </style>
-
-<!-- FIREBASE SDK 11.8.1 -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
-    authDomain: "web-pdv-6546d.firebaseapp.com",
-    projectId: "web-pdv-6546d",
-    storageBucket: "web-pdv-6546d.firebasestorage.app",
-    messagingSenderId: "985739667688",
-    appId: "1:985739667688:web:a1518c0379e7848b97815d"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  window.auth = getAuth(app);
-  window.db = getFirestore(app);
-</script>
 </head>
-<body>
+<body class="bg-gray-100">
 
-<div id="telaLogin" class="login">
-  <div class="login-box">
-    <h2>PDV Online</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="senha" type="password" placeholder="Senha">
-    <button onclick="logar()">Entrar</button>
-    <button onclick="cadastrar()" style="background:#6c757d">Cadastrar</button>
-  </div>
+<div id="auth-container" class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold text-center mb-6">PDV Login</h1>
+        <input id="email" type="email" placeholder="Email" class="w-full p-2 border rounded mb-4">
+        <input id="password" type="password" placeholder="Senha" class="w-full p-2 border rounded mb-4">
+        <button onclick="logar()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Entrar</button>
+        <button onclick="cadastrar()" class="w-full bg-gray-600 text-white p-2 rounded hover:bg-gray-700 mt-2">Cadastrar</button>
+        <p id="auth-error" class="text-red-500 text-center mt-4"></p>
+    </div>
 </div>
 
-<div id="telaPDV" class="hidden">
-  <div class="header">
-    <h3>PDV ONLINE</h3>
-    <span id="usuario"></span>
-  </div>
-  <div class="menu">
-    <button onclick="mostrar('dashboard')">Dashboard</button>
-    <button onclick="mostrar('produtos')">Produtos</button>
-    <button onclick="mostrar('vendas')">Vendas</button>
-    <button onclick="sair()" style="background:#dc3545">Sair</button>
-  </div>
-  <div class="container">
-
-    <div id="dashboard" class="card">
-      <h3>Dashboard</h3>
-      <p>Vendas Hoje: <b id="totalVendas">R$ 0,00</b></p>
-      <p>Total de Produtos: <b id="totalProdutos">0</b></p>
-    </div>
-
-    <div id="produtos" class="card hidden">
-      <h3>Cadastro de Produtos</h3>
-      <input id="nomeProd" placeholder="Nome do Produto">
-      <input id="precoProd" type="number" step="0.01" placeholder="Preço R$">
-      <input id="estoqueProd" type="number" placeholder="Estoque">
-      <button onclick="addProduto()">+ Adicionar Produto</button>
-      <table><thead><tr><th>Nome</th><th>Preço</th><th>Estoque</th><th>Ação</th></tr></thead><tbody id="listaProdutos"></tbody></table>
-    </div>
-
-    <div id="vendas" class="card hidden">
-      <h3>Tela de Vendas</h3>
-      <select id="selectProd" onchange="addCarrinho()"><option>Selecione um produto</option></select>
-      <div id="carrinho"></div>
-      <div class="total">Total: R$ <span id="totalCarrinho">0.00</span></div>
-      <button onclick="finalizarVenda()" style="background:#28a745">Finalizar Venda</button>
-    </div>
-
-  </div>
+<div id="app-container" class="hidden p-4">
+    <h1 class="text-3xl font-bold">PDV Funcionando!</h1>
+    <button onclick="sair()" class="bg-red-600 text-white p-2 rounded mt-4">Sair</button>
 </div>
 
 <script type="module">
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.8/firebase-auth.js";
-import { addDoc, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.9.8/firebase-firestore.js";
+    // VERSÃO 11.8.1 - ESTÁVEL
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 
-let carrinho = [];
+    const firebaseConfig = {
+        apiKey: "SUA_API_KEY",
+        authDomain: "web-pdv-6546d.firebaseapp.com",
+        projectId: "web-pdv-6546d",
+        storageBucket: "web-pdv-6546d.appspot.com",
+        messagingSenderId: "SEU_ID",
+        appId: "SEU_APP_ID"
+    };
 
-onAuthStateChanged(window.auth, (user) => {
-  if(user){
-    document.getElementById('telaLogin').classList.add('hidden');
-    document.getElementById('telaPDV').classList.remove('hidden');
-    document.getElementById('usuario').innerText = user.email;
-    carregarProdutos();
-    carregarDashboard();
-  }
-});
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-window.logar = async () => {
-  try {
-    await signInWithEmailAndPassword(window.auth, email.value, senha.value);
-  } catch(e) { alert("Erro: " + e.message) }
-}
-
-window.cadastrar = async () => {
-  try {
-    await createUserWithEmailAndPassword(window.auth, email.value, senha.value);
-    alert("Usuário criado! Faça login agora.");
-  } catch(e) { alert("Erro: " + e.message) }
-}
-
-window.sair = async () => {
-  await signOut(window.auth);
-  document.getElementById('telaPDV').classList.add('hidden');
-  document.getElementById('telaLogin').classList.remove('hidden');
-}
-
-window.mostrar = (id) => {
-  document.querySelectorAll('.container .card').forEach(c=>c.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-  if(id=='produtos') carregarProdutos();
-  if(id=='vendas') carregarProdutos();
-}
-
-window.addProduto = async () => {
-  await addDoc(collection(window.db, "produtos"), {
-    nome:nomeProd.value, preco:parseFloat(precoProd.value), estoque:parseInt(estoqueProd.value)
-  });
-  nomeProd.value=precoProd.value=estoqueProd.value='';
-  carregarProdutos();
-}
-
-async function carregarProdutos(){
-  const query = await getDocs(collection(window.db, "produtos"));
-  listaProdutos.innerHTML='';
-  selectProd.innerHTML='<option>Selecione um produto</option>';
-  query.forEach((d)=>{
-    let p = d.data();
-    listaProdutos.innerHTML += `<tr><td>${p.nome}</td><td>R$ ${p.preco.toFixed(2)}</td><td>${p.estoque}</td><td><button onclick="delProd('${d.id}')" style="background:#dc3545;padding:5px">Excluir</button></td></tr>`;
-    selectProd.innerHTML += `<option value="${d.id}">${p.nome} - R$ ${p.preco.toFixed(2)}</option>`;
-  });
-  document.getElementById('totalProdutos').innerText = query.size;
-}
-
-window.delProd = async (id) => {
-  await deleteDoc(doc(window.db, "produtos", id));
-  carregarProdutos();
-}
-
-window.addCarrinho = async () => {
-  const query = await getDocs(collection(window.db, "produtos"));
-  query.forEach((d)=>{
-    if(d.id == selectProd.value){
-      let p = d.data();
-      carrinho.push(p);
-      renderCarrinho();
+    window.logar = () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        signInWithEmailAndPassword(auth, email, password).catch(e => document.getElementById('auth-error').innerText = e.message);
     }
-  });
-}
+    
+    window.cadastrar = () => {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        createUserWithEmailAndPassword(auth, email, password).catch(e => document.getElementById('auth-error').innerText = e.message);
+    }
 
-function renderCarrinho(){
-  carrinhoDiv = document.getElementById('carrinho');
-  carrinhoDiv.innerHTML='';
-  let total=0;
-  carrinho.forEach((p,i)=>{
-    total+=p.preco;
-    carrinhoDiv.innerHTML += `<div class="carrinho-item">${p.nome} - R$ ${p.preco.toFixed(2)} <button onclick="carrinho.splice(${i},1);renderCarrinho()" style="background:#dc3545;padding:3px 8px">x</button></div>`;
-  });
-  document.getElementById('totalCarrinho').innerText = total.toFixed(2);
-}
+    window.sair = () => signOut(auth);
 
-window.finalizarVenda = async () => {
-  if(carrinho.length==0) return alert('Carrinho vazio');
-  await addDoc(collection(window.db, "vendas"), {
-    itens:carrinho, total: carrinho.reduce((a,b)=>a+b.preco,0), data: new Date()
-  });
-  carrinho=[];
-  renderCarrinho();
-  alert('Venda finalizada!');
-  carregarDashboard();
-}
-
-async function carregarDashboard(){
-  const query = await getDocs(collection(window.db, "vendas"));
-  let total = 0;
-  query.forEach(d=> total += d.data().total);
-  document.getElementById('totalVendas').innerText = 'R$ '+total.toFixed(2);
-}
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+        } else {
+            document.getElementById('auth-container').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+        }
+    });
 </script>
+
 </body>
 </html>
