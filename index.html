@@ -1,236 +1,254 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV Top Completo</title>
+<meta charset="UTF-8"><title>PDV COMPLETO ONLINE</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<style> 
-    body { font-family: 'Inter', sans-serif; } 
-    .hidden { display: none; } 
-    .aba-ativa { border-bottom: 3px solid #2563eb; color: #2563eb; }
-</style>
+<style>.hidden{display:none}.aba-ativa{border-bottom:3px solid #2563eb;color:#2563eb}</style>
 </head>
 <body class="bg-gray-100">
 
 <!-- LOGIN -->
-<div id="auth-container" class="flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center mb-6">PDV Top</h1>
+<div id="login" class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-96">
+        <h1 class="text-2xl font-bold text-center mb-6">PDV ONLINE</h1>
         <input id="email" type="email" placeholder="Email" class="w-full p-2 border rounded mb-4">
-        <input id="password" type="password" placeholder="Senha" class="w-full p-2 border rounded mb-4">
-        <button onclick="logar()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Entrar</button>
-        <button onclick="cadastrar()" class="w-full bg-gray-600 text-white p-2 rounded hover:bg-gray-700 mt-2">Cadastrar</button>
-        <p id="auth-error" class="text-red-500 text-center mt-4"></p>
+        <input id="senha" type="password" placeholder="Senha" class="w-full p-2 border rounded mb-4">
+        <button onclick="entrar()" class="w-full bg-blue-600 text-white p-2 rounded">ENTRAR</button>
+        <button onclick="cadastrar()" class="w-full bg-gray-600 text-white p-2 rounded mt-2">CADASTRAR</button>
+        <p id="msg" class="text-red-500 text-center mt-4"></p>
     </div>
 </div>
 
 <!-- APP -->
-<div id="app-container" class="hidden">
-    <header class="bg-white shadow p-4 flex justify-between items-center">
-        <h1 class="text-2xl font-bold">PDV Top</h1>
-        <button onclick="sair()" class="bg-red-600 text-white px-4 py-2 rounded">Sair</button>
+<div id="app" class="hidden">
+    <header class="bg-white shadow p-4 flex justify-between">
+        <h1 class="text-2xl font-bold">PDV ONLINE</h1>
+        <button onclick="sair()" class="bg-red-600 text-white px-4 py-2 rounded">SAIR</button>
     </header>
-
-    <nav class="bg-white px-4 flex gap-6 border-b">
-        <button onclick="trocarAba('venda')" id="btn-venda" class="py-3 aba-ativa font-semibold">Venda</button>
-        <button onclick="trocarAba('produtos')" id="btn-produtos" class="py-3 text-gray-600 font-semibold">Produtos</button>
-        <button onclick="trocarAba('relatorio')" id="btn-relatorio" class="py-3 text-gray-600 font-semibold">Relatório</button>
+    
+    <nav class="bg-white px-4 flex gap-4 border-b overflow-x-auto">
+        <button onclick="aba('venda')" id="btn-venda" class="py-3 aba-ativa font-semibold">Vendas</button>
+        <button onclick="aba('produtos')" id="btn-produtos" class="py-3 font-semibold">Produtos</button>
+        <button onclick="aba('clientes')" id="btn-clientes" class="py-3 font-semibold">Clientes</button>
+        <button onclick="aba('fornecedores')" id="btn-fornecedores" class="py-3 font-semibold">Fornecedores</button>
+        <button onclick="aba('loja')" id="btn-loja" class="py-3 font-semibold">Loja</button>
+        <button onclick="aba('pagar')" id="btn-pagar" class="py-3 font-semibold">C. Pagar</button>
+        <button onclick="aba('receber')" id="btn-receber" class="py-3 font-semibold">C. Receber</button>
+        <button onclick="aba('relatorio')" id="btn-relatorio" class="py-3 font-semibold">Relatórios</button>
+        <button onclick="aba('caixa')" id="btn-caixa" class="py-3 font-semibold">Fechamento</button>
+        <button onclick="backup()" class="py-3 font-semibold text-purple-600">BACKUP</button>
     </nav>
 
     <main class="p-4">
-        <!-- ABA VENDA -->
+        <!-- VENDAS -->
         <div id="aba-venda">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="grid lg:grid-cols-3 gap-4">
                 <div class="lg:col-span-2 bg-white p-4 rounded shadow">
-                    <input id="buscaProd" onkeyup="buscarProduto()" placeholder="Buscar produto..." class="w-full p-2 border rounded mb-4">
-                    <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-96 overflow-y-auto"></div>
+                    <input id="busca" onkeyup="buscar()" placeholder="Buscar Produto..." class="w-full p-2 border rounded mb-4">
+                    <div id="listaProdVenda" class="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto"></div>
                 </div>
                 <div class="bg-white p-4 rounded shadow">
-                    <h2 class="font-bold text-lg mb-2">Carrinho</h2>
-                    <div id="carrinho" class="max-h-64 overflow-y-auto mb-2"></div>
-                    <p class="font-bold text-2xl">Total: R$ <span id="total">0.00</span></p>
-                    <button onclick="fecharVenda()" class="w-full bg-green-600 text-white p-3 rounded mt-2 font-bold">FINALIZAR VENDA</button>
+                    <h2 class="font-bold mb-2">Carrinho</h2>
+                    <div id="carrinho"></div>
+                    <p class="font-bold text-2xl mt-4">Total: R$ <span id="total">0.00</span></p>
+                    <button onclick="vender()" class="w-full bg-green-600 text-white p-3 rounded mt-2 font-bold">FINALIZAR</button>
                 </div>
             </div>
         </div>
 
-        <!-- ABA PRODUTOS -->
+        <!-- PRODUTOS -->
         <div id="aba-produtos" class="hidden">
             <div class="bg-white p-4 rounded shadow mb-4">
-                <h2 class="font-bold text-lg mb-2">Cadastrar Produto</h2>
-                <input id="nomeProd" placeholder="Nome" class="p-2 border rounded">
-                <input id="precoProd" type="number" step="0.01" placeholder="Preço" class="p-2 border rounded">
-                <input id="estoqueProd" type="number" placeholder="Estoque" class="p-2 border rounded">
-                <button onclick="addProduto()" class="bg-blue-600 text-white p-2 rounded">Salvar</button>
+                <h2 class="font-bold mb-2">Cadastrar Produto</h2>
+                <div class="grid grid-cols-5 gap-2">
+                    <input id="cod" placeholder="Código">
+                    <input id="nome" placeholder="Nome">
+                    <input id="custo" type="number" placeholder="Custo">
+                    <input id="preco" type="number" placeholder="Preço">
+                    <input id="estoque" type="number" placeholder="Estoque">
+                </div>
+                <button onclick="salvarProd()" class="bg-blue-600 text-white p-2 rounded mt-2">SALVAR</button>
             </div>
-            <div id="tabelaEstoque" class="bg-white p-4 rounded shadow"></div>
+            <div id="tabelaProd" class="bg-white p-4 rounded shadow"></div>
         </div>
 
-        <!-- ABA RELATORIO -->
+        <!-- CLIENTES -->
+        <div id="aba-clientes" class="hidden">
+            <div class="bg-white p-4 rounded shadow mb-4">
+                <h2 class="font-bold mb-2">Cadastrar Cliente</h2>
+                <div class="grid grid-cols-4 gap-2">
+                    <input id="nomeCli" placeholder="Nome">
+                    <input id="telCli" placeholder="Telefone">
+                    <input id="cpfCli" placeholder="CPF">
+                    <input id="endCli" placeholder="Endereço">
+                </div>
+                <button onclick="salvarCli()" class="bg-blue-600 text-white p-2 rounded mt-2">SALVAR</button>
+            </div>
+            <div id="tabelaCli" class="bg-white p-4 rounded shadow"></div>
+        </div>
+
+        <!-- FORNECEDORES -->
+        <div id="aba-fornecedores" class="hidden">
+            <div class="bg-white p-4 rounded shadow mb-4">
+                <h2 class="font-bold mb-2">Cadastrar Fornecedor</h2>
+                <div class="grid grid-cols-4 gap-2">
+                    <input id="nomeFor" placeholder="Nome">
+                    <input id="telFor" placeholder="Telefone">
+                    <input id="cnpjFor" placeholder="CNPJ">
+                    <input id="endFor" placeholder="Endereço">
+                </div>
+                <button onclick="salvarFor()" class="bg-blue-600 text-white p-2 rounded mt-2">SALVAR</button>
+            </div>
+            <div id="tabelaFor" class="bg-white p-4 rounded shadow"></div>
+        </div>
+
+        <!-- LOJA -->
+        <div id="aba-loja" class="hidden">
+            <div class="bg-white p-4 rounded shadow">
+                <h2 class="font-bold mb-2">Dados da Loja</h2>
+                <input id="nomeLoja" placeholder="Nome da Loja">
+                <input id="cnpjLoja" placeholder="CNPJ">
+                <input id="telLoja" placeholder="Telefone">
+                <textarea id="endLoja" placeholder="Endereço"></textarea>
+                <button onclick="salvarLoja()" class="bg-blue-600 text-white p-2 rounded mt-2">SALVAR</button>
+            </div>
+        </div>
+
+        <!-- CONTAS A PAGAR -->
+        <div id="aba-pagar" class="hidden">
+            <div class="bg-white p-4 rounded shadow mb-4">
+                <h2 class="font-bold mb-2">Lançar Conta a Pagar</h2>
+                <div class="grid grid-cols-4 gap-2">
+                    <input id="descPagar" placeholder="Descrição">
+                    <input id="valorPagar" type="number" placeholder="Valor">
+                    <input id="vencPagar" type="date">
+                    <select id="forPagar"></select>
+                </div>
+                <button onclick="salvarPagar()" class="bg-red-600 text-white p-2 rounded mt-2">LANÇAR</button>
+            </div>
+            <div id="tabelaPagar" class="bg-white p-4 rounded shadow"></div>
+        </div>
+
+        <!-- CONTAS A RECEBER -->
+        <div id="aba-receber" class="hidden">
+            <div class="bg-white p-4 rounded shadow mb-4">
+                <h2 class="font-bold mb-2">Lançar Conta a Receber</h2>
+                <div class="grid grid-cols-4 gap-2">
+                    <input id="descReceb" placeholder="Descrição">
+                    <input id="valorReceb" type="number" placeholder="Valor">
+                    <input id="vencReceb" type="date">
+                    <select id="cliReceb"></select>
+                </div>
+                <button onclick="salvarReceb()" class="bg-green-600 text-white p-2 rounded mt-2">LANÇAR</button>
+            </div>
+            <div id="tabelaReceb" class="bg-white p-4 rounded shadow"></div>
+        </div>
+
+        <!-- RELATÓRIOS -->
         <div id="aba-relatorio" class="hidden">
             <div class="bg-white p-4 rounded shadow">
-                <h2 class="font-bold text-lg mb-2">Vendas do Dia</h2>
-                <p class="text-3xl font-bold">R$ <span id="totalDia">0.00</span></p>
-                <div id="listaVendas" class="mt-4"></div>
+                <h2 class="font-bold mb-2">Relatório de Vendas</h2>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <input id="dataIni" type="date">
+                    <input id="dataFim" type="date">
+                    <button onclick="gerarRel()" class="bg-blue-600 text-white p-2 rounded">GERAR</button>
+                </div>
+                <div id="resumoRel"></div>
+            </div>
+        </div>
+
+        <!-- FECHAMENTO CAIXA -->
+        <div id="aba-caixa" class="hidden">
+            <div class="bg-white p-4 rounded shadow">
+                <h2 class="font-bold mb-2">Fechamento do Caixa</h2>
+                <p class="text-3xl font-bold">Saldo Atual: R$ <span id="saldoCaixa">0.00</span></p>
+                <button onclick="fecharCaixa()" class="bg-purple-600 text-white p-2 rounded mt-4">GERAR FECHAMENTO</button>
+                <div id="detalheCaixa" class="mt-4"></div>
             </div>
         </div>
     </main>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, Timestamp, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, deleteDoc, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
-      authDomain: "web-pdv-6546d.firebaseapp.com",
-      projectId: "web-pdv-6546d",
-      storageBucket: "web-pdv-6546d.appspot.com",
-      messagingSenderId: "985739667688",
-      appId: "1:985739667688:web:742dab33141e39fd97815d"
+const firebaseConfig = {
+  apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
+  authDomain: "web-pdv-6546d.firebaseapp.com",
+  projectId: "web-pdv-6546d",
+  storageBucket: "web-pdv-6546d.appspot.com",
+  messagingSenderId: "985739667688",
+  appId: "1:985739667688:web:742dab33141e39fd97815d"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let carrinho = [], produtos = [], clientes = [], fornecedores = [];
+
+// AUTH
+window.entrar = () => { const e=$('email').value, s=$('senha').value; signInWithEmailAndPassword(auth,e,s).catch(err=>$('msg').innerText=err.message) }
+window.cadastrar = () => { const e=$('email').value, s=$('senha').value; createUserWithEmailAndPassword(auth,e,s).catch(err=>$('msg').innerText=err.message) }
+window.sair = () => signOut(auth);
+onAuthStateChanged(auth, u => { if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden');carregarTudo()}else{$('login').classList.remove('hidden');$('app').classList.add('hidden')} });
+
+const $ = id => document.getElementById(id);
+window.aba = id => { document.querySelectorAll('main > div').forEach(d=>d.classList.add('hidden')); $(`aba-${id}`).classList.remove('hidden'); document.querySelectorAll('nav button').forEach(b=>b.classList.remove('aba-ativa')); $(`btn-${id}`).classList.add('aba-ativa') }
+
+async function carregarTudo(){
+    produtos = (await getDocs(collection(db,"produtos"))).docs.map(d=>({id:d.id,...d.data()}));
+    clientes = (await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
+    fornecedores = (await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
+    const lojaSnap = await getDoc(doc(db,"loja","dados"));
+    if(lojaSnap.exists()){const l=lojaSnap.data(); $('nomeLoja').value=l.nome;$('cnpjLoja').value=l.cnpj;$('telLoja').value=l.tel;$('endLoja').value=l.end}
+    listarProd(); listarCli(); listarFor(); listarPagar(); listarReceb(); carregarSelects(); caixaSaldo();
+}
+
+// PRODUTOS
+window.salvarProd = async () => { await addDoc(collection(db,"produtos"),{cod:$('cod').value,nome:$('nome').value,custo:+$('custo').value,preco:+$('preco').value,estoque:+$('estoque').value}); alert("Salvo!"); carregarTudo(); $('cod').value='';$('nome').value='';$('custo').value='';$('preco').value='';$('estoque').value='' }
+function listarProd(){ $('tabelaProd').innerHTML = produtos.map(p=>`<div class="flex justify-between border-b py-1"><span>${p.cod} - ${p.nome}</span><span>Est: ${p.estoque}</span></div>`).join('') }
+window.buscar = () => { const t=$('busca').value.toLowerCase(); const f=produtos.filter(p=>p.nome.toLowerCase().includes(t)); $('listaProdVenda').innerHTML=f.map(p=>`<button onclick="addCarrinho('${p.id}')" class="bg-gray-200 p-2 rounded"><b>${p.nome}</b><br>R$${p.preco}</button>`).join('') }
+window.addCarrinho = id => { const p=produtos.find(x=>x.id==id); if(p.estoque>0){carrinho.push(p); atualizarCarrinho()}else alert("Sem estoque") }
+function atualizarCarrinho(){ let t=0; $('carrinho').innerHTML=carrinho.map(p=>{t+=p.preco; return `<div>${p.nome} - R$${p.preco}</div>`}).join(''); $('total').innerText=t.toFixed(2) }
+window.vender = async () => { if(carrinho.length==0)return; const total=carrinho.reduce((s,p)=>s+p.preco,0); await addDoc(collection(db,"vendas"),{itens:carrinho,total,data:Timestamp.now()}); for(const i of carrinho){const p=produtos.find(x=>x.id==i.id); await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque-1})} alert("Venda R$"+total.toFixed(2)); carrinho=[]; atualizarCarrinho(); carregarTudo() }
+
+// CLIENTES
+window.salvarCli = async () => { await addDoc(collection(db,"clientes"),{nome:$('nomeCli').value,tel:$('telCli').value,cpf:$('cpfCli').value,end:$('endCli').value}); alert("Salvo!"); carregarTudo() }
+function listarCli(){ $('tabelaCli').innerHTML = clientes.map(c=>`<div class="flex justify-between border-b py-1"><span>${c.nome}</span><span>${c.tel}</span></div>`).join('') }
+
+// FORNECEDORES
+window.salvarFor = async () => { await addDoc(collection(db,"fornecedores"),{nome:$('nomeFor').value,tel:$('telFor').value,cnpj:$('cnpjFor').value,end:$('endFor').value}); alert("Salvo!"); carregarTudo() }
+function listarFor(){ $('tabelaFor').innerHTML = fornecedores.map(f=>`<div class="flex justify-between border-b py-1"><span>${f.nome}</span><span>${f.tel}</span></div>`).join('') }
+
+// LOJA
+window.salvarLoja = async () => { await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value,cnpj:$('cnpjLoja').value,tel:$('telLoja').value,end:$('endLoja').value}); alert("Salvo!") }
+
+// CONTAS
+window.salvarPagar = async () => { await addDoc(collection(db,"contasPagar"),{desc:$('descPagar').value,valor:+$('valorPagar').value,venc:$('vencPagar').value,for:$('forPagar').value,status:"Pendente"}); alert("Lançado!"); carregarTudo() }
+function listarPagar(){ getDocs(collection(db,"contasPagar")).then(s=>{ $('tabelaPagar').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="flex justify-between border-b py-1"><span>${d.data().desc}</span><span>R$${d.data().valor}</span></div>`).join('') }) }
+window.salvarReceb = async () => { await addDoc(collection(db,"contasReceber"),{desc:$('descReceb').value,valor:+$('valorReceb').value,venc:$('vencReceb').value,cli:$('cliReceb').value,status:"Pendente"}); alert("Lançado!"); carregarTudo() }
+function listarReceb(){ getDocs(collection(db,"contasReceber")).then(s=>{ $('tabelaReceb').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="flex justify-between border-b py-1"><span>${d.data().desc}</span><span>R$${d.data().valor}</span></div>`).join('') }) }
+function carregarSelects(){ $('forPagar').innerHTML=fornecedores.map(f=>`<option value="${f.id}">${f.nome}</option>`).join(''); $('cliReceb').innerHTML=clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('') }
+
+// RELATORIO
+window.gerarRel = async () => { const s=await getDocs(collection(db,"vendas")); let t=0; s.forEach(d=>t+=d.data().total); $('resumoRel').innerHTML=`<p class="text-2xl">Total Vendido: R$ ${t.toFixed(2)}</p>` }
+
+// CAIXA
+async function caixaSaldo(){ const s=await getDocs(collection(db,"vendas")); let t=0; s.forEach(d=>t+=d.data().total); $('saldoCaixa').innerText=t.toFixed(2) }
+window.fecharCaixa = () => { $('detalheCaixa').innerHTML = `<p>Fechamento gerado em ${new Date().toLocaleString()}</p>` }
+
+// BACKUP
+window.backup = async () => { 
+    const dados = {
+        produtos, clientes, fornecedores,
+        vendas: (await getDocs(collection(db,"vendas"))).docs.map(d=>d.data()),
+        loja: (await getDoc(doc(db,"loja","dados"))).data()
     };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    let carrinho = [];
-    let produtos = [];
-
-    // AUTH
-    window.logar = () => { 
-        const email = document.getElementById('email').value; 
-        const senha = document.getElementById('password').value; 
-        signInWithEmailAndPassword(auth, email, senha)
-        .catch(erro => document.getElementById('auth-error').innerText = erro.message); 
-    }
-    window.cadastrar = () => { 
-        const email = document.getElementById('email').value; 
-        const senha = document.getElementById('password').value; 
-        createUserWithEmailAndPassword(auth, email, senha)
-        .catch(erro => document.getElementById('auth-error').innerText = erro.message); 
-    }
-    window.sair = () => signOut(auth);
-
-    onAuthStateChanged(auth, user => { 
-        const authDiv = document.getElementById('auth-container');
-        const appDiv = document.getElementById('app-container');
-        if(user && authDiv && appDiv){
-            authDiv.classList.add('hidden');
-            appDiv.classList.remove('hidden');
-            carregarTudo();
-            carregarRelatorio();
-        }else if(authDiv && appDiv){
-            authDiv.classList.remove('hidden');
-            appDiv.classList.add('hidden');
-        }
-    });
-
-    // ABAS
-    window.trocarAba = (aba) => {
-        document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden'));
-        document.getElementById('aba-'+aba).classList.remove('hidden');
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('aba-ativa'));
-        document.getElementById('btn-'+aba).classList.add('aba-ativa');
-    }
-
-    // PRODUTOS
-    async function carregarTudo(){
-        const snap = await getDocs(collection(db, "produtos"));
-        produtos = snap.docs.map(d => ({id: d.id, ...d.data()}));
-        renderizarProdutos();
-        renderizarEstoque();
-    }
-
-    window.renderizarProdutos = () => {
-        const div = document.getElementById('listaProdutos');
-        div.innerHTML = '';
-        produtos.forEach(p => {
-            div.innerHTML += `<button onclick="addCarrinho('${p.id}')" class="bg-gray-200 p-2 rounded hover:bg-blue-200 text-left"><b>${p.nome}</b><br>R$${p.preco}<br>Est:${p.estoque}</button>`;
-        });
-    }
-    
-    window.renderizarEstoque = () => {
-        const div = document.getElementById('tabelaEstoque');
-        div.innerHTML = '<h3 class="font-bold mb-2">Estoque Atual</h3>';
-        produtos.forEach(p => {
-            div.innerHTML += `<div class="flex justify-between border-b py-1"><span>${p.nome}</span><span>${p.estoque} un</span></div>`;
-        });
-    }
-    
-    window.buscarProduto = () => {
-        const termo = document.getElementById('buscaProd').value.toLowerCase();
-        const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(termo));
-        document.getElementById('listaProdutos').innerHTML = '';
-        filtrados.forEach(p => { document.getElementById('listaProdutos').innerHTML += `<button onclick="addCarrinho('${p.id}')" class="bg-gray-200 p-2 rounded hover:bg-blue-200 text-left"><b>${p.nome}</b><br>R$${p.preco}<br>Est:${p.estoque}</button>`; });
-    }
-    
-    window.addProduto = async () => { 
-        await addDoc(collection(db, "produtos"), {
-            nome:document.getElementById('nomeProd').value, 
-            preco:parseFloat(document.getElementById('precoProd').value), 
-            estoque:parseInt(document.getElementById('estoqueProd').value)
-        }); 
-        alert("Produto Salvo!"); 
-        document.getElementById('nomeProd').value = '';
-        document.getElementById('precoProd').value = '';
-        document.getElementById('estoqueProd').value = '';
-        carregarTudo(); 
-    }
-
-    // VENDA
-    window.addCarrinho = (id) => {
-        const prod = produtos.find(p => p.id === id);
-        if(prod.estoque > 0){
-            carrinho.push(prod);
-            atualizarCarrinho();
-        } else { alert("Sem estoque!") }
-    }
-    
-    function atualizarCarrinho(){
-        const div = document.getElementById('carrinho');
-        let total = 0;
-        div.innerHTML = '';
-        carrinho.forEach((p) => {
-            total += p.preco;
-            div.innerHTML += `<div class="flex justify-between">${p.nome} <span>R$${p.preco}</span></div>`;
-        });
-        document.getElementById('total').innerText = total.toFixed(2);
-    }
-    
-    window.fecharVenda = async () => {
-        if(carrinho.length === 0) return alert("Carrinho vazio!");
-        const total = carrinho.reduce((s,p)=>s+p.preco,0);
-        await addDoc(collection(db, "vendas"), {itens: carrinho, total: total, data: Timestamp.now()});
-        for(const item of carrinho){ 
-            const prodRef = doc(db, "produtos", item.id); 
-            await updateDoc(prodRef, {estoque: item.estoque - 1}); 
-        }
-        alert("Venda R$"+total.toFixed(2)+" finalizada!");
-        carrinho = [];
-        atualizarCarrinho();
-        carregarTudo();
-        carregarRelatorio();
-    }
-
-    // RELATORIO
-    async function carregarRelatorio(){
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-        const q = query(collection(db, "vendas"), where("data", ">=", Timestamp.fromDate(hoje)));
-        const snap = await getDocs(q);
-        let totalDia = 0;
-        let html = '';
-        snap.forEach(doc => {
-            const v = doc.data();
-            totalDia += v.total;
-            const hora = v.data.toDate().toLocaleTimeString('pt-BR');
-            html += `<div class="border-b py-1 flex justify-between"><span>${hora}</span><span>R$${v.total.toFixed(2)}</span></div>`;
-        });
-        document.getElementById('totalDia').innerText = totalDia.toFixed(2);
-        document.getElementById('listaVendas').innerHTML = html;
-    }
+    const blob = new Blob([JSON.stringify(dados)],{type:"application/json"});
+    const a = document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="backup_pdv.json"; a.click();
+}
 </script>
 </body>
 </html>
