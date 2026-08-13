@@ -3,18 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV Web</title>
+<title>PDV Top</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<style>
-    body { font-family: 'Inter', sans-serif; }
-    .hidden { display: none; }
+<style> 
+    body { font-family: 'Inter', sans-serif; } 
+    .hidden { display: none; } 
+    .aba-ativa { border-bottom: 3px solid #2563eb; color: #2563eb; }
 </style>
 </head>
 <body class="bg-gray-100">
 
+<!-- TELA DE LOGIN -->
 <div id="auth-container" class="flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center mb-6">PDV Login</h1>
+        <h1 class="text-2xl font-bold text-center mb-6">PDV Top Login</h1>
         <input id="email" type="email" placeholder="Email" class="w-full p-2 border rounded mb-4">
         <input id="password" type="password" placeholder="Senha" class="w-full p-2 border rounded mb-4">
         <button onclick="logar()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Entrar</button>
@@ -23,15 +25,64 @@
     </div>
 </div>
 
-<div id="app-container" class="hidden p-4">
-    <h1 class="text-3xl font-bold">PDV Funcionando!</h1>
-    <button onclick="sair()" class="bg-red-600 text-white p-2 rounded mt-4">Sair</button>
+<!-- APP PDV -->
+<div id="app-container" class="hidden">
+    <header class="bg-white shadow p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold">PDV Top</h1>
+        <button onclick="sair()" class="bg-red-600 text-white px-4 py-2 rounded">Sair</button>
+    </header>
+
+    <!-- MENU DE ABAS -->
+    <nav class="bg-white px-4 flex gap-6 border-b">
+        <button onclick="trocarAba('venda')" id="btn-venda" class="py-3 aba-ativa font-semibold">Venda</button>
+        <button onclick="trocarAba('produtos')" id="btn-produtos" class="py-3 text-gray-600 font-semibold">Produtos</button>
+        <button onclick="trocarAba('relatorio')" id="btn-relatorio" class="py-3 text-gray-600 font-semibold">Relatório</button>
+    </nav>
+
+    <main class="p-4">
+        <!-- ABA VENDA -->
+        <div id="aba-venda">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="lg:col-span-2 bg-white p-4 rounded shadow">
+                    <input id="buscaProd" onkeyup="buscarProduto()" placeholder="Buscar produto..." class="w-full p-2 border rounded mb-4">
+                    <div id="listaProdutos" class="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-96 overflow-y-auto"></div>
+                </div>
+                <div class="bg-white p-4 rounded shadow">
+                    <h2 class="font-bold text-lg mb-2">Carrinho</h2>
+                    <div id="carrinho" class="max-h-64 overflow-y-auto"></div>
+                    <p class="font-bold text-2xl mt-4">Total: R$ <span id="total">0.00</span></p>
+                    <button onclick="fecharVenda()" class="w-full bg-green-600 text-white p-3 rounded mt-2 font-bold">FINALIZAR VENDA F2</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA PRODUTOS -->
+        <div id="aba-produtos" class="hidden">
+            <div class="bg-white p-4 rounded shadow mb-4">
+                <h2 class="font-bold text-lg mb-2">Cadastrar Produto</h2>
+                <input id="nomeProd" placeholder="Nome" class="p-2 border rounded">
+                <input id="precoProd" type="number" placeholder="Preço" class="p-2 border rounded">
+                <input id="estoqueProd" type="number" placeholder="Estoque" class="p-2 border rounded">
+                <button onclick="addProduto()" class="bg-blue-600 text-white p-2 rounded">Salvar</button>
+            </div>
+            <div id="tabelaEstoque" class="bg-white p-4 rounded shadow"></div>
+        </div>
+
+        <!-- ABA RELATORIO -->
+        <div id="aba-relatorio" class="hidden">
+            <div class="bg-white p-4 rounded shadow">
+                <h2 class="font-bold text-lg mb-2">Vendas do Dia</h2>
+                <p class="text-3xl font-bold">R$ <span id="totalDia">0.00</span></p>
+                <div id="listaVendas" class="mt-4"></div>
+            </div>
+        </div>
+    </main>
 </div>
 
 <script type="module">
-    // VERSÃO 11.8.1 - ESTÁVEL
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, Timestamp, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
   apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
@@ -42,33 +93,69 @@
   appId: "1:985739667688:web:742dab33141e39fd97815d"
 };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    window.logar = () => {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        signInWithEmailAndPassword(auth, email, password).catch(e => document.getElementById('auth-error').innerText = e.message);
-    }
-    
-    window.cadastrar = () => {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        createUserWithEmailAndPassword(auth, email, password).catch(e => document.getElementById('auth-error').innerText = e.message);
-    }
-
+    // LOGIN
+    window.logar = () => { const e=document.getElementById('email').value; const p=document.getElementById('password').value; signInWithEmailAndPassword(auth,e,p).catch(e=>document.getElementById('auth-error').innerText=e.message); }
+    window.cadastrar = () => { const e=document.getElementById('email').value; const p=document.getElementById('password').value; createUserWithEmailAndPassword(auth,e,p).catch(e=>document.getElementById('auth-error').innerText=e.message); }
     window.sair = () => signOut(auth);
+    onAuthStateChanged(auth, user => { if(user){document.getElementById('auth-container').classList.add('hidden');document.getElementById('app-container').classList.remove('hidden');carregarTudo();}else{document.getElementById('auth-container').classList.remove('hidden');document.getElementById('app-container').classList.add('hidden');}});
 
-    onAuthStateChanged(auth, user => {
-        if (user) {
-            document.getElementById('auth-container').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
-        } else {
-            document.getElementById('auth-container').classList.remove('hidden');
-            document.getElementById('app-container').classList.add('hidden');
-        }
-    });
+    // ABAS
+    window.trocarAba = (aba) => {
+        document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden'));
+        document.getElementById('aba-'+aba).classList.remove('hidden');
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('aba-ativa'));
+        document.getElementById('btn-'+aba).classList.add('aba-ativa');
+    }
+
+    // PRODUTOS
+    async function carregarTudo(){
+        const snap = await getDocs(collection(db, "produtos"));
+        produtos = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        renderizarProdutos();
+        renderizarEstoque();
+    }
+    window.renderizarProdutos = () => {
+        const div = document.getElementById('listaProdutos');
+        div.innerHTML = '';
+        produtos.forEach(p => {
+            div.innerHTML += `<button onclick="addCarrinho('${p.id}')" class="bg-gray-200 p-2 rounded hover:bg-blue-200"><b>${p.nome}</b><br>R$${p.preco}<br>Est:${p.estoque}</button>`;
+        });
+    }
+    window.buscarProduto = () => {
+        const termo = document.getElementById('buscaProd').value.toLowerCase();
+        const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(termo));
+        // renderiza só os filtrados...
+        document.getElementById('listaProdutos').innerHTML = '';
+        filtrados.forEach(p => { document.getElementById('listaProdutos').innerHTML += `<button onclick="addCarrinho('${p.id}')" class="bg-gray-200 p-2 rounded hover:bg-blue-200"><b>${p.nome}</b><br>R$${p.preco}<br>Est:${p.estoque}</button>`; });
+    }
+    window.addProduto = async () => { await addDoc(collection(db, "produtos"), {nome:document.getElementById('nomeProd').value, preco:parseFloat(document.getElementById('precoProd').value), estoque:parseInt(document.getElementById('estoqueProd').value)}); alert("Salvo!"); carregarTudo(); }
+
+    // CARRINHO E VENDA
+    window.addCarrinho = (id) => {
+        const prod = produtos.find(p => p.id === id);
+        carrinho.push(prod);
+        atualizarCarrinho();
+    }
+    function atualizarCarrinho(){
+        const div = document.getElementById('carrinho');
+        let total = 0;
+        div.innerHTML = '';
+        carrinho.forEach((p, i) => {
+            total += p.preco;
+            div.innerHTML += `<div>${p.nome} - R$${p.preco}</div>`;
+        });
+        document.getElementById('total').innerText = total.toFixed(2);
+    }
+    window.fecharVenda = async () => {
+        const total = carrinho.reduce((s,p)=>s+p.preco,0);
+        await addDoc(collection(db, "vendas"), {itens: carrinho, total: total, data: Timestamp.now()});
+        // Baixa estoque
+        for(const item of carrinho){ const prodRef = doc(db, "produtos", item.id); await updateDoc(prodRef, {estoque: item.estoque - 1}); }
+        alert("Venda R$"+total.toFixed(2)+" finalizada!");
+        carrinho = [];
+        atualizarCarrinho();
+        carregarTudo();
+    }
 </script>
-
 </body>
 </html>
