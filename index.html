@@ -20,8 +20,21 @@
     let produtos = []; // 5
 
     // LOGIN
-    window.logar = () => { const e=document.getElementById('email').value; const p=document.getElementById('password').value; signInWithEmailAndPassword(auth,e,p).catch(e=>document.getElementById('auth-error').innerText=e.message); }
-    window.cadastrar = () => { const e=document.getElementById('email').value; const p=document.getElementById('password').value; createUserWithEmailAndPassword(auth,e,p).catch(e=>document.getElementById('auth-error').innerText=e.message); }
+    // LOGIN CORRIGIDO
+    window.logar = () => { 
+        const email = document.getElementById('email').value; 
+        const senha = document.getElementById('password').value; 
+        signInWithEmailAndPassword(auth, email, senha)
+        .catch(erro => document.getElementById('auth-error').innerText = erro.message); 
+    }
+
+    window.cadastrar = () => { 
+        const email = document.getElementById('email').value; 
+        const senha = document.getElementById('password').value; 
+        createUserWithEmailAndPassword(auth, email, senha)
+        .catch(erro => document.getElementById('auth-error').innerText = erro.message); 
+    }
+
     window.sair = () => signOut(auth);
     onAuthStateChanged(auth, user => { if(user){document.getElementById('auth-container').classList.add('hidden');document.getElementById('app-container').classList.remove('hidden');carregarTudo();}else{document.getElementById('auth-container').classList.remove('hidden');document.getElementById('app-container').classList.add('hidden');}});
 
