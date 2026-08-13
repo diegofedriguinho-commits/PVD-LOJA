@@ -84,14 +84,12 @@
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, Timestamp, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-  apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
-  authDomain: "web-pdv-6546d.firebaseapp.com",
-  projectId: "web-pdv-6546d",
-  storageBucket: "web-pdv-6546d.firebasestorage.app",
-  messagingSenderId: "985739667688",
-  appId: "1:985739667688:web:742dab33141e39fd97815d"
-};
+    const firebaseConfig = SUA_CONFIG_AQUI; // <<<< COLA SUA CONFIG AQUI
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let carrinho = [];
+    let produtos = [];
 
     // LOGIN
     window.logar = () => { const e=document.getElementById('email').value; const p=document.getElementById('password').value; signInWithEmailAndPassword(auth,e,p).catch(e=>document.getElementById('auth-error').innerText=e.message); }
