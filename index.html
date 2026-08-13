@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV Loja</title>
+<title>PDV Online v11.9.8</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
   body{background:#f0f2f5}
   .login{display:flex;justify-content:center;align-items:center;height:100vh}
   .login-box{background:#fff;padding:30px;border-radius:8px;box-shadow:0 2px 10px #0001;width:350px}
   .login-box h2{text-align:center;margin-bottom:20px}
-  input,button{width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:5px;font-size:16px}
+  input,button,select{width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:5px;font-size:16px}
   button{background:#28a745;color:#fff;border:none;cursor:pointer;font-weight:bold}
   button:hover{opacity:0.9}
   .header{background:#343a40;color:#fff;padding:15px;display:flex;justify-content:space-between}
-  .menu{display:flex;gap:10px;background:#fff;padding:10px;box-shadow:0 2px 5px #0001}
+  .menu{display:flex;gap:10px;background:#fff;padding:10px;box-shadow:0 2px 5px #0001;flex-wrap:wrap}
   .menu button{background:#007bff}
   .container{padding:20px}
   .card{background:#fff;padding:20px;border-radius:8px;margin-bottom:15px}
@@ -25,21 +25,42 @@
   .total{font-size:24px;font-weight:bold;text-align:right;margin-top:10px}
   .hidden{display:none}
 </style>
+
+<!-- FIREBASE SDK 11.9.8 -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.8/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.8/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.9.8/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
+    authDomain: "web-pdv-6546d.firebaseapp.com",
+    projectId: "web-pdv-6546d",
+    storageBucket: "web-pdv-6546d.firebasestorage.app",
+    messagingSenderId: "985739667688",
+    appId: "1:985739667688:web:a1518c0379e7848b97815d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  window.auth = getAuth(app);
+  window.db = getFirestore(app);
+</script>
 </head>
 <body>
 
 <div id="telaLogin" class="login">
   <div class="login-box">
-    <h2>PDV Loja</h2>
-    <input id="email" type="email" placeholder="Email" value="admin@teste.com">
-    <input id="senha" type="password" placeholder="Senha" value="123456">
+    <h2>PDV Online</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="senha" type="password" placeholder="Senha">
     <button onclick="logar()">Entrar</button>
+    <button onclick="cadastrar()" style="background:#6c757d">Cadastrar</button>
   </div>
 </div>
 
 <div id="telaPDV" class="hidden">
   <div class="header">
-    <h3>PDV LOJA</h3>
+    <h3>PDV ONLINE</h3>
     <span id="usuario"></span>
   </div>
   <div class="menu">
@@ -76,62 +97,82 @@
   </div>
 </div>
 
-<script>
-let produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-let vendas = JSON.parse(localStorage.getItem('vendas')) || [];
+<script type="module">
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.8/firebase-auth.js";
+import { addDoc, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.9.8/firebase-firestore.js";
+
 let carrinho = [];
 
-function logar(){
-  if(email.value=='admin@teste.com' && senha.value=='123456'){
+onAuthStateChanged(window.auth, (user) => {
+  if(user){
     document.getElementById('telaLogin').classList.add('hidden');
     document.getElementById('telaPDV').classList.remove('hidden');
-    document.getElementById('usuario').innerText = 'Admin';
+    document.getElementById('usuario').innerText = user.email;
     carregarProdutos();
-    atualizarDashboard();
-  } else { alert('Login inválido') }
+    carregarDashboard();
+  }
+});
+
+window.logar = async () => {
+  try {
+    await signInWithEmailAndPassword(window.auth, email.value, senha.value);
+  } catch(e) { alert("Erro: " + e.message) }
 }
 
-function sair(){
+window.cadastrar = async () => {
+  try {
+    await createUserWithEmailAndPassword(window.auth, email.value, senha.value);
+    alert("Usuário criado! Faça login agora.");
+  } catch(e) { alert("Erro: " + e.message) }
+}
+
+window.sair = async () => {
+  await signOut(window.auth);
   document.getElementById('telaPDV').classList.add('hidden');
   document.getElementById('telaLogin').classList.remove('hidden');
 }
 
-function mostrar(id){
+window.mostrar = (id) => {
   document.querySelectorAll('.container .card').forEach(c=>c.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
+  if(id=='produtos') carregarProdutos();
+  if(id=='vendas') carregarProdutos();
 }
 
-function addProduto(){
-  let p = {id:Date.now(), nome:nomeProd.value, preco:parseFloat(precoProd.value), estoque:parseInt(estoqueProd.value)};
-  produtos.push(p);
-  localStorage.setItem('produtos',JSON.stringify(produtos));
+window.addProduto = async () => {
+  await addDoc(collection(window.db, "produtos"), {
+    nome:nomeProd.value, preco:parseFloat(precoProd.value), estoque:parseInt(estoqueProd.value)
+  });
   nomeProd.value=precoProd.value=estoqueProd.value='';
   carregarProdutos();
 }
 
-function carregarProdutos(){
+async function carregarProdutos(){
+  const query = await getDocs(collection(window.db, "produtos"));
   listaProdutos.innerHTML='';
   selectProd.innerHTML='<option>Selecione um produto</option>';
-  produtos.forEach(p=>{
-    listaProdutos.innerHTML += `<tr><td>${p.nome}</td><td>R$ ${p.preco.toFixed(2)}</td><td>${p.estoque}</td><td><button onclick="delProd(${p.id})" style="background:#dc3545;padding:5px">Excluir</button></td></tr>`;
-    selectProd.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco.toFixed(2)}</option>`;
+  query.forEach((d)=>{
+    let p = d.data();
+    listaProdutos.innerHTML += `<tr><td>${p.nome}</td><td>R$ ${p.preco.toFixed(2)}</td><td>${p.estoque}</td><td><button onclick="delProd('${d.id}')" style="background:#dc3545;padding:5px">Excluir</button></td></tr>`;
+    selectProd.innerHTML += `<option value="${d.id}">${p.nome} - R$ ${p.preco.toFixed(2)}</option>`;
   });
-  document.getElementById('totalProdutos').innerText = produtos.length;
+  document.getElementById('totalProdutos').innerText = query.size;
 }
 
-function delProd(id){
-  produtos = produtos.filter(p=>p.id!=id);
-  localStorage.setItem('produtos',JSON.stringify(produtos));
+window.delProd = async (id) => {
+  await deleteDoc(doc(window.db, "produtos", id));
   carregarProdutos();
 }
 
-function addCarrinho(){
-  let id = selectProd.value;
-  let prod = produtos.find(p=>p.id==id);
-  if(prod && prod.estoque>0){
-    carrinho.push(prod);
-    renderCarrinho();
-  }
+window.addCarrinho = async () => {
+  const query = await getDocs(collection(window.db, "produtos"));
+  query.forEach((d)=>{
+    if(d.id == selectProd.value){
+      let p = d.data();
+      carrinho.push(p);
+      renderCarrinho();
+    }
+  });
 }
 
 function renderCarrinho(){
@@ -145,18 +186,21 @@ function renderCarrinho(){
   document.getElementById('totalCarrinho').innerText = total.toFixed(2);
 }
 
-function finalizarVenda(){
+window.finalizarVenda = async () => {
   if(carrinho.length==0) return alert('Carrinho vazio');
-  vendas.push({data:new Date(), itens:carrinho, total: carrinho.reduce((a,b)=>a+b.preco,0)});
-  localStorage.setItem('vendas',JSON.stringify(vendas));
+  await addDoc(collection(window.db, "vendas"), {
+    itens:carrinho, total: carrinho.reduce((a,b)=>a+b.preco,0), data: new Date()
+  });
   carrinho=[];
   renderCarrinho();
   alert('Venda finalizada!');
-  atualizarDashboard();
+  carregarDashboard();
 }
 
-function atualizarDashboard(){
-  let total = vendas.reduce((a,b)=>a+b.total,0);
+async function carregarDashboard(){
+  const query = await getDocs(collection(window.db, "vendas"));
+  let total = 0;
+  query.forEach(d=> total += d.data().total);
   document.getElementById('totalVendas').innerText = 'R$ '+total.toFixed(2);
 }
 </script>
