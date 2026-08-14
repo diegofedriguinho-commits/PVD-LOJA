@@ -266,6 +266,7 @@ function imprimirFechamento(){
   html+=`<hr><b>SALDO FINAL: R$${($('saldoCaixa').innerText)}</b><hr class="center">OBRIGADO!</div>`;
   $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
 }
+ window.cadastrar=()=>createUserWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText=e.message)
 </script>
 </body>
 </html>
