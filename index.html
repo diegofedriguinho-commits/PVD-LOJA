@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV Iguaraçu V2</title>
+<title>PDV Iguaraçu V3</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
@@ -81,25 +81,34 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <div id="tabelaCli" class="bg-white p-3 rounded shadow"></div>
   </div>
 
-  <!-- 4.FORNECEDORES -->
+  <!-- 4.FORNECEDORES COM DADOS COMPLEMENTARES -->
   <div id="fornecedores" class="aba">
     <div class="bg-white p-3 rounded shadow mb-3">
       <h2 class="font-bold mb-2">+ Fornecedor</h2>
       <input type="hidden" id="idFor">
-      <input id="nomeFor" placeholder="Nome" class="w-full border p-2 mb-2 rounded">
-      <input id="telFor" placeholder="Telefone" class="w-full border p-2 mb-2 rounded">
+      <input id="nomeFor" placeholder="Nome / Razão Social" class="w-full border p-2 mb-2 rounded">
       <input id="cnpjFor" placeholder="CNPJ" class="w-full border p-2 mb-2 rounded">
+      <input id="telFor" placeholder="Telefone" class="w-full border p-2 mb-2 rounded">
+      <input id="emailFor" placeholder="Email" class="w-full border p-2 mb-2 rounded">
+      <input id="endFor" placeholder="Endereço" class="w-full border p-2 mb-2 rounded">
       <button id="btnFor" onclick="salvarFor()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
     </div>
     <div id="tabelaFor" class="bg-white p-3 rounded shadow"></div>
   </div>
 
-  <!-- 5.LOJA -->
+  <!-- 5.LOJA COM DADOS COMPLETOS -->
   <div id="loja" class="aba">
-    <div class="bg-white p-3 rounded shadow">
+    <div class="bg-white p-3 rounded shadow mb-3">
       <h2 class="font-bold mb-2">Dados da Loja</h2>
       <input id="nomeLoja" placeholder="Nome da Loja" class="w-full border p-2 mb-2 rounded">
+      <input id="cnpjLoja" placeholder="CNPJ" class="w-full border p-2 mb-2 rounded">
+      <input id="telLoja" placeholder="Telefone" class="w-full border p-2 mb-2 rounded">
+      <input id="endLoja" placeholder="Endereço Completo" class="w-full border p-2 mb-2 rounded">
       <button onclick="salvarLoja()" class="w-full btn bg-blue-600 text-white">SALVAR LOJA</button>
+    </div>
+    <div class="bg-white p-3 rounded shadow border-2 border-red-500">
+      <h2 class="font-bold text-red-600 mb-2">ÁREA PERIGOSA</h2>
+      <button onclick="zerarSistema()" class="w-full btn bg-red-600 text-white">ZERAR TODO O SISTEMA</button>
     </div>
   </div>
 
@@ -141,7 +150,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     </div>
   </div>
 
-  <!-- 9.CAIXA -->
+  <!-- 9.CAIXA COM BOTÃO FECHAR CAIXA -->
   <div id="caixa" class="aba">
     <div class="bg-white p-3 rounded shadow mb-3">
       <h2 class="font-bold mb-2">Movimentação</h2>
@@ -156,7 +165,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <div class="bg-white p-3 rounded shadow">
       <h2 class="font-bold mb-2">Fechamento</h2>
       <p class="text-3xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
-      <button onclick="fecharCaixa()" class="w-full btn bg-purple-600 text-white mt-2">IMPRIMIR FECHAMENTO</button>
+      <button onclick="fecharCaixa()" class="w-full btn bg-purple-600 text-white mt-2">FECHAR CAIXA E IMPRIMIR</button>
       <div id="detalheCaixa" class="mt-4"></div>
     </div>
   </div>
@@ -187,6 +196,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let produtos=[], clientes=[], fornecedores=[], vendas=[], movimentacoes=[], carrinho=[], loja={}, tipoMov='';
+const SENHA_ZERAR = "1234";
 const $=id=>document.getElementById(id);
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on')}
 
@@ -201,7 +211,7 @@ async function carregarTudo(){
   fornecedores=(await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
   vendas=(await getDocs(collection(db,"vendas"))).docs.map(d=>({id:d.id,...d.data()}));
   movimentacoes=(await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
-  const l=await getDoc(doc(db,"loja","dados")); if(l.exists()){loja=l.data();$('tituloLoja').innerText=loja.nome||'PDV';$('nomeLoja').value=loja.nome||''}
+  const l=await getDoc(doc(db,"loja","dados")); if(l.exists()){loja=l.data();$('tituloLoja').innerText=loja.nome||'PDV';$('nomeLoja').value=loja.nome||'';$('cnpjLoja').value=loja.cnpj||'';$('telLoja').value=loja.tel||'';$('endLoja').value=loja.end||''}
   listarProd();listarCli();listarFor();listarPagar();listarReceb();carregarSelects();caixaSaldo();buscar();
 }
 
@@ -211,26 +221,26 @@ window.addCarrinho=id=>{const p=produtos.find(x=>x.id==id);if(p.estoque>0){const
 function atualizarCarrinho(){let t=0;$('carrinho').innerHTML=carrinho.map((p,i)=>{t+=p.preco*p.qtd;return`<div class="flex justify-between py-1"><span>${p.nome} x${p.qtd}</span><span>R$${(p.preco*p.qtd).toFixed(2)}</span></div>`}).join('');$('total').innerText=t.toFixed(2)}
 window.vender=async()=>{if(carrinho.length==0)return;const total=+$('total').innerText;const venda=await addDoc(collection(db,"vendas"),{itens:carrinho,total,cliente:$('clienteVenda').value,forma:$('formaPag').value,data:Timestamp.now()});for(const i of carrinho){const p=produtos.find(x=>x.id==i.id);await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque-i.qtd})}if($('formaPag').value!="Prazo"){await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Venda",valor:total,data:Timestamp.now()})}imprimirVenda(venda.id);carrinho=[];atualizarCarrinho();carregarTudo()}
 
-// PRODUTOS C/ EDITAR EXCLUIR
+// PRODUTOS
 window.salvarProd=async()=>{const data={nome:$('nomeProd').value,preco:+$('precoProd').value,estoque:+$('estoqueProd').value};if($('idProd').value){await updateDoc(doc(db,"produtos",$('idProd').value),data)}else{await addDoc(collection(db,"produtos"),data)}limparProd();carregarTudo()}
 function listarProd(){$('tabelaProd').innerHTML=produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome} - R$${p.preco} - Est:${p.estoque}</span><span><button onclick="editarProd('${p.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('produtos','${p.id}')" class="bg-red-500 text-white px-2 rounded">X</button></span></div>`).join('')}
 window.editarProd=id=>{const p=produtos.find(x=>x.id==id);$('idProd').value=p.id;$('nomeProd').value=p.nome;$('precoProd').value=p.preco;$('estoqueProd').value=p.estoque;$('btnProd').innerText='ATUALIZAR'}
 function limparProd(){$('idProd').value='';$('nomeProd').value='';$('precoProd').value='';$('estoqueProd').value='';$('btnProd').innerText='SALVAR'}
 
-// CLIENTES C/ EDITAR EXCLUIR
+// CLIENTES
 window.salvarCli=async()=>{const data={nome:$('nomeCli').value,tel:$('telCli').value,cpf:$('cpfCli').value,end:$('endCli').value};if($('idCli').value){await updateDoc(doc(db,"clientes",$('idCli').value),data)}else{await addDoc(collection(db,"clientes"),data)}limparCli();carregarTudo()}
-function listarCli(){$('tabelaCli').innerHTML=clientes.map(c=>`<div class="border-b py-2"><b>${c.nome}</b><br>${c.tel} ${c.cpf}<br><button onclick="editarCli('${c.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('clientes','${c.id}')" class="bg-red-500 text-white px-2 rounded">X</button></div>`).join('')}
+function listarCli(){$('tabelaCli').innerHTML=clientes.map(c=>`<div class="border-b py-2"><b>${c.nome}</b><br>${c.tel} ${c.cpf} ${c.end}<br><button onclick="editarCli('${c.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('clientes','${c.id}')" class="bg-red-500 text-white px-2 rounded">X</button></div>`).join('')}
 window.editarCli=id=>{const c=clientes.find(x=>x.id==id);$('idCli').value=c.id;$('nomeCli').value=c.nome;$('telCli').value=c.tel;$('cpfCli').value=c.cpf;$('endCli').value=c.end;$('btnCli').innerText='ATUALIZAR'}
 function limparCli(){$('idCli').value='';$('nomeCli').value='';$('telCli').value='';$('cpfCli').value='';$('endCli').value='';$('btnCli').innerText='SALVAR'}
 
-// FORNECEDORES C/ EDITAR EXCLUIR
-window.salvarFor=async()=>{const data={nome:$('nomeFor').value,tel:$('telFor').value,cnpj:$('cnpjFor').value};if($('idFor').value){await updateDoc(doc(db,"fornecedores",$('idFor').value),data)}else{await addDoc(collection(db,"fornecedores"),data)}limparFor();carregarTudo()}
-function listarFor(){$('tabelaFor').innerHTML=fornecedores.map(f=>`<div class="border-b py-2"><b>${f.nome}</b><br>${f.tel} ${f.cnpj}<br><button onclick="editarFor('${f.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('fornecedores','${f.id}')" class="bg-red-500 text-white px-2 rounded">X</button></div>`).join('')}
-window.editarFor=id=>{const f=fornecedores.find(x=>x.id==id);$('idFor').value=f.id;$('nomeFor').value=f.nome;$('telFor').value=f.tel;$('cnpjFor').value=f.cnpj;$('btnFor').innerText='ATUALIZAR'}
-function limparFor(){$('idFor').value='';$('nomeFor').value='';$('telFor').value='';$('cnpjFor').value='';$('btnFor').innerText='SALVAR'}
+// FORNECEDORES COMPLETOS
+window.salvarFor=async()=>{const data={nome:$('nomeFor').value,cnpj:$('cnpjFor').value,tel:$('telFor').value,email:$('emailFor').value,end:$('endFor').value};if($('idFor').value){await updateDoc(doc(db,"fornecedores",$('idFor').value),data)}else{await addDoc(collection(db,"fornecedores"),data)}limparFor();carregarTudo()}
+function listarFor(){$('tabelaFor').innerHTML=fornecedores.map(f=>`<div class="border-b py-2"><b>${f.nome}</b><br>CNPJ:${f.cnpj} Tel:${f.tel}<br>${f.email} ${f.end}<br><button onclick="editarFor('${f.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('fornecedores','${f.id}')" class="bg-red-500 text-white px-2 rounded">X</button></div>`).join('')}
+window.editarFor=id=>{const f=fornecedores.find(x=>x.id==id);$('idFor').value=f.id;$('nomeFor').value=f.nome;$('cnpjFor').value=f.cnpj;$('telFor').value=f.tel;$('emailFor').value=f.email;$('endFor').value=f.end;$('btnFor').innerText='ATUALIZAR'}
+function limparFor(){$('idFor').value='';$('nomeFor').value='';$('cnpjFor').value='';$('telFor').value='';$('emailFor').value='';$('endFor').value='';$('btnFor').innerText='SALVAR'}
 
-// LOJA
-window.salvarLoja=async()=>{await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value});alert("Loja salva!");carregarTudo()}
+// LOJA COMPLETA
+window.salvarLoja=async()=>{await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value,cnpj:$('cnpjLoja').value,tel:$('telLoja').value,end:$('endLoja').value});alert("Loja salva!");carregarTudo()}
 
 // CONTAS PAGAR PARCELADO
 window.salvarPagar=async()=>{const total=+$('valorPagar').value;const parc=+$('parcelasPagar').value;for(let i=0;i<parc;i++){let venc=new Date($('vencPagar').value);venc.setMonth(venc.getMonth()+i);await addDoc(collection(db,"contasPagar"),{desc:`${$('descPagar').value} ${i+1}/${parc}`,valor:total/parc,venc:venc.toISOString().split('T')[0],for:$('forPagar').value,status:"Pendente"})}carregarTudo()}
@@ -252,6 +262,9 @@ window.mostrarMov=t=>{tipoMov=t;$('formMov').classList.remove('hidden')}
 window.salvarMov=async()=>{await addDoc(collection(db,"movimentacoes"),{tipo:tipoMov,desc:$('descMov').value,valor:+$('valorMov').value,data:Timestamp.now()});$('formMov').classList.add('hidden');carregarTudo()}
 function caixaSaldo(){let e=movimentacoes.filter(m=>m.tipo=="Entrada").reduce((s,m)=>s+m.valor,0);let s=movimentacoes.filter(m=>m.tipo=="Saida").reduce((s,m)=>s+m.valor,0);$('saldoCaixa').innerText=(e-s).toFixed(2)}
 window.fecharCaixa=()=>{let e=movimentacoes.filter(m=>m.tipo=="Entrada");let s=movimentacoes.filter(m=>m.tipo=="Saida");let html=`<b>ENTRADAS:</b><br>`;e.forEach(x=>html+=`${x.desc}: R$${x.valor}<br>`);html+=`<hr><b>SAÍDAS:</b><br>`;s.forEach(x=>html+=`${x.desc}: R$${x.valor}<br>`);html+=`<hr><b>SALDO: R$${(e.reduce((a,b)=>a+b.valor,0)-s.reduce((a,b)=>a+b.valor,0)).toFixed(2)}</b>`;$('detalheCaixa').innerHTML=html;$('imprimir').innerHTML=`<h2 style="text-align:center">FECHAMENTO ${new Date().toLocaleDateString()}</h2>`+html;window.print()}
+
+// ZERAR SISTEMA
+window.zerarSistema=async()=>{const senha=prompt("DIGITE A SENHA PARA ZERAR:");if(senha!=SENHA_ZERAR){alert("Senha incorreta!");return;}if(!confirm("ATENÇÃO! Isso vai apagar TODOS os dados. Tem certeza?"))return;const colecoes=["produtos","clientes","fornecedores","vendas","contasPagar","contasReceber","movimentacoes"];for(const col of colecoes){const snap=await getDocs(collection(db,col));for(const d of snap.docs){await deleteDoc(doc(db,col,d.id))}}await setDoc(doc(db,"loja","dados"),{});alert("Sistema zerado!");carregarTudo()}
 
 // EXCLUIR GERAL
 window.excluir=async(col,id)=>{if(confirm("Tem certeza?")){await deleteDoc(doc(db,col,id));carregarTudo()}}
