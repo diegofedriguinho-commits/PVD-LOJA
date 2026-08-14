@@ -260,6 +260,14 @@ function imprimirFechamento(){
   html+=`<hr><b>SALDO FINAL: R$${($('saldoCaixa').innerText)}</b><hr class="center">OBRIGADO!</div>`;
   $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
 }
+  window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value)
+.catch(e=>{
+  console.log(e);
+  if(e.code=='auth/user-not-found') $('erro').innerText="Usuário não existe. Cria ele no Firebase";
+  else if(e.code=='auth/wrong-password') $('erro').innerText="Senha errada";
+  else if(e.code=='auth/invalid-email') $('erro').innerText="Email inválido";
+  else $('erro').innerText="Erro: "+e.message
+}
 </script>
 </body>
 </html>
