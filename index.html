@@ -194,80 +194,24 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 </nav>
 </div>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-
-const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
+<script>
+// MODO TESTE SEM FIREBASE
 let produtos=[], clientes=[], fornecedores=[], vendas=[], contasPagar=[], contasReceber=[], movimentacoes=[], carrinho=[], loja={}, tipoMov='', grafico, dadosRel=[];
 const $=id=>document.getElementById(id);
-window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on'); if(id=='relatorio') carregarGrafico(); if(id=='vendas') listarVendas();}
+window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
 
-window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText="Erro: "+e.message)
-window.sair=()=>signOut(auth);
-onAuthStateChanged(auth,u=>{if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden');carregarTudo();mostrarAba('venda')}else{$('login').classList.remove('hidden');$('app').classList.add('hidden')}});
-
-async function carregarTudo(){
-  produtos=(await getDocs(collection(db,"produtos"))).docs.map(d=>({id:d.id,...d.data()}));
-  clientes=(await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
-  fornecedores=(await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
-  vendas=(await getDocs(collection(db,"vendas"))).docs.map(d=>({id:d.id,...d.data()}));
-  contasPagar=(await getDocs(collection(db,"contasPagar"))).docs.map(d=>({id:d.id,...d.data()}));
-  contasReceber=(await getDocs(collection(db,"contasReceber"))).docs.map(d=>({id:d.id,...d.data()}));
-  movimentacoes=(await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
-  const l=await getDoc(doc(db,"loja","dados")); 
-  if(l.exists()){
-    loja=l.data();
-    $('tituloLoja').innerText=loja.nome||'PDV';
-    $('nomeLoja').value=loja.nome||''; $('razaoLoja').value=loja.razao||''; $('cnpjLoja').value=loja.cnpj||'';
-    $('ieLoja').value=loja.ie||''; $('telLoja').value=loja.tel||''; $('emailLoja').value=loja.email||''; $('endLoja').value=loja.end||'';
-  }
-  listarProd();listarCli();listarFor();listarPagar();listarReceb();carregarSelects();caixaSaldo();buscar();
+window.entrar=()=>{ 
+  if($('email').value!='' && $('senha').value!=''){
+    $('login').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    alert("ENTROU NO MODO TESTE. Dados não vão salvar!");
+    mostrarAba('venda')
+  }else{ $('erro').innerText="Preencha email e senha" }
 }
+window.sair=()=>{ $('login').classList.remove('hidden');$('app').classList.add('hidden') }
 
-// VENDAS
-window.buscar=()=>{const t=$('busca').value.toLowerCase();$('listaProdVenda').innerHTML=produtos.filter(p=>p.nome.toLowerCase().includes(t)).map(p=>`<button onclick="addCarrinho('${p.id}')" class="bg-white p-3 rounded shadow"><b>${p.nome}</b><br>R$${p.preco}<br><small>Est:${p.estoque}</small></button>`).join('')}
-window.addCarrinho=id=>{const p=produtos.find(x=>x.id==id);if(p.estoque>0){const i=carrinho.find(x=>x.id==id);i?i.qtd++:carrinho.push({...p,qtd:1});atualizarCarrinho()}else alert("Sem estoque")}
-function atualizarCarrinho(){let t=0;$('carrinho').innerHTML=carrinho.map((p,i)=>{t+=p.preco*p.qtd;return`<div class="flex justify-between py-1"><span>${p.nome} x${p.qtd}</span><span>R$${(p.preco*p.qtd).toFixed(2)}</span></div>`}).join('');$('total').innerText=t.toFixed(2)}
-window.vender=async()=>{if(carrinho.length==0)return;const total=+$('total').innerText;const forma=$('formaPag').value;const clienteId=$('clienteVenda').value; const cliente=clientes.find(c=>c.id==clienteId); const vendaRef=await addDoc(collection(db,"vendas"),{itens:carrinho,total,cliente:clienteId,nomeCliente:cliente?cliente.nome:'Avulso',forma,data:Timestamp.now(),estornada:false});
-  for(const i of carrinho){const p=produtos.find(x=>x.id==i.id);await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque-i.qtd})}
-  if(forma!="Prazo"){await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Venda",valor:total,forma,data:Timestamp.now()})} 
-  else {if(!clienteId) return alert("Selecione um cliente"); await addDoc(collection(db,"contasReceber"),{desc:`Venda ${vendaRef.id}`,valor:total,cliente:clienteId,status:"Pendente",pago:0,data:Timestamp.now()})}
-  imprimirVenda(vendaRef.id);carrinho=[];atualizarCarrinho();carregarTudo()
-}
-
-// PRODUTOS
-window.salvarProd=async()=>{const data={nome:$('nomeProd').value,custo:+$('custoProd').value,preco:+$('precoProd').value,estoque:+$('estoqueProd').value};if($('idProd').value){await updateDoc(doc(db,"produtos",$('idProd').value),data)}else{await addDoc(collection(db,"produtos"),data)}limparProd();carregarTudo()}
-function listarProd(){$('tabelaProd').innerHTML=produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome}<br>Custo:R$${p.custo} Venda:R$${p.preco} Est:${p.estoque}</span><span><button onclick="editarProd('${p.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('produtos','${p.id}')" class="bg-red-500 text-white px-2 rounded">X</button></span></div>`).join('')}
-window.editarProd=id=>{const p=produtos.find(x=>x.id==id);$('idProd').value=p.id;$('nomeProd').value=p.nome;$('custoProd').value=p.custo;$('precoProd').value=p.preco;$('estoqueProd').value=p.estoque;$('btnProd').innerText='ATUALIZAR'}
-function limparProd(){$('idProd').value='';$('nomeProd').value='';$('custoProd').value='';$('precoProd').value='';$('estoqueProd').value='';$('btnProd').innerText='SALVAR'}
-deleteDoc(doc(db,col,id));carregarTudo()}}
-
-// IMPRESSÃO
-async function imprimirVenda(id){const vSnap=await getDoc(doc(db,"vendas",id));const data=vSnap.data(); if(data.estornada) return alert("Venda estornada");
-  let itens=''; data.itens.forEach((i,idx)=>{ itens+=`${idx+1} ${i.nome}<br>   ${i.qtd} x R$${i.preco.toFixed(2)} = R$${(i.preco*i.qtd).toFixed(2)}<br>` });
-  let html=`<div class="center"><h2>${loja.nome||'CUPOM'}</h2>CNPJ: ${loja.cnpj||''}<br>${loja.end||''}<hr><b>2ª VIA</b><br><b>VENDA N: ${id.substring(0,8)}</b><br><b>DATA: ${data.data.toDate().toLocaleString()}</b><br><b>CLIENTE: ${data.nomeCliente}</b><hr>${itens}<hr><b>TOTAL: R$${data.total.toFixed(2)}</b><br><b>FORMA: ${data.forma}</b><hr class="center">OBRIGADO!</div>`;
-  $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
-}
-function imprimirFechamento(){
-  let e=movimentacoes.filter(m=>m.tipo=="Entrada"); let s=movimentacoes.filter(m=>m.tipo=="Saida");
-  let html=`<div class="center"><h2>${loja.nome||'FECHAMENTO'}</h2>CNPJ: ${loja.cnpj||''}<br>${loja.end||''}<hr><b>DATA: ${new Date().toLocaleString()}</b><hr><b>ENTRADAS</b><br>`; e.forEach(x=>html+=`${x.desc} - R$${x.valor.toFixed(2)}<br>`);
-  html+=`<hr><b>SAIDAS</b><br>`; s.forEach(x=>html+=`${x.desc} - R$${x.valor.toFixed(2)}<br>`);
-  html+=`<hr><b>SALDO FINAL: R$${($('saldoCaixa').innerText)}</b><hr class="center">OBRIGADO!</div>`;
-  $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
-}
-  window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value)
-.catch(e=>{
-  console.log(e);
-  if(e.code=='auth/user-not-found') $('erro').innerText="Usuário não existe. Cria ele no Firebase";
-  else if(e.code=='auth/wrong-password') $('erro').innerText="Senha errada";
-  else if(e.code=='auth/invalid-email') $('erro').innerText="Email inválido";
-  else $('erro').innerText="Erro: "+e.message
-})
+// Coloca o resto do código da Parte 2 e 3 aqui embaixo normal
+</script>
 </script>
 </body>
 </html>
