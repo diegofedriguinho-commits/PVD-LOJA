@@ -3,37 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV Completo</title>
+<title>PDV Iguaraçu</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
-.btn-mobile{min-height:50px;font-size:16px}
-.card-prod:active{transform:scale(0.95)}
+.btn-mobile{min-height:50px;font-size:16px;font-weight:bold}
 .aba-ativa{background:#2563eb;color:white}
-@media print { body * { visibility: hidden; } #cupom, #cupom * { visibility: visible; } #cupom { position: absolute; left: 0; top: 0; width: 80mm; } }
+.card-prod:active{transform:scale(0.95)}
 </style>
 </head>
 <body>
 
-<!-- CUPOM DE IMPRESSÃO ESCONDIDO -->
-<div id="cupom" class="hidden"></div>
-
-<!-- TELA LOGIN -->
 <div id="login" class="flex items-center justify-center h-screen">
   <div class="bg-white p-6 rounded shadow w-11/12 max-w-sm">
     <h1 class="text-2xl font-bold text-center mb-4">Login PDV</h1>
     <input id="email" type="email" placeholder="Email" class="w-full p-3 border rounded mb-3">
     <input id="senha" type="password" placeholder="Senha" class="w-full p-3 border rounded mb-3">
-    <button onclick="entrar()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">ENTRAR</button>
+    <button onclick="entrar()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile">ENTRAR</button>
     <button onclick="cadastrar()" class="w-full bg-gray-600 text-white p-3 rounded btn-mobile mt-2">CADASTRAR</button>
     <p id="msg" class="text-red-500 text-center mt-2"></p>
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" class="hidden">
 <header class="bg-blue-600 text-white p-3 flex justify-between sticky top-0 z-10">
-  <h1 class="font-bold">PDV COMPLETO</h1>
+  <h1 class="font-bold">PDV IGUARAÇU</h1>
   <button onclick="sair()" class="bg-red-500 px-3 py-1 rounded text-sm">SAIR</button>
 </header>
 
@@ -46,11 +40,8 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
             <h2 class="font-bold">Carrinho</h2>
             <div id="carrinho" class="max-h-40 overflow-y-auto"></div>
             <select id="clienteVenda" class="w-full p-2 border rounded mt-2"></select>
-            <select id="formaPag" class="w-full p-2 border rounded mt-2">
-                <option>Dinheiro</option><option>Cartão</option><option>PIX</option><option>Prazo</option>
-            </select>
             <p class="text-2xl font-bold text-center mt-2">Total: R$ <span id="total">0.00</span></p>
-            <button onclick="vender()" class="w-full bg-green-600 text-white p-4 rounded btn-mobile mt-2 font-bold">FINALIZAR VENDA</button>
+            <button onclick="vender()" class="w-full bg-green-600 text-white p-4 rounded btn-mobile mt-2">FINALIZAR VENDA</button>
         </div>
     </div>
 
@@ -58,11 +49,10 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
     <div id="aba-produtos" class="hidden">
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Produto</h2>
-            <input type="hidden" id="idProd">
-            <input id="nome" placeholder="Nome" class="w-full p-2 border rounded mb-2">
-            <input id="preco" type="number" placeholder="Preço" class="w-full p-2 border rounded mb-2">
-            <input id="estoque" type="number" placeholder="Estoque" class="w-full p-2 border rounded mb-2">
-            <button id="btnProd" onclick="salvarProd()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
+            <input id="nomeProd" placeholder="Nome do Produto" class="w-full p-2 border rounded mb-2">
+            <input id="precoProd" type="number" placeholder="Preço" class="w-full p-2 border rounded mb-2">
+            <input id="estoqueProd" type="number" placeholder="Estoque" class="w-full p-2 border rounded mb-2">
+            <button onclick="salvarProd()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile">SALVAR PRODUTO</button>
         </div>
         <div id="tabelaProd" class="bg-white p-3 rounded shadow"></div>
     </div>
@@ -71,10 +61,9 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
     <div id="aba-clientes" class="hidden">
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Cliente</h2>
-            <input type="hidden" id="idCli">
-            <input id="nomeCli" placeholder="Nome" class="w-full p-2 border rounded mb-2">
+            <input id="nomeCli" placeholder="Nome do Cliente" class="w-full p-2 border rounded mb-2">
             <input id="telCli" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
-            <button id="btnCli" onclick="salvarCli()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
+            <button onclick="salvarCli()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile">SALVAR CLIENTE</button>
         </div>
         <div id="tabelaCli" class="bg-white p-3 rounded shadow"></div>
     </div>
@@ -83,9 +72,8 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
     <div id="aba-fornecedores" class="hidden">
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Fornecedor</h2>
-            <input type="hidden" id="idFor">
-            <input id="nomeFor" placeholder="Nome" class="w-full p-2 border rounded mb-2">
-            <button id="btnFor" onclick="salvarFor()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
+            <input id="nomeFor" placeholder="Nome do Fornecedor" class="w-full p-2 border rounded mb-2">
+            <button onclick="salvarFor()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile">SALVAR FORNECEDOR</button>
         </div>
         <div id="tabelaFor" class="bg-white p-3 rounded shadow"></div>
     </div>
@@ -95,7 +83,11 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">Dados da Loja</h2>
             <input id="nomeLoja" placeholder="Nome da Loja" class="w-full p-2 border rounded mb-2">
-            <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
+            <input id="cnpjLoja" placeholder="CNPJ" class="w-full p-2 border rounded mb-2">
+            <input id="telLoja" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
+            <input id="endLoja" placeholder="Endereço" class="w-full p-2 border rounded mb-2">
+            <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile">SALVAR LOJA</button>
+            <p id="msgLoja" class="text-green-600 text-center mt-2 font-bold"></p>
         </div>
     </div>
 
@@ -107,7 +99,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
             <input id="valorPagar" type="number" placeholder="Valor" class="w-full p-2 border rounded mb-2">
             <input id="vencPagar" type="date" class="w-full p-2 border rounded mb-2">
             <select id="forPagar" class="w-full p-2 border rounded mb-2"></select>
-            <button onclick="salvarPagar()" class="w-full bg-red-600 text-white p-3 rounded btn-mobile font-bold">LANÇAR</button>
+            <button onclick="salvarPagar()" class="w-full bg-red-600 text-white p-3 rounded btn-mobile">LANÇAR CONTA</button>
         </div>
         <div id="tabelaPagar" class="bg-white p-3 rounded shadow"></div>
     </div>
@@ -120,7 +112,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
             <input id="valorReceb" type="number" placeholder="Valor" class="w-full p-2 border rounded mb-2">
             <input id="vencReceb" type="date" class="w-full p-2 border rounded mb-2">
             <select id="cliReceb" class="w-full p-2 border rounded mb-2"></select>
-            <button onclick="salvarReceb()" class="w-full bg-green-600 text-white p-3 rounded btn-mobile font-bold">LANÇAR</button>
+            <button onclick="salvarReceb()" class="w-full bg-green-600 text-white p-3 rounded btn-mobile">LANÇAR CONTA</button>
         </div>
         <div id="tabelaReceb" class="bg-white p-3 rounded shadow"></div>
     </div>
@@ -128,12 +120,13 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
     <!-- 8. CAIXA -->
     <div id="aba-caixa" class="hidden">
         <div class="bg-white p-3 rounded shadow">
-            <h2 class="font-bold mb-2">Saldo: R$ <span id="saldoCaixa">0.00</span></h2>
+            <h2 class="font-bold mb-2">Saldo em Caixa</h2>
+            <p class="text-3xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
         </div>
     </div>
 </main>
 
-<!-- MENU INFERIOR CORRIGIDO: 9 BOTÕES = 3 LINHAS -->
+<!-- MENU INFERIOR CORRIGIDO -->
 <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-2xl grid-cols-3 border-t text-center">
     <button onclick="aba('venda')" id="btn-venda" class="py-3 text-xs aba-ativa">VENDAS</button>
     <button onclick="aba('produtos')" id="btn-produtos" class="py-3 text-xs">PROD</button>
@@ -149,71 +142,81 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let carrinho = [], produtos = [], clientes = [], fornecedores = [], movimentacoes = [], lojaData = {};
+let produtos = [], clientes = [], fornecedores = [], movimentacoes = [];
 
 const $ = id => document.getElementById(id);
 window.aba = id => { document.querySelectorAll('main > div').forEach(d=>d.classList.add('hidden')); $(`aba-${id}`).classList.remove('hidden'); document.querySelectorAll('nav button').forEach(b=>b.classList.remove('aba-ativa')); $(`btn-${id}`).classList.add('aba-ativa') }
 
-window.entrar = () => { const e=$('email').value, s=$('senha').value; signInWithEmailAndPassword(auth,e,s).catch(err=>$('msg').innerText=err.message) }
-window.cadastrar = () => { const e=$('email').value, s=$('senha').value; createUserWithEmailAndPassword(auth,e,s).catch(err=>$('msg').innerText=err.message) }
+window.entrar = () => { signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(err=>$('msg').innerText=err.message) }
+window.cadastrar = () => { createUserWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(err=>$('msg').innerText=err.message) }
 window.sair = () => signOut(auth);
 onAuthStateChanged(auth, u => { if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden');carregarTudo()}else{$('login').classList.remove('hidden');$('app').classList.add('hidden')} });
 
 async function carregarTudo(){
-    produtos = (await getDocs(collection(db,"produtos"))).docs.map(d=>({id:d.id,...d.data()}));
-    clientes = (await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
-    fornecedores = (await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
-    movimentacoes = (await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
-    const lojaSnap = await getDoc(doc(db,"loja","dados"));
-    if(lojaSnap.exists()){lojaData=lojaSnap.data(); $('nomeLoja').value=lojaData.nome||''}
-    listarProd(); listarCli(); listarFor(); listarPagar(); listarReceb(); carregarSelects(); caixaSaldo(); buscar();
+    try{
+        produtos = (await getDocs(collection(db,"produtos"))).docs.map(d=>({id:d.id,...d.data()}));
+        clientes = (await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
+        fornecedores = (await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
+        movimentacoes = (await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
+        const lojaSnap = await getDoc(doc(db,"loja","dados"));
+        if(lojaSnap.exists()){
+            let l=lojaSnap.data();
+            $('nomeLoja').value=l.nome||'';$('cnpjLoja').value=l.cnpj||'';$('telLoja').value=l.tel||'';$('endLoja').value=l.end||''
+        }
+        listarProd(); listarCli(); listarFor(); listarPagar(); listarReceb(); carregarSelects(); caixaSaldo(); buscar();
+    }catch(e){console.log(e)}
 }
 
 // VENDAS
-window.buscar = () => { const t=$('busca').value.toLowerCase(); const f=produtos.filter(p=>p.nome.toLowerCase().includes(t)); $('listaProdVenda').innerHTML=f.map(p=>`<button onclick="addCarrinho('${p.id}')" class="card-prod bg-white p-3 rounded shadow text-left"><b>${p.nome}</b><br><span class="text-green-600 font-bold">R$${p.preco}</span></button>`).join('') }
+window.buscar = () => { const t=$('busca').value.toLowerCase(); const f=produtos.filter(p=>p.nome.toLowerCase().includes(t)); $('listaProdVenda').innerHTML=f.map(p=>`<button onclick="addCarrinho('${p.id}')" class="card-prod bg-white p-3 rounded shadow text-left"><b>${p.nome}</b><br><span class="text-green-600 font-bold">R$${p.preco}</span></button>`).join('') || "Nenhum produto" }
 window.addCarrinho = id => { const p=produtos.find(x=>x.id==id); const item=carrinho.find(i=>i.id==id); if(item){item.qtd++}else{carrinho.push({...p,qtd:1})} atualizarCarrinho() }
+let carrinho=[]; 
 function atualizarCarrinho(){ let t=0; $('carrinho').innerHTML=carrinho.map((p,i)=>{t+=p.preco*p.qtd; return `<div class="flex justify-between border-b py-2"><div>${p.nome} x${p.qtd}</div><div>R$${(p.preco*p.qtd).toFixed(2)}</div></div>`}).join(''); $('total').innerText=t.toFixed(2) }
 window.vender = async () => {
     if(carrinho.length==0)return alert("Carrinho vazio");
     const total=+$('total').innerText;
     await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Venda",valor:total,data:Timestamp.now()});
-    alert("Venda R$"+total.toFixed(2));
+    alert("Venda de R$"+total.toFixed(2)+" registrada!");
     carrinho=[];atualizarCarrinho(); carregarTudo()
 }
 
 // CRUDS
-window.salvarProd = async () => { await addDoc(collection(db,"produtos"),{nome:$('nome').value,preco:+$('preco').value,estoque:+$('estoque').value}); alert("Salvo!"); $('nome').value='';$('preco').value='';$('estoque').value=''; carregarTudo() }
-function listarProd(){ $('tabelaProd').innerHTML = produtos.map(p=>`<div class="border-b py-2">${p.nome} - R$${p.preco} - Est:${p.estoque}</div>`).join('') || "Nenhum produto" }
+window.salvarProd = async () => { if(!$('nomeProd').value) return alert("Digite o nome"); await addDoc(collection(db,"produtos"),{nome:$('nomeProd').value,preco:+$('precoProd').value,estoque:+$('estoqueProd').value}); alert("Produto Salvo!"); $('nomeProd').value='';$('precoProd').value='';$('estoqueProd').value=''; carregarTudo() }
+function listarProd(){ $('tabelaProd').innerHTML = produtos.map(p=>`<div class="border-b py-2">${p.nome} - R$${p.preco} - Est:${p.estoque}</div>`).join('') || "Nenhum produto cadastrado" }
 
-window.salvarCli = async () => { await addDoc(collection(db,"clientes"),{nome:$('nomeCli').value,tel:$('telCli').value}); alert("Salvo!"); $('nomeCli').value='';$('telCli').value=''; carregarTudo() }
-function listarCli(){ $('tabelaCli').innerHTML = clientes.map(c=>`<div class="border-b py-2">${c.nome}</div>`).join('') || "Nenhum cliente" }
+window.salvarCli = async () => { if(!$('nomeCli').value) return alert("Digite o nome"); await addDoc(collection(db,"clientes"),{nome:$('nomeCli').value,tel:$('telCli').value}); alert("Cliente Salvo!"); $('nomeCli').value='';$('telCli').value=''; carregarTudo() }
+function listarCli(){ $('tabelaCli').innerHTML = clientes.map(c=>`<div class="border-b py-2">${c.nome} - ${c.tel}</div>`).join('') || "Nenhum cliente cadastrado" }
 
-window.salvarFor = async () => { await addDoc(collection(db,"fornecedores"),{nome:$('nomeFor').value}); alert("Salvo!"); $('nomeFor').value=''; carregarTudo() }
-function listarFor(){ $('tabelaFor').innerHTML = fornecedores.map(f=>`<div class="border-b py-2">${f.nome}</div>`).join('') || "Nenhum fornecedor" }
+window.salvarFor = async () => { if(!$('nomeFor').value) return alert("Digite o nome"); await addDoc(collection(db,"fornecedores"),{nome:$('nomeFor').value}); alert("Fornecedor Salvo!"); $('nomeFor').value=''; carregarTudo() }
+function listarFor(){ $('tabelaFor').innerHTML = fornecedores.map(f=>`<div class="border-b py-2">${f.nome}</div>`).join('') || "Nenhum fornecedor cadastrado" }
 
-window.salvarLoja = async () => { await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value}); alert("Salvo!") }
+window.salvarLoja = async () => { 
+    await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value,cnpj:$('cnpjLoja').value,tel:$('telLoja').value,end:$('endLoja').value});
+    $('msgLoja').innerText = "Loja Salva com Sucesso!";
+    setTimeout(()=>{$('msgLoja').innerText=""}, 3000);
+}
 
 // CONTAS
 window.salvarPagar = async () => {
-    if(!$('descPagar').value || !$('valorPagar').value || !$('vencPagar').value || !$('forPagar').value) return alert("Preencha tudo");
+    if(!$('descPagar').value || !$('valorPagar').value || !$('vencPagar').value || !$('forPagar').value) return alert("Preencha todos os campos");
     await addDoc(collection(db,"contasPagar"),{desc:$('descPagar').value,valor:+$('valorPagar').value,venc:$('vencPagar').value,for:$('forPagar').value,status:"Pendente"})
-    alert("Conta lançada!"); $('descPagar').value='';$('valorPagar').value='';$('vencPagar').value=''; carregarTudo()
+    alert("Conta a Pagar lançada!"); $('descPagar').value='';$('valorPagar').value='';$('vencPagar').value=''; carregarTudo()
 }
-function listarPagar(){ getDocs(collection(db,"contasPagar")).then(s=>{ $('tabelaPagar').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="border-b py-2">${d.data().desc} - R$${d.data().valor}</div>`).join('') || "Nenhuma conta" }) }
+function listarPagar(){ getDocs(collection(db,"contasPagar")).then(s=>{ $('tabelaPagar').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="border-b py-2">${d.data().desc} - R$${d.data().valor} - Venc:${d.data().venc}</div>`).join('') || "Nenhuma conta a pagar" }) }
 
 window.salvarReceb = async () => {
-    if(!$('descReceb').value || !$('valorReceb').value || !$('vencReceb').value || !$('cliReceb').value) return alert("Preencha tudo");
+    if(!$('descReceb').value || !$('valorReceb').value || !$('vencReceb').value || !$('cliReceb').value) return alert("Preencha todos os campos");
     await addDoc(collection(db,"contasReceber"),{desc:$('descReceb').value,valor:+$('valorReceb').value,venc:$('vencReceb').value,cli:$('cliReceb').value,status:"Pendente"})
-    alert("Conta lançada!"); $('descReceb').value='';$('valorReceb').value='';$('vencReceb').value=''; carregarTudo()
+    alert("Conta a Receber lançada!"); $('descReceb').value='';$('valorReceb').value='';$('vencReceb').value=''; carregarTudo()
 }
-function listarReceb(){ getDocs(collection(db,"contasReceber")).then(s=>{ $('tabelaReceb').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="border-b py-2">${d.data().desc} - R$${d.data().valor}</div>`).join('') || "Nenhuma conta" }) }
+function listarReceb(){ getDocs(collection(db,"contasReceber")).then(s=>{ $('tabelaReceb').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="border-b py-2">${d.data().desc} - R$${d.data().valor} - Venc:${d.data().venc}</div>`).join('') || "Nenhuma conta a receber" }) }
 
 function carregarSelects(){ 
     $('clienteVenda').innerHTML='<option value="">Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join(''); 
