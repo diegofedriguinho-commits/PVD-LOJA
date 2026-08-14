@@ -49,11 +49,6 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
             <select id="formaPag" class="w-full p-2 border rounded mt-2">
                 <option>Dinheiro</option><option>Cartão</option><option>PIX</option><option>Prazo</option>
             </select>
-            <div class="flex gap-2 mt-2">
-                <input id="descValor" type="number" placeholder="Desc R$" class="w-1/2 p-2 border rounded">
-                <input id="descPerc" type="number" placeholder="Desc %" class="w-1/2 p-2 border rounded">
-            </div>
-            <button onclick="aplicarDesc()" class="w-full bg-yellow-500 text-white p-2 rounded mt-2">APLICAR DESC</button>
             <p class="text-2xl font-bold text-center mt-2">Total: R$ <span id="total">0.00</span></p>
             <button onclick="vender()" class="w-full bg-green-600 text-white p-4 rounded btn-mobile mt-2 font-bold">FINALIZAR VENDA</button>
         </div>
@@ -64,9 +59,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Produto</h2>
             <input type="hidden" id="idProd">
-            <input id="cod" placeholder="Código" class="w-full p-2 border rounded mb-2">
             <input id="nome" placeholder="Nome" class="w-full p-2 border rounded mb-2">
-            <input id="custo" type="number" placeholder="Custo" class="w-full p-2 border rounded mb-2">
             <input id="preco" type="number" placeholder="Preço" class="w-full p-2 border rounded mb-2">
             <input id="estoque" type="number" placeholder="Estoque" class="w-full p-2 border rounded mb-2">
             <button id="btnProd" onclick="salvarProd()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
@@ -81,7 +74,6 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
             <input type="hidden" id="idCli">
             <input id="nomeCli" placeholder="Nome" class="w-full p-2 border rounded mb-2">
             <input id="telCli" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
-            <input id="cpfCli" placeholder="CPF" class="w-full p-2 border rounded mb-2">
             <button id="btnCli" onclick="salvarCli()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
         </div>
         <div id="tabelaCli" class="bg-white p-3 rounded shadow"></div>
@@ -93,8 +85,6 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
             <h2 class="font-bold mb-2">+ Fornecedor</h2>
             <input type="hidden" id="idFor">
             <input id="nomeFor" placeholder="Nome" class="w-full p-2 border rounded mb-2">
-            <input id="telFor" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
-            <input id="cnpjFor" placeholder="CNPJ" class="w-full p-2 border rounded mb-2">
             <button id="btnFor" onclick="salvarFor()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
         </div>
         <div id="tabelaFor" class="bg-white p-3 rounded shadow"></div>
@@ -105,14 +95,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">Dados da Loja</h2>
             <input id="nomeLoja" placeholder="Nome da Loja" class="w-full p-2 border rounded mb-2">
-            <input id="cnpjLoja" placeholder="CNPJ" class="w-full p-2 border rounded mb-2">
-            <input id="telLoja" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
-            <input id="endLoja" placeholder="Endereço" class="w-full p-2 border rounded mb-2">
             <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
-        </div>
-        <div class="bg-white p-3 rounded shadow border-2 border-red-500">
-            <h2 class="font-bold text-red-600 mb-2">ÁREA PERIGOSA</h2>
-            <button onclick="zerarSistema()" class="w-full bg-red-600 text-white p-3 rounded btn-mobile font-bold">ZERAR TODO O SISTEMA</button>
         </div>
     </div>
 
@@ -121,11 +104,10 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Conta a Pagar</h2>
             <input id="descPagar" placeholder="Descrição" class="w-full p-2 border rounded mb-2">
-            <input id="valorPagar" type="number" placeholder="Valor Total" class="w-full p-2 border rounded mb-2">
-            <input id="parcelasPagar" type="number" placeholder="Qtd Parcelas" value="1" class="w-full p-2 border rounded mb-2">
+            <input id="valorPagar" type="number" placeholder="Valor" class="w-full p-2 border rounded mb-2">
             <input id="vencPagar" type="date" class="w-full p-2 border rounded mb-2">
             <select id="forPagar" class="w-full p-2 border rounded mb-2"></select>
-            <button onclick="salvarPagar()" class="w-full bg-red-600 text-white p-3 rounded btn-mobile font-bold">LANÇAR PARCELADO</button>
+            <button onclick="salvarPagar()" class="w-full bg-red-600 text-white p-3 rounded btn-mobile font-bold">LANÇAR</button>
         </div>
         <div id="tabelaPagar" class="bg-white p-3 rounded shadow"></div>
     </div>
@@ -135,49 +117,24 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Conta a Receber</h2>
             <input id="descReceb" placeholder="Descrição" class="w-full p-2 border rounded mb-2">
-            <input id="valorReceb" type="number" placeholder="Valor Total" class="w-full p-2 border rounded mb-2">
-            <input id="parcelasReceb" type="number" placeholder="Qtd Parcelas" value="1" class="w-full p-2 border rounded mb-2">
+            <input id="valorReceb" type="number" placeholder="Valor" class="w-full p-2 border rounded mb-2">
             <input id="vencReceb" type="date" class="w-full p-2 border rounded mb-2">
             <select id="cliReceb" class="w-full p-2 border rounded mb-2"></select>
-            <button onclick="salvarReceb()" class="w-full bg-green-600 text-white p-3 rounded btn-mobile font-bold">LANÇAR PARCELADO</button>
+            <button onclick="salvarReceb()" class="w-full bg-green-600 text-white p-3 rounded btn-mobile font-bold">LANÇAR</button>
         </div>
         <div id="tabelaReceb" class="bg-white p-3 rounded shadow"></div>
     </div>
 
-    <!-- 8. RELATÓRIOS -->
-    <div id="aba-relatorio" class="hidden">
-        <div class="bg-white p-3 rounded shadow">
-            <h2 class="font-bold mb-2">Relatório Detalhado</h2>
-            <input id="dataIni" type="date" class="w-full p-2 border rounded mb-2">
-            <input id="dataFim" type="date" class="w-full p-2 border rounded mb-2">
-            <button onclick="gerarRel()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">GERAR</button>
-            <div id="resumoRel" class="mt-4"></div>
-        </div>
-    </div>
-
-    <!-- 9. FECHAMENTO CAIXA -->
+    <!-- 8. CAIXA -->
     <div id="aba-caixa" class="hidden">
-        <div class="bg-white p-3 rounded shadow mb-3">
-            <h2 class="font-bold mb-2">Movimentação Caixa</h2>
-            <button onclick="mostrarEntrada()" class="w-full bg-green-500 text-white p-3 rounded mb-2">ENTRADA AVULSA</button>
-            <button onclick="mostrarSangria()" class="w-full bg-red-500 text-white p-3 rounded mb-2">SANGRIA</button>
-            <div id="formMov" class="hidden">
-                <input id="descMov" placeholder="Descrição" class="w-full p-2 border rounded mb-2">
-                <input id="valorMov" type="number" placeholder="Valor" class="w-full p-2 border rounded mb-2">
-                <button onclick="salvarMov()" class="w-full bg-purple-600 text-white p-3 rounded">SALVAR</button>
-            </div>
-        </div>
         <div class="bg-white p-3 rounded shadow">
-            <h2 class="font-bold mb-2">Fechamento do Caixa</h2>
-            <p class="text-3xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
-            <button onclick="fecharCaixa()" class="w-full bg-purple-600 text-white p-3 rounded mt-4 btn-mobile font-bold">GERAR FECHAMENTO</button>
-            <div id="detalheCaixa" class="mt-4"></div>
+            <h2 class="font-bold mb-2">Saldo: R$ <span id="saldoCaixa">0.00</span></h2>
         </div>
     </div>
 </main>
 
-<!-- MENU INFERIOR -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white shadow-2xl grid grid-cols-5 border-t text-center">
+<!-- MENU INFERIOR CORRIGIDO: 9 BOTÕES = 3 LINHAS -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white shadow-2xl grid-cols-3 border-t text-center">
     <button onclick="aba('venda')" id="btn-venda" class="py-3 text-xs aba-ativa">VENDAS</button>
     <button onclick="aba('produtos')" id="btn-produtos" class="py-3 text-xs">PROD</button>
     <button onclick="aba('clientes')" id="btn-clientes" class="py-3 text-xs">CLI</button>
@@ -185,7 +142,6 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
     <button onclick="aba('loja')" id="btn-loja" class="py-3 text-xs">LOJA</button>
     <button onclick="aba('pagar')" id="btn-pagar" class="py-3 text-xs">PAGAR</button>
     <button onclick="aba('receber')" id="btn-receber" class="py-3 text-xs">RECEB</button>
-    <button onclick="aba('relatorio')" id="btn-relatorio" class="py-3 text-xs">REL</button>
     <button onclick="aba('caixa')" id="btn-caixa" class="py-3 text-xs">CAIXA</button>
 </nav>
 </div>
@@ -193,15 +149,14 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d",storageBucket: "web-pdv-6546d.appspot.com",messagingSenderId: "985739667688",appId: "1:985739667688:web:742dab33141e39fd97815d"};
+const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let carrinho = [], produtos = [], clientes = [], fornecedores = [], vendas = [], movimentacoes = [], lojaData = {};
-let desconto = 0; let tipoMov = ''; const SENHA_ZERAR = "1234";
+let carrinho = [], produtos = [], clientes = [], fornecedores = [], movimentacoes = [], lojaData = {};
 
 const $ = id => document.getElementById(id);
 window.aba = id => { document.querySelectorAll('main > div').forEach(d=>d.classList.add('hidden')); $(`aba-${id}`).classList.remove('hidden'); document.querySelectorAll('nav button').forEach(b=>b.classList.remove('aba-ativa')); $(`btn-${id}`).classList.add('aba-ativa') }
@@ -215,149 +170,59 @@ async function carregarTudo(){
     produtos = (await getDocs(collection(db,"produtos"))).docs.map(d=>({id:d.id,...d.data()}));
     clientes = (await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
     fornecedores = (await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
-    vendas = (await getDocs(collection(db,"vendas"))).docs.map(d=>({id:d.id,...d.data()}));
     movimentacoes = (await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
     const lojaSnap = await getDoc(doc(db,"loja","dados"));
-    if(lojaSnap.exists()){lojaData=lojaSnap.data(); $('nomeLoja').value=lojaData.nome;$('cnpjLoja').value=lojaData.cnpj;$('telLoja').value=lojaData.tel;$('endLoja').value=lojaData.end}
-    listarProd(); listarCli(); listarFor(); listarPagar(); listarReceb(); carregarSelects(); caixaSaldo();
+    if(lojaSnap.exists()){lojaData=lojaSnap.data(); $('nomeLoja').value=lojaData.nome||''}
+    listarProd(); listarCli(); listarFor(); listarPagar(); listarReceb(); carregarSelects(); caixaSaldo(); buscar();
 }
 
-// 1. VENDAS
-window.buscar = () => { const t=$('busca').value.toLowerCase(); const f=produtos.filter(p=>p.nome.toLowerCase().includes(t)); $('listaProdVenda').innerHTML=f.map(p=>`<button onclick="addCarrinho('${p.id}')" class="card-prod bg-white p-3 rounded shadow text-left"><b>${p.nome}</b><br><span class="text-green-600 font-bold">R$${p.preco}</span><br><span class="text-xs">Est:${p.estoque}</span></button>`).join('') }
-window.addCarrinho = id => { const p=produtos.find(x=>x.id==id); if(p.estoque>0){const item=carrinho.find(i=>i.id==id); if(item){item.qtd++}else{carrinho.push({...p,qtd:1})} atualizarCarrinho()}else alert("Sem estoque") }
-function atualizarCarrinho(){ let t=0; $('carrinho').innerHTML=carrinho.map((p,i)=>{t+=p.preco*p.qtd; return `<div class="flex justify-between items-center border-b py-2"><div>${p.nome}<br><small>R$${p.preco} x ${p.qtd}</small></div><div><button onclick="mudaQtd(${i},-1)" class="bg-red-500 text-white px-2 rounded">-</button><button onclick="mudaQtd(${i},1)" class="bg-green-500 text-white px-2 rounded">+</button><button onclick="carrinho.splice(${i},1);atualizarCarrinho()" class="bg-gray-500 text-white px-2 rounded">X</button></div></div>`}).join(''); let sub=t; if(desconto>0)sub-=desconto; $('total').innerText=sub.toFixed(2) }
-window.mudaQtd = (i, val) => {carrinho[i].qtd += val; if(carrinho[i].qtd <= 0) carrinho.splice(i,1); atualizarCarrinho();}
-window.aplicarDesc = () => { let sub=carrinho.reduce((s,p)=>s+p.preco*p.qtd,0); let v=+$('descValor').value||0; let p=+$('descPerc').value||0; desconto = p>0? sub*(p/100) : v; atualizarCarrinho() }
+// VENDAS
+window.buscar = () => { const t=$('busca').value.toLowerCase(); const f=produtos.filter(p=>p.nome.toLowerCase().includes(t)); $('listaProdVenda').innerHTML=f.map(p=>`<button onclick="addCarrinho('${p.id}')" class="card-prod bg-white p-3 rounded shadow text-left"><b>${p.nome}</b><br><span class="text-green-600 font-bold">R$${p.preco}</span></button>`).join('') }
+window.addCarrinho = id => { const p=produtos.find(x=>x.id==id); const item=carrinho.find(i=>i.id==id); if(item){item.qtd++}else{carrinho.push({...p,qtd:1})} atualizarCarrinho() }
+function atualizarCarrinho(){ let t=0; $('carrinho').innerHTML=carrinho.map((p,i)=>{t+=p.preco*p.qtd; return `<div class="flex justify-between border-b py-2"><div>${p.nome} x${p.qtd}</div><div>R$${(p.preco*p.qtd).toFixed(2)}</div></div>`}).join(''); $('total').innerText=t.toFixed(2) }
 window.vender = async () => {
-    if(carrinho.length==0)return;
-    const total=+$('total').innerText; const forma=$('formaPag').value; const clienteId=$('clienteVenda').value;
-    const vendaRef = await addDoc(collection(db,"vendas"),{itens:carrinho,total,cliente:clienteId,forma,data:Timestamp.now()});
-    for(const i of carrinho){const p=produtos.find(x=>x.id==i.id); await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque - i.qtd})}
-    if(forma!="Prazo"){await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Venda "+forma,valor:total,data:Timestamp.now()})}
-    if(forma=="Prazo" && clienteId!=""){const clienteNome = clientes.find(c=>c.id==clienteId).nome; await addDoc(collection(db,"contasReceber"),{desc:"Venda Prazo - "+clienteNome,valor:total,venc:new Date().toISOString().split('T')[0],cli:clienteId,status:"Pendente",origem:vendaRef.id})}
-    imprimirCupom(vendaRef.id); // IMPRIME CUPOM
+    if(carrinho.length==0)return alert("Carrinho vazio");
+    const total=+$('total').innerText;
+    await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Venda",valor:total,data:Timestamp.now()});
     alert("Venda R$"+total.toFixed(2));
-    carrinho=[];desconto=0;$('descValor').value='';$('descPerc').value='';atualizarCarrinho();
-    carregarTudo()
+    carrinho=[];atualizarCarrinho(); carregarTudo()
 }
 
-// CRUDS PRODUTOS E CLIENTES
-window.salvarProd = async () => { const data={cod:$('cod').value,nome:$('nome').value,custo:+$('custo').value,preco:+$('preco').value,estoque:+$('estoque').value}; if($('idProd').value){await updateDoc(doc(db,"produtos",$('idProd').value),data)}else{await addDoc(collection(db,"produtos"),data)} alert("Salvo!"); limparProd(); carregarTudo() }
-function listarProd(){ $('tabelaProd').innerHTML = produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome}<br><small>Est:${p.estoque}</small></span><button onclick="editarProd('${p.id}')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">E</button></div>`).join('') }
-window.editarProd = id => {const p=produtos.find(x=>x.id==id); $('idProd').value=p.id;$('cod').value=p.cod;$('nome').value=p.nome;$('custo').value=p.custo;$('preco').value=p.preco;$('estoque').value=p.estoque;$('btnProd').innerText='ATUALIZAR'}
-function limparProd(){$('idProd').value='';$('cod').value='';$('nome').value='';$('custo').value='';$('preco').value='';$('estoque').value='';$('btnProd').innerText='SALVAR'}
+// CRUDS
+window.salvarProd = async () => { await addDoc(collection(db,"produtos"),{nome:$('nome').value,preco:+$('preco').value,estoque:+$('estoque').value}); alert("Salvo!"); $('nome').value='';$('preco').value='';$('estoque').value=''; carregarTudo() }
+function listarProd(){ $('tabelaProd').innerHTML = produtos.map(p=>`<div class="border-b py-2">${p.nome} - R$${p.preco} - Est:${p.estoque}</div>`).join('') || "Nenhum produto" }
 
-window.salvarCli = async () => { const data={nome:$('nomeCli').value,tel:$('telCli').value,cpf:$('cpfCli').value}; if($('idCli').value){await updateDoc(doc(db,"clientes",$('idCli').value),data)}else{await addDoc(collection(db,"clientes"),data)} alert("Salvo!"); limparCli(); carregarTudo() }
-function listarCli(){ $('tabelaCli').innerHTML = clientes.map(c=>`<div class="flex justify-between border-b py-2"><span>${c.nome}<br><small>${c.tel}</small></span><button onclick="editarCli('${c.id}')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">E</button></div>`).join('') }
-window.editarCli = id => {const c=clientes.find(x=>x.id==id); $('idCli').value=c.id;$('nomeCli').value=c.nome;$('telCli').value=c.tel;$('cpfCli').value=c.cpf;$('btnCli').innerText='ATUALIZAR'}
-function limparCli(){$('idCli').value='';$('nomeCli').value='';$('telCli').value='';$('cpfCli').value='';$('btnCli').innerText='SALVAR'}
-  // CRUDS FORNECEDORES E LOJA
-window.salvarFor = async () => { const data={nome:$('nomeFor').value,tel:$('telFor').value,cnpj:$('cnpjFor').value}; if($('idFor').value){await updateDoc(doc(db,"fornecedores",$('idFor').value),data)}else{await addDoc(collection(db,"fornecedores"),data)} alert("Salvo!"); limparFor(); carregarTudo() }
-function listarFor(){ $('tabelaFor').innerHTML = fornecedores.map(f=>`<div class="flex justify-between border-b py-2"><span>${f.nome}<br><small>${f.tel}</small></span><button onclick="editarFor('${f.id}')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">E</button></div>`).join('') }
-window.editarFor = id => {const f=fornecedores.find(x=>x.id==id); $('idFor').value=f.id;$('nomeFor').value=f.nome;$('telFor').value=f.tel;$('cnpjFor').value=f.cnpj;$('btnFor').innerText='ATUALIZAR'}
-function limparFor(){$('idFor').value='';$('nomeFor').value='';$('telFor').value='';$('cnpjFor').value='';$('btnFor').innerText='SALVAR'}
+window.salvarCli = async () => { await addDoc(collection(db,"clientes"),{nome:$('nomeCli').value,tel:$('telCli').value}); alert("Salvo!"); $('nomeCli').value='';$('telCli').value=''; carregarTudo() }
+function listarCli(){ $('tabelaCli').innerHTML = clientes.map(c=>`<div class="border-b py-2">${c.nome}</div>`).join('') || "Nenhum cliente" }
 
-window.salvarLoja = async () => { await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value,cnpj:$('cnpjLoja').value,tel:$('telLoja').value,end:$('endLoja').value}); alert("Salvo!") }
+window.salvarFor = async () => { await addDoc(collection(db,"fornecedores"),{nome:$('nomeFor').value}); alert("Salvo!"); $('nomeFor').value=''; carregarTudo() }
+function listarFor(){ $('tabelaFor').innerHTML = fornecedores.map(f=>`<div class="border-b py-2">${f.nome}</div>`).join('') || "Nenhum fornecedor" }
 
-// 6. CONTAS A PAGAR PARCELADAS + BOTÃO PAGAR
+window.salvarLoja = async () => { await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value}); alert("Salvo!") }
+
+// CONTAS
 window.salvarPagar = async () => {
-    const total=+ $('valorPagar').value; const parcelas=+ $('parcelasPagar').value; const valorParcela=total/parcelas;
-    for(let i=0; i<parcelas; i++){
-        let venc = new Date($('vencPagar').value); venc.setMonth(venc.getMonth() + i);
-        await addDoc(collection(db,"contasPagar"),{desc:`${$('descPagar').value} ${i+1}/${parcelas}`,valor:valorParcela,venc:venc.toISOString().split('T')[0],for:$('forPagar').value,status:"Pendente"})
-    }
-    alert(`${parcelas} parcelas lançadas!`); carregarTudo()
+    if(!$('descPagar').value || !$('valorPagar').value || !$('vencPagar').value || !$('forPagar').value) return alert("Preencha tudo");
+    await addDoc(collection(db,"contasPagar"),{desc:$('descPagar').value,valor:+$('valorPagar').value,venc:$('vencPagar').value,for:$('forPagar').value,status:"Pendente"})
+    alert("Conta lançada!"); $('descPagar').value='';$('valorPagar').value='';$('vencPagar').value=''; carregarTudo()
 }
-function listarPagar(){ getDocs(collection(db,"contasPagar")).then(s=>{ $('tabelaPagar').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="flex justify-between border-b py-2"><div><b>${d.data().desc}</b><br>R$${d.data().valor} - Venc:${d.data().venc}</div><button onclick="pagarConta('${d.id}',${d.data().valor})" class="bg-green-500 text-white px-3 py-1 rounded">PAGAR</button></div>`).join('') }) }
-window.pagarConta = async (id, valor) => {
-    await updateDoc(doc(db,"contasPagar",id),{status:"Pago"});
-    await addDoc(collection(db,"movimentacoes"),{tipo:"Saida",desc:"Pagamento Conta",valor:valor,data:Timestamp.now()});
-    alert("Conta Paga!"); carregarTudo()
-}
+function listarPagar(){ getDocs(collection(db,"contasPagar")).then(s=>{ $('tabelaPagar').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="border-b py-2">${d.data().desc} - R$${d.data().valor}</div>`).join('') || "Nenhuma conta" }) }
 
-// 7. CONTAS A RECEBER PARCELADAS + BOTÃO RECEBER
 window.salvarReceb = async () => {
-    const total=+ $('valorReceb').value; const parcelas=+ $('parcelasReceb').value; const valorParcela=total/parcelas;
-    for(let i=0; i<parcelas; i++){
-        let venc = new Date($('vencReceb').value); venc.setMonth(venc.getMonth() + i);
-        await addDoc(collection(db,"contasReceber"),{desc:`${$('descReceb').value} ${i+1}/${parcelas}`,valor:valorParcela,venc:venc.toISOString().split('T')[0],cli:$('cliReceb').value,status:"Pendente"})
-    }
-    alert(`${parcelas} parcelas lançadas!`); carregarTudo()
+    if(!$('descReceb').value || !$('valorReceb').value || !$('vencReceb').value || !$('cliReceb').value) return alert("Preencha tudo");
+    await addDoc(collection(db,"contasReceber"),{desc:$('descReceb').value,valor:+$('valorReceb').value,venc:$('vencReceb').value,cli:$('cliReceb').value,status:"Pendente"})
+    alert("Conta lançada!"); $('descReceb').value='';$('valorReceb').value='';$('vencReceb').value=''; carregarTudo()
 }
-function listarReceb(){ getDocs(collection(db,"contasReceber")).then(s=>{ $('tabelaReceb').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="flex justify-between border-b py-2"><div><b>${d.data().desc}</b><br>R$${d.data().valor} - Venc:${d.data().venc}</div><button onclick="receberConta('${d.id}',${d.data().valor})" class="bg-green-500 text-white px-3 py-1 rounded">RECEBER</button></div>`).join('') }) }
-window.receberConta = async (id, valor) => {
-    await updateDoc(doc(db,"contasReceber",id),{status:"Recebido"});
-    await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Recebimento Conta",valor:valor,data:Timestamp.now()});
-    alert("Conta Recebida!"); carregarTudo()
+function listarReceb(){ getDocs(collection(db,"contasReceber")).then(s=>{ $('tabelaReceb').innerHTML=s.docs.filter(d=>d.data().status=="Pendente").map(d=>`<div class="border-b py-2">${d.data().desc} - R$${d.data().valor}</div>`).join('') || "Nenhuma conta" }) }
+
+function carregarSelects(){ 
+    $('clienteVenda').innerHTML='<option value="">Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join(''); 
+    $('forPagar').innerHTML='<option value="">Selecione Fornecedor</option>'+fornecedores.map(f=>`<option value="${f.id}">${f.nome}</option>`).join(''); 
+    $('cliReceb').innerHTML='<option value="">Selecione Cliente</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('') 
 }
 
-function carregarSelects(){ $('clienteVenda').innerHTML='<option value="">Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join(''); $('forPagar').innerHTML=fornecedores.map(f=>`<option value="${f.id}">${f.nome}</option>`).join(''); $('cliReceb').innerHTML=clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('') }
-
-// 8. RELATÓRIOS
-window.gerarRel = async () => {
-    let ini=new Date($('dataIni').value); let fim=new Date($('dataFim').value); fim.setHours(23,59,59);
-    let vendasFiltradas = vendas.filter(v=>v.data.toDate()>=ini && v.data.toDate()<=fim);
-    let total=0; let porForma={Dinheiro:0,Cartao:0,PIX:0,Prazo:0};
-    vendasFiltradas.forEach(v=>{total+=v.total; if(v.forma=="Cartão")porForma.Cartao+=v.total; else porForma[v.forma]+=v.total});
-    $('resumoRel').innerHTML=`<p class="text-2xl text-center">Total: R$ ${total.toFixed(2)}</p><p>Vendas: ${vendasFiltradas.length}</p><hr><p><b>Por Pagamento:</b><br>Dinheiro: R$${porForma.Dinheiro.toFixed(2)}<br>Cartão: R$${porForma.Cartao.toFixed(2)}<br>PIX: R$${porForma.PIX.toFixed(2)}<br>Prazo: R$${porForma.Prazo.toFixed(2)}</p>`
-}
-
-// 9. CAIXA
-window.mostrarEntrada = () => {tipoMov='Entrada'; $('formMov').classList.remove('hidden')}
-window.mostrarSangria = () => {tipoMov='Saida'; $('formMov').classList.remove('hidden')}
-window.salvarMov = async () => { await addDoc(collection(db,"movimentacoes"),{tipo:tipoMov,desc:$('descMov').value,valor:+$('valorMov').value,data:Timestamp.now()}); alert("Salvo!"); $('formMov').classList.add('hidden'); carregarTudo() }
-
-async function caixaSaldo(){
-    let entradas = movimentacoes.filter(m=>m.tipo=="Entrada").reduce((s,m)=>s+m.valor,0);
-    let saidas = movimentacoes.filter(m=>m.tipo=="Saida").reduce((s,m)=>s+m.valor,0);
-    $('saldoCaixa').innerText=(entradas - saidas).toFixed(2)
-}
-window.fecharCaixa = async () => {
-    await carregarTudo();
-    let entradas = movimentacoes.filter(m=>m.tipo=="Entrada");
-    let saidas = movimentacoes.filter(m=>m.tipo=="Saida");
-    let recebDocs = await getDocs(collection(db,"contasReceber"));
-    let recebPendente = recebDocs.docs.filter(d=>d.data().status=="Pendente").reduce((s,d)=>s+d.data().valor,0);
-    let html = `<b>Entradas:</b><br>`; entradas.forEach(e=>html+=`${e.desc}: R$${e.valor.toFixed(2)}<br>`);
-    html += `<hr><b>Saídas/Sangria:</b><br>`; saidas.forEach(s=>html+=`${s.desc}: R$${s.valor.toFixed(2)}<br>`);
-    html += `<hr><b>Saldo em Caixa:</b> R$${(entradas.reduce((a,b)=>a+b.valor,0) - saidas.reduce((a,b)=>a+b.valor,0)).toFixed(2)}`;
-    html += `<hr><b>A Receber Pendente:</b> R$${recebPendente.toFixed(2)}`;
-    $('detalheCaixa').innerHTML = html;
-}
-
-// 10. ZERAR SISTEMA
-window.zerarSistema = async () => {
-    const senha = prompt("DIGITE A SENHA PARA ZERAR O SISTEMA:");
-    if(senha!= SENHA_ZERAR){ alert("Senha incorreta!"); return; }
-    if(!confirm("ATENÇÃO! Isso vai apagar TODOS os dados. Tem certeza?")) return;
-    const colecoes = ["produtos","clientes","fornecedores","vendas","contasPagar","contasReceber","movimentacoes"];
-    for(const col of colecoes){ const snap = await getDocs(collection(db,col)); for(const d of snap.docs){ await deleteDoc(doc(db,col,d.id)) } }
-    await setDoc(doc(db,"loja","dados"),{});
-    alert("Sistema zerado com sucesso!"); carregarTudo();
-}
-
-// 11. IMPRIMIR CUPOM
-async function imprimirCupom(vendaId){
-    const venda = vendas.find(v=>v.id==vendaId) || await getDoc(doc(db,"vendas",vendaId)).then(d=>({id:d.id,...d.data()}));
-    const cliente = venda.cliente? clientes.find(c=>c.id==venda.cliente).nome : "Avulso";
-    let itensHTML = venda.itens.map(i=>`${i.nome} x${i.qtd} = R$${(i.preco*i.qtd).toFixed(2)}`).join('<br>');
-    $('cupom').innerHTML = `
-        <div style="font-family:monospace;font-size:12px;">
-            <h2 style="text-align:center">${lojaData.nome||'MINHA LOJA'}</h2>
-            <p style="text-align:center">${lojaData.end||''} Tel:${lojaData.tel||''}</p>
-            <hr>
-            <p>Cliente: ${cliente}</p>
-            <p>Data: ${new Date().toLocaleString()}</p>
-            <hr>
-            ${itensHTML}
-            <hr>
-            <p style="font-size:16px;font-weight:bold">TOTAL: R$${venda.total.toFixed(2)}</p>
-            <p>Forma: ${venda.forma}</p>
-            <hr>
-            <p style="text-align:center">Obrigado e volte sempre!</p>
-        </div>`;
-    window.print();
-}
+// CAIXA
+function caixaSaldo(){ let entradas = movimentacoes.filter(m=>m.tipo=="Entrada").reduce((s,m)=>s+m.valor,0); let saidas = movimentacoes.filter(m=>m.tipo=="Saida").reduce((s,m)=>s+m.valor,0); $('saldoCaixa').innerText=(entradas - saidas).toFixed(2) }
 </script>
 </body>
 </html>
