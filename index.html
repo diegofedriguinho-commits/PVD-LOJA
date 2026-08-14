@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV Iguaraçu V5</title>
+<title>PDV Iguaraçu V6</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
@@ -11,7 +11,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 .menu button{flex:1;padding:10px;font-size:11px}
 .menu .on{background:#2563eb;color:white}
 
-/* CORREÇÃO IMPRESSÃO 80MM */
+/* IMPRESSÃO 80MM COM LETRA MAIOR */
 @media print { 
   body * { visibility: hidden; } 
   #imprimir, #imprimir * { visibility: visible; } 
@@ -20,9 +20,11 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     left: 0; 
     top: 0; 
     width: 80mm; 
-    font-size: 12px;
+    font-size: 14px; /* AUMENTEI AQUI */
     font-family: 'Courier New', monospace;
+    line-height: 1.4;
   } 
+  #imprimir h2{font-size: 18px; font-weight: bold;}
 }
 </style>
 </head>
@@ -81,6 +83,8 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <div class="bg-white p-3 rounded shadow mb-3">
       <input type="hidden" id="idCli">
       <input id="nomeCli" placeholder="Nome" class="w-full border p-2 mb-2 rounded">
+      <input id="telCli" placeholder="Telefone" class="w-full border p-2 mb-2 rounded">
+      <input id="cpfCli" placeholder="CPF" class="w-full border p-2 mb-2 rounded">
       <button id="btnCli" onclick="salvarCli()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
     </div>
     <div id="tabelaCli" class="bg-white p-3 rounded shadow"></div>
@@ -91,15 +95,23 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <div class="bg-white p-3 rounded shadow mb-3">
       <input type="hidden" id="idFor">
       <input id="nomeFor" placeholder="Nome" class="w-full border p-2 mb-2 rounded">
+      <input id="cnpjFor" placeholder="CNPJ" class="w-full border p-2 mb-2 rounded">
       <button id="btnFor" onclick="salvarFor()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
     </div>
     <div id="tabelaFor" class="bg-white p-3 rounded shadow"></div>
   </div>
 
-  <!-- LOJA -->
+  <!-- LOJA COM MAIS INFORMAÇÕES -->
   <div id="loja" class="aba">
     <div class="bg-white p-3 rounded shadow">
-      <input id="nomeLoja" placeholder="Nome da Loja" class="w-full border p-2 mb-2 rounded">
+      <h2 class="font-bold mb-2">Dados da Loja</h2>
+      <input id="nomeLoja" placeholder="Nome Fantasia" class="w-full border p-2 mb-2 rounded">
+      <input id="razaoLoja" placeholder="Razão Social" class="w-full border p-2 mb-2 rounded">
+      <input id="cnpjLoja" placeholder="CNPJ" class="w-full border p-2 mb-2 rounded">
+      <input id="ieLoja" placeholder="Inscrição Estadual" class="w-full border p-2 mb-2 rounded">
+      <input id="telLoja" placeholder="Telefone" class="w-full border p-2 mb-2 rounded">
+      <input id="emailLoja" placeholder="Email" class="w-full border p-2 mb-2 rounded">
+      <input id="endLoja" placeholder="Endereço Completo" class="w-full border p-2 mb-2 rounded">
       <button onclick="salvarLoja()" class="w-full btn bg-blue-600 text-white">SALVAR LOJA</button>
     </div>
   </div>
@@ -124,12 +136,11 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     </div>
   </div>
 
-  <!-- CAIXA COM RECEBIDO A PRAZO -->
+  <!-- CAIXA SEM RECEBIDO A PRAZO -->
   <div id="caixa" class="aba">
     <div class="bg-white p-3 rounded shadow mb-3">
       <h2 class="font-bold mb-2">Movimentação</h2>
       <button onclick="mostrarMov('Entrada')" class="w-full btn bg-green-500 text-white mb-2">ENTRADA AVULSA</button>
-      <button onclick="mostrarMov('RecebidoPrazo')" class="w-full btn bg-blue-500 text-white mb-2">RECEBIDO A PRAZO</button>
       <button onclick="mostrarMov('Saida')" class="w-full btn bg-red-500 text-white mb-2">SANGRIA</button>
       <div id="formMov" class="hidden">
         <input id="descMov" placeholder="Descrição" class="w-full border p-2 mb-2 rounded">
@@ -183,7 +194,18 @@ async function carregarTudo(){
   vendas=(await getDocs(collection(db,"vendas"))).docs.map(d=>({id:d.id,...d.data()}));
   contasReceber=(await getDocs(collection(db,"contasReceber"))).docs.map(d=>({id:d.id,...d.data()}));
   movimentacoes=(await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
-  const l=await getDoc(doc(db,"loja","dados")); if(l.exists()){loja=l.data();$('tituloLoja').innerText=loja.nome||'PDV';$('nomeLoja').value=loja.nome||''}
+  const l=await getDoc(doc(db,"loja","dados")); 
+  if(l.exists()){
+    loja=l.data();
+    $('tituloLoja').innerText=loja.nome||'PDV';
+    $('nomeLoja').value=loja.nome||'';
+    $('razaoLoja').value=loja.razao||'';
+    $('cnpjLoja').value=loja.cnpj||'';
+    $('ieLoja').value=loja.ie||'';
+    $('telLoja').value=loja.tel||'';
+    $('emailLoja').value=loja.email||'';
+    $('endLoja').value=loja.end||'';
+  }
   listarProd();listarCli();listarFor();listarPagar();listarReceb();carregarSelects();caixaSaldo();buscar();
 }
 
@@ -198,25 +220,26 @@ window.vender=async()=>{if(carrinho.length==0)return;const total=+$('total').inn
   imprimirVenda(vendaRef.id);carrinho=[];atualizarCarrinho();carregarTudo()
 }
 
-// CAIXA CORRIGIDO COM RECEBIDO A PRAZO
-window.mostrarMov=t=>{tipoMov=t;$('formMov').classList.remove('hidden'); $('descMov').value = t=='RecebidoPrazo' ? 'Receb. Conta' : ''}
-window.salvarMov=async()=>{let forma='Dinheiro'; if(tipoMov=='RecebidoPrazo') forma='Prazo'; await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:$('descMov').value,valor:+$('valorMov').value,forma,data:Timestamp.now()});$('formMov').classList.add('hidden');carregarTudo()}
+// CAIXA
+window.mostrarMov=t=>{tipoMov=t;$('formMov').classList.remove('hidden')}
+window.salvarMov=async()=>{await addDoc(collection(db,"movimentacoes"),{tipo:tipoMov,desc:$('descMov').value,valor:+$('valorMov').value,forma:"Dinheiro",data:Timestamp.now()});$('formMov').classList.add('hidden');carregarTudo()}
 function caixaSaldo(){
   let e=movimentacoes.filter(m=>m.tipo=="Entrada");
   let s=movimentacoes.filter(m=>m.tipo=="Saida");
   let saldo=e.reduce((a,b)=>a+b.valor,0)-s.reduce((a,b)=>a+b.valor,0);
   $('saldoCaixa').innerText=saldo.toFixed(2);
-  let porForma={Dinheiro:0,Cartao:0,Pix:0,Prazo:0};
-  e.forEach(x=>{ if(x.forma) porForma[x.forma]+=x.valor });
-  $('detalheCaixa').innerHTML=`<b>Entradas:</b><br>Dinheiro: R$${porForma.Dinheiro.toFixed(2)}<br>Cartão: R$${porForma.Cartao.toFixed(2)}<br>PIX: R$${porForma.Pix.toFixed(2)}<br>Prazo: R$${porForma.Prazo.toFixed(2)}`
+  let porForma={Dinheiro:0,Cartao:0,Pix:0};
+  e.filter(x=>x.forma!="Prazo").forEach(x=>{ if(x.forma) porForma[x.forma]+=x.valor });
+  $('detalheCaixa').innerHTML=`<b>Entradas:</b><br>Dinheiro: R$${porForma.Dinheiro.toFixed(2)}<br>Cartão: R$${porForma.Cartao.toFixed(2)}<br>PIX: R$${porForma.Pix.toFixed(2)}`
 }
 window.fecharCaixa=()=>{caixaSaldo();imprimirFechamento()}
 
-// IMPRESSÃO CORRIGIDA 80MM
+// IMPRESSÃO COM LETRA MAIOR
 function imprimirFechamento(){
   let e=movimentacoes.filter(m=>m.tipo=="Entrada");
   let s=movimentacoes.filter(m=>m.tipo=="Saida");
-  let html=`<div style="width:80mm;text-align:center"><h2>${loja.nome||'FECHAMENTO'}</h2><hr>`;
+  let html=`<div><h2>${loja.nome||'FECHAMENTO'}</h2>`;
+  html+=`${loja.end||''}<br>${loja.tel||''}<hr>`;
   html+=`<b>DATA: ${new Date().toLocaleString()}</b><hr>`;
   html+=`<b>ENTRADAS</b><br>`; e.forEach(x=>html+=`${x.desc}: R$${x.valor.toFixed(2)}<br>`);
   html+=`<hr><b>SAIDAS</b><br>`; s.forEach(x=>html+=`${x.desc}: R$${x.valor.toFixed(2)}<br>`);
@@ -240,18 +263,29 @@ window.receberParcial=async(id,total)=>{const valor=+$(`valRec${id}`).value;cons
 // CRUDS
 window.salvarProd=async()=>{const data={nome:$('nomeProd').value,preco:+$('precoProd').value,estoque:+$('estoqueProd').value};$('idProd').value?await updateDoc(doc(db,"produtos",$('idProd').value),data):await addDoc(collection(db,"produtos"),data);carregarTudo()}
 function listarProd(){$('tabelaProd').innerHTML=produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome} - R$${p.preco} - Est:${p.estoque}</span><button onclick="excluir('produtos','${p.id}')" class="bg-red-500 text-white px-2 rounded">X</button></div>`).join('')}
-window.salvarCli=async()=>{const data={nome:$('nomeCli').value};$('idCli').value?await updateDoc(doc(db,"clientes",$('idCli').value),data):await addDoc(collection(db,"clientes"),data);carregarTudo()}
-function listarCli(){$('tabelaCli').innerHTML=clientes.map(c=>`<div class="border-b py-2">${c.nome}</div>`).join('')}
-window.salvarFor=async()=>{const data={nome:$('nomeFor').value};$('idFor').value?await updateDoc(doc(db,"fornecedores",$('idFor').value),data):await addDoc(collection(db,"fornecedores"),data);carregarTudo()}
-function listarFor(){$('tabelaFor').innerHTML=fornecedores.map(f=>`<div class="border-b py-2">${f.nome}</div>`).join('')}
-window.salvarLoja=async()=>{await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value});alert("Salvo!")}
+window.salvarCli=async()=>{const data={nome:$('nomeCli').value,tel:$('telCli').value,cpf:$('cpfCli').value};$('idCli').value?await updateDoc(doc(db,"clientes",$('idCli').value),data):await addDoc(collection(db,"clientes"),data);carregarTudo()}
+function listarCli(){$('tabelaCli').innerHTML=clientes.map(c=>`<div class="border-b py-2">${c.nome} - ${c.tel}</div>`).join('')}
+window.salvarFor=async()=>{const data={nome:$('nomeFor').value,cnpj:$('cnpjFor').value};$('idFor').value?await updateDoc(doc(db,"fornecedores",$('idFor').value),data):await addDoc(collection(db,"fornecedores"),data);carregarTudo()}
+function listarFor(){$('tabelaFor').innerHTML=fornecedores.map(f=>`<div class="border-b py-2">${f.nome} - ${f.cnpj}</div>`).join('')}
+
+// LOJA COM MAIS CAMPOS
+window.salvarLoja=async()=>{await setDoc(doc(db,"loja","dados"),{
+  nome:$('nomeLoja').value,
+  razao:$('razaoLoja').value,
+  cnpj:$('cnpjLoja').value,
+  ie:$('ieLoja').value,
+  tel:$('telLoja').value,
+  email:$('emailLoja').value,
+  end:$('endLoja').value
+});alert("Loja salva!");carregarTudo()}
+
 function listarPagar(){$('tabelaPagar').innerHTML="Contas a pagar"}
 function carregarSelects(){$('clienteVenda').innerHTML='<option value="">Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}
 window.excluir=async(col,id)=>{if(confirm("Excluir?")){await deleteDoc(doc(db,col,id));carregarTudo()}}
 
-// IMPRESSÃO VENDA 80MM
+// IMPRESSÃO VENDA COM LETRA MAIOR
 async function imprimirVenda(id){const v=await getDoc(doc(db,"vendas",id));const data=v.data();let itens=data.itens.map(i=>`${i.nome} x${i.qtd} R$${(i.preco*i.qtd).toFixed(2)}`).join('<br>');
-  let html=`<div style="width:80mm;text-align:center"><h2>${loja.nome||'CUPOM'}</h2><hr>${itens}<hr><b>TOTAL: R$${data.total.toFixed(2)}</b><br>Forma: ${data.forma}</div>`;
+  let html=`<div><h2>${loja.nome||'CUPOM'}</h2>${loja.cnpj||''}<br>${loja.end||''}<hr>${itens}<hr><b>TOTAL: R$${data.total.toFixed(2)}</b><br>Forma: ${data.forma}</div>`;
   $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
 }
 </script>
