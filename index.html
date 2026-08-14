@@ -38,7 +38,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
     <div id="aba-venda">
         <input id="busca" onkeyup="buscar()" placeholder="Buscar produto..." class="w-full p-3 border rounded mb-2">
         <div id="listaProdVenda" class="grid grid-cols-2 gap-2 mb-3"></div>
-        
+
         <div class="bg-white p-3 rounded shadow">
             <h2 class="font-bold">Carrinho</h2>
             <div id="carrinho" class="max-h-40 overflow-y-auto"></div>
@@ -99,13 +99,19 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
 
     <!-- 5. LOJA -->
     <div id="aba-loja" class="hidden">
-        <div class="bg-white p-3 rounded shadow">
+        <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">Dados da Loja</h2>
             <input id="nomeLoja" placeholder="Nome da Loja" class="w-full p-2 border rounded mb-2">
             <input id="cnpjLoja" placeholder="CNPJ" class="w-full p-2 border rounded mb-2">
             <input id="telLoja" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
             <input id="endLoja" placeholder="Endereço" class="w-full p-2 border rounded mb-2">
             <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
+        </div>
+        <!-- BOTÃO ZERAR AQUI -->
+        <div class="bg-white p-3 rounded shadow border-2 border-red-500">
+            <h2 class="font-bold text-red-600 mb-2">ÁREA PERIGOSA</h2>
+            <button onclick="zerarSistema()" class="w-full bg-red-600 text-white p-3 rounded btn-mobile font-bold">ZERAR TODO O SISTEMA</button>
+            <p class="text-xs text-gray-500 mt-1">Apaga Produtos, Clientes, Vendas, Contas...</p>
         </div>
     </div>
 
@@ -184,7 +190,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d",storageBucket: "web-pdv-6546d.appspot.com",messagingSenderId: "985739667688",appId: "1:985739667688:web:742dab33141e39fd97815d"};
 const app = initializeApp(firebaseConfig);
@@ -192,7 +198,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let carrinho = [], produtos = [], clientes = [], fornecedores = [], vendas = [], movimentacoes = [];
-let desconto = 0; let tipoMov = '';
+let desconto = 0; let tipoMov = ''; const SENHA_ZERAR = "1234"; // <-- MUDE AQUI A SENHA
 
 const $ = id => document.getElementById(id);
 window.aba = id => { document.querySelectorAll('main > div').forEach(d=>d.classList.add('hidden')); $(`aba-${id}`).classList.remove('hidden'); document.querySelectorAll('nav button').forEach(b=>b.classList.remove('aba-ativa')); $(`btn-${id}`).classList.add('aba-ativa') }
@@ -213,13 +219,25 @@ async function carregarTudo(){
     listarProd(); listarCli(); listarFor(); listarPagar(); listarReceb(); carregarSelects(); caixaSaldo();
 }
 
-// 1. VENDAS COM QUANTIDADE
+// 1. VENDAS COM QUANTIDADE + CORRIGIDO CAIXA E A RECEBER
 window.buscar = () => { const t=$('busca').value.toLowerCase(); const f=produtos.filter(p=>p.nome.toLowerCase().includes(t)); $('listaProdVenda').innerHTML=f.map(p=>`<button onclick="addCarrinho('${p.id}')" class="card-prod bg-white p-3 rounded shadow text-left"><b>${p.nome}</b><br><span class="text-green-600 font-bold">R$${p.preco}</span><br><span class="text-xs">Est:${p.estoque}</span></button>`).join('') }
 window.addCarrinho = id => { const p=produtos.find(x=>x.id==id); if(p.estoque>0){const item=carrinho.find(i=>i.id==id); if(item){item.qtd++}else{carrinho.push({...p,qtd:1})} atualizarCarrinho()}else alert("Sem estoque") }
 function atualizarCarrinho(){ let t=0; $('carrinho').innerHTML=carrinho.map((p,i)=>{t+=p.preco*p.qtd; return `<div class="flex justify-between items-center border-b py-2"><div>${p.nome}<br><small>R$${p.preco} x ${p.qtd}</small></div><div><button onclick="mudaQtd(${i},-1)" class="bg-red-500 text-white px-2 rounded">-</button><button onclick="mudaQtd(${i},1)" class="bg-green-500 text-white px-2 rounded">+</button><button onclick="carrinho.splice(${i},1);atualizarCarrinho()" class="bg-gray-500 text-white px-2 rounded">X</button></div></div>`}).join(''); let sub=t; if(desconto>0)sub-=desconto; $('total').innerText=sub.toFixed(2) }
 window.mudaQtd = (i, val) => {carrinho[i].qtd += val; if(carrinho[i].qtd <= 0) carrinho.splice(i,1); atualizarCarrinho();}
-window.aplicarDesc = () => { let sub=carrinho.reduce((s,p)=>s+p.preco*p.qtd,0); let v=+$('descValor').value||0; let p=+$('descPerc').value||0; desconto = p>0 ? sub*(p/100) : v; atualizarCarrinho() }
-window.vender = async () => { if(carrinho.length==0)return; const total=+$('total').innerText; const forma=$('formaPag').value; await addDoc(collection(db,"vendas"),{itens:carrinho,total,cliente:$('clienteVenda').value,forma,data:Timestamp.now()}); for(const i of carrinho){const p=produtos.find(x=>x.id==i.id); await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque - i.qtd})} if(forma!="Prazo"){await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Venda",valor:total,data:Timestamp.now()})} alert("Venda R$"+total.toFixed(2)); carrinho=[];desconto=0;$('descValor').value='';$('descPerc').value='';atualizarCarrinho(); carregarTudo() }
+window.aplicarDesc = () => { let sub=carrinho.reduce((s,p)=>s+p.preco*p.qtd,0); let v=+$('descValor').value||0; let p=+$('descPerc').value||0; desconto = p>0? sub*(p/100) : v; atualizarCarrinho() }
+window.vender = async () => {
+    if(carrinho.length==0)return;
+    const total=+$('total').innerText;
+    const forma=$('formaPag').value;
+    const clienteId=$('clienteVenda').value;
+    await addDoc(collection(db,"vendas"),{itens:carrinho,total,cliente:clienteId,forma,data:Timestamp.now()});
+    for(const i of carrinho){const p=produtos.find(x=>x.id==i.id); await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque - i.qtd})}
+    if(forma!="Prazo"){await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Venda "+forma,valor:total,data:Timestamp.now()})}
+    if(forma=="Prazo" && clienteId!=""){const clienteNome = clientes.find(c=>c.id==clienteId).nome; await addDoc(collection(db,"contasReceber"),{desc:"Venda Prazo - "+clienteNome,valor:total,venc:new Date().toISOString().split('T')[0],cli:clienteId,status:"Pendente"})}
+    alert("Venda R$"+total.toFixed(2));
+    carrinho=[];desconto=0;$('descValor').value='';$('descPerc').value='';atualizarCarrinho();
+    carregarTudo()
+}
 
 // CRUDS
 window.salvarProd = async () => { const data={cod:$('cod').value,nome:$('nome').value,custo:+$('custo').value,preco:+$('preco').value,estoque:+$('estoque').value}; if($('idProd').value){await updateDoc(doc(db,"produtos",$('idProd').value),data)}else{await addDoc(collection(db,"produtos"),data)} alert("Salvo!"); limparProd(); carregarTudo() }
@@ -248,12 +266,12 @@ function listarReceb(){ getDocs(collection(db,"contasReceber")).then(s=>{ $('tab
 function carregarSelects(){ $('clienteVenda').innerHTML='<option value="">Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join(''); $('forPagar').innerHTML=fornecedores.map(f=>`<option value="${f.id}">${f.nome}</option>`).join(''); $('cliReceb').innerHTML=clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('') }
 
 // 8. RELATÓRIOS DETALHADOS
-window.gerarRel = async () => { 
+window.gerarRel = async () => {
     let ini=new Date($('dataIni').value); let fim=new Date($('dataFim').value); fim.setHours(23,59,59);
     let vendasFiltradas = vendas.filter(v=>v.data.toDate()>=ini && v.data.toDate()<=fim);
     let total=0; let porForma={Dinheiro:0,Cartao:0,PIX:0,Prazo:0};
     vendasFiltradas.forEach(v=>{total+=v.total; if(v.forma=="Cartão")porForma.Cartao+=v.total; else porForma[v.forma]+=v.total});
-    $('resumoRel').innerHTML=`<p class="text-2xl text-center">Total: R$ ${total.toFixed(2)}</p><p>Vendas: ${vendasFiltradas.length}</p><hr><p><b>Por Pagamento:</b><br>Dinheiro: R$${porForma.Dinheiro.toFixed(2)}<br>Cartão: R$${porForma.Cartao.toFixed(2)}<br>PIX: R$${porForma.PIX.toFixed(2)}<br>Prazo: R$${porForma.Prazo.toFixed(2)}</p>` 
+    $('resumoRel').innerHTML=`<p class="text-2xl text-center">Total: R$ ${total.toFixed(2)}</p><p>Vendas: ${vendasFiltradas.length}</p><hr><p><b>Por Pagamento:</b><br>Dinheiro: R$${porForma.Dinheiro.toFixed(2)}<br>Cartão: R$${porForma.Cartao.toFixed(2)}<br>PIX: R$${porForma.PIX.toFixed(2)}<br>Prazo: R$${porForma.Prazo.toFixed(2)}</p>`
 }
 
 // 9. CAIXA COM SANGRIA E ENTRADA
@@ -261,21 +279,38 @@ window.mostrarEntrada = () => {tipoMov='Entrada'; $('formMov').classList.remove(
 window.mostrarSangria = () => {tipoMov='Saida'; $('formMov').classList.remove('hidden')}
 window.salvarMov = async () => { await addDoc(collection(db,"movimentacoes"),{tipo:tipoMov,desc:$('descMov').value,valor:+$('valorMov').value,data:Timestamp.now()}); alert("Salvo!"); $('formMov').classList.add('hidden'); carregarTudo() }
 
-async function caixaSaldo(){ 
+async function caixaSaldo(){
     let entradas = movimentacoes.filter(m=>m.tipo=="Entrada").reduce((s,m)=>s+m.valor,0);
     let saidas = movimentacoes.filter(m=>m.tipo=="Saida").reduce((s,m)=>s+m.valor,0);
-    $('saldoCaixa').innerText=(entradas - saidas).toFixed(2) 
+    $('saldoCaixa').innerText=(entradas - saidas).toFixed(2)
 }
 window.fecharCaixa = async () => {
+    await carregarTudo();
     let entradas = movimentacoes.filter(m=>m.tipo=="Entrada");
     let saidas = movimentacoes.filter(m=>m.tipo=="Saida");
-    let recebPendente = (await getDocs(collection(db,"contasReceber"))).docs.filter(d=>d.data().status=="Pendente").reduce((s,d)=>s+d.data().valor,0);
-    let html = `<b>Entradas:</b><br>`;
-    entradas.forEach(e=>html+=`${e.desc}: R$${e.valor.toFixed(2)}<br>`);
-    html += `<b>Saídas/Sangria:</b><br>`;
-    saidas.forEach(s=>html+=`${s.desc}: R$${s.valor.toFixed(2)}<br>`);
-    html += `<hr><b>A Receber:</b> R$${recebPendente.toFixed(2)}`;
+    let recebDocs = await getDocs(collection(db,"contasReceber"));
+    let recebPendente = recebDocs.docs.filter(d=>d.data().status=="Pendente").reduce((s,d)=>s+d.data().valor,0);
+    let html = `<b>Entradas:</b><br>`; entradas.forEach(e=>html+=`${e.desc}: R$${e.valor.toFixed(2)}<br>`);
+    html += `<hr><b>Saídas/Sangria:</b><br>`; saidas.forEach(s=>html+=`${s.desc}: R$${s.valor.toFixed(2)}<br>`);
+    html += `<hr><b>Saldo em Caixa:</b> R$${(entradas.reduce((a,b)=>a+b.valor,0) - saidas.reduce((a,b)=>a+b.valor,0)).toFixed(2)}`;
+    html += `<hr><b>A Receber Pendente:</b> R$${recebPendente.toFixed(2)}`;
     $('detalheCaixa').innerHTML = html;
+}
+
+// 10. ZERAR SISTEMA COM SENHA
+window.zerarSistema = async () => {
+    const senha = prompt("DIGITE A SENHA PARA ZERAR O SISTEMA:");
+    if(senha!= SENHA_ZERAR){ alert("Senha incorreta!"); return; }
+    if(!confirm("ATENÇÃO! Isso vai apagar TODOS os dados. Tem certeza?")) return;
+
+    const colecoes = ["produtos","clientes","fornecedores","vendas","contasPagar","contasReceber","movimentacoes"];
+    for(const col of colecoes){
+        const snap = await getDocs(collection(db,col));
+        for(const d of snap.docs){ await deleteDoc(doc(db,col,d.id)) }
+    }
+    await setDoc(doc(db,"loja","dados"),{}); // limpa loja
+    alert("Sistema zerado com sucesso!");
+    carregarTudo();
 }
 </script>
 </body>
