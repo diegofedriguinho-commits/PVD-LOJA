@@ -5,10 +5,9 @@
 <title>PDV Completo</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}.btn-mobile{min-height:50px;font-size:16px}.aba-ativa{background:#2563eb;color:white}.alerta-banner{background:#dc2626;color:white;padding:10px;text-align:center;font-weight:bold;position:sticky;top:48px;z-index:9}@media print { body * { visibility: hidden; } #cupom, #cupom * { visibility: visible; } #cupom { position: absolute; left: 0; top: 0; width: 80mm; } }</style>
+<style>body{font-family:'Segoe UI',sans-serif;background:#f3f4f6;padding-bottom:80px}.btn-mobile{min-height:50px;font-size:16px}.aba-ativa{background:#2563eb;color:white}.alerta-banner{background:#dc2626;color:white;padding:10px;text-align:center;font-weight:bold;position:sticky;top:48px;z-index:9}</style>
 </head>
 <body>
-<div id="cupom" class="hidden"></div>
 <div id="alertaContas" class="hidden alerta-banner"></div>
 
 <div id="login" class="flex items-center justify-center h-screen">
@@ -29,48 +28,13 @@
 </header>
 
 <main class="p-2">
-    <!-- VENDAS -->
-    <div id="aba-venda">
-        <input id="busca" onkeyup="buscar()" placeholder="Buscar produto..." class="w-full p-3 border rounded mb-2">
-        <div id="listaProdVenda" class="grid grid-cols-2 gap-2 mb-3"></div>
-        <div class="bg-white p-3 rounded shadow">
-            <h2 class="font-bold">Carrinho</h2>
-            <div id="carrinho" class="max-h-40 overflow-y-auto"></div>
-            <select id="clienteVenda" class="w-full p-2 border rounded mt-2"></select>
-            <select id="formaPag" class="w-full p-2 border rounded mt-2">
-                <option>Dinheiro</option><option>Cartão</option><option>PIX</option><option>Prazo</option>
-            </select>
-            <p class="text-2xl font-bold text-center mt-2">Total: R$ <span id="total">0.00</span></p>
-            <button onclick="vender()" class="w-full bg-green-600 text-white p-4 rounded btn-mobile mt-2 font-bold">FINALIZAR VENDA</button>
-            <button onclick="reimprimirUltima()" class="w-full bg-gray-600 text-white p-3 rounded btn-mobile mt-2">REIMPRIMIR ÚLTIMA</button>
-        </div>
-    </div>
-
-    <!-- PRODUTOS -->
-    <div id="aba-produtos" class="hidden">
-        <div class="bg-white p-3 rounded shadow mb-3">
-            <h2 class="font-bold mb-2">+ Produto</h2>
-            <input type="hidden" id="idProd">
-            <input id="cod" placeholder="Código" class="w-full p-2 border rounded mb-2">
-            <input id="nome" placeholder="Nome" class="w-full p-2 border rounded mb-2">
-            <input id="custo" type="number" placeholder="Custo" class="w-full p-2 border rounded mb-2">
-            <input id="preco" type="number" placeholder="Preço" class="w-full p-2 border rounded mb-2">
-            <input id="estoque" type="number" placeholder="Estoque" class="w-full p-2 border rounded mb-2">
-            <input id="estMin" type="number" placeholder="Estoque Mínimo" class="w-full p-2 border rounded mb-2">
-            <button id="btnProd" onclick="salvarProd()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
-        </div>
-        <div id="tabelaProd" class="bg-white p-3 rounded shadow"></div>
-    </div>
-
     <!-- CLIENTES -->
     <div id="aba-clientes" class="hidden">
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Cliente</h2>
-            <input type="hidden" id="idCli">
             <input id="nomeCli" placeholder="Nome" class="w-full p-2 border rounded mb-2">
             <input id="telCli" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
-            <input id="cpfCli" placeholder="CPF" class="w-full p-2 border rounded mb-2">
-            <button id="btnCli" onclick="salvarCli()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
+            <button onclick="salvarCli()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
         </div>
         <div id="tabelaCli" class="bg-white p-3 rounded shadow"></div>
     </div>
@@ -79,11 +43,8 @@
     <div id="aba-fornecedores" class="hidden">
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Fornecedor</h2>
-            <input type="hidden" id="idFor">
             <input id="nomeFor" placeholder="Nome" class="w-full p-2 border rounded mb-2">
-            <input id="telFor" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
-            <input id="cnpjFor" placeholder="CNPJ" class="w-full p-2 border rounded mb-2">
-            <button id="btnFor" onclick="salvarFor()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
+            <button onclick="salvarFor()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR</button>
         </div>
         <div id="tabelaFor" class="bg-white p-3 rounded shadow"></div>
     </div>
@@ -93,11 +54,7 @@
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">Dados da Loja</h2>
             <input id="nomeLoja" placeholder="Nome da Loja" class="w-full p-2 border rounded mb-2">
-            <input id="cnpjLoja" placeholder="CNPJ" class="w-full p-2 border rounded mb-2">
-            <input id="telLoja" placeholder="Telefone" class="w-full p-2 border rounded mb-2">
-            <input id="endLoja" placeholder="Endereço" class="w-full p-2 border rounded mb-2">
             <button onclick="salvarLoja()" class="w-full bg-blue-600 text-white p-3 rounded btn-mobile font-bold">SALVAR LOJA</button>
-            <button onclick="exportarExcel()" class="w-full bg-green-600 text-white p-3 rounded btn-mobile mt-2">BAIXAR BACKUP EXCEL</button>
         </div>
     </div>
 
@@ -106,71 +63,34 @@
         <div class="bg-white p-3 rounded shadow mb-3">
             <h2 class="font-bold mb-2">+ Conta a Pagar</h2>
             <input id="descPagar" placeholder="Descrição" class="w-full p-2 border rounded mb-2">
-            <input id="valorPagar" type="number" placeholder="Valor Total" class="w-full p-2 border rounded mb-2">
-            <input id="parcelasPagar" type="number" placeholder="Qtd Parcelas" value="1" class="w-full p-2 border rounded mb-2">
+            <input id="valorPagar" type="number" placeholder="Valor" class="w-full p-2 border rounded mb-2">
             <input id="vencPagar" type="date" class="w-full p-2 border rounded mb-2">
             <select id="forPagar" class="w-full p-2 border rounded mb-2"></select>
             <button onclick="salvarPagar()" class="w-full bg-red-600 text-white p-3 rounded btn-mobile font-bold">LANÇAR</button>
         </div>
         <div id="tabelaPagar" class="bg-white p-3 rounded shadow"></div>
     </div>
-
-    <!-- CONTAS A RECEBER -->
-    <div id="aba-receber" class="hidden">
-        <div class="bg-white p-3 rounded shadow mb-3">
-            <h2 class="font-bold mb-2">+ Conta a Receber</h2>
-            <input id="descReceb" placeholder="Descrição" class="w-full p-2 border rounded mb-2">
-            <input id="valorReceb" type="number" placeholder="Valor Total" class="w-full p-2 border rounded mb-2">
-            <input id="parcelasReceb" type="number" placeholder="Qtd Parcelas" value="1" class="w-full p-2 border rounded mb-2">
-            <input id="vencReceb" type="date" class="w-full p-2 border rounded mb-2">
-            <select id="cliReceb" class="w-full p-2 border rounded mb-2"></select>
-            <button onclick="salvarReceb()" class="w-full bg-green-600 text-white p-3 rounded btn-mobile font-bold">LANÇAR</button>
-        </div>
-        <div id="tabelaReceb" class="bg-white p-3 rounded shadow"></div>
-    </div>
-
-    <!-- CAIXA -->
-    <div id="aba-caixa" class="hidden">
-        <div class="bg-white p-3 rounded shadow mb-3">
-            <h2 class="font-bold mb-2">Movimentação Caixa</h2>
-            <button onclick="mostrarEntrada()" class="w-full bg-green-500 text-white p-3 rounded mb-2">ENTRADA AVULSA</button>
-            <button onclick="mostrarSangria()" class="w-full bg-red-500 text-white p-3 rounded mb-2">SANGRIA</button>
-            <div id="formMov" class="hidden">
-                <input id="descMov" placeholder="Descrição" class="w-full p-2 border rounded mb-2">
-                <input id="valorMov" type="number" placeholder="Valor" class="w-full p-2 border rounded mb-2">
-                <button onclick="salvarMov()" class="w-full bg-purple-600 text-white p-3 rounded">SALVAR</button>
-            </div>
-        </div>
-        <div class="bg-white p-3 rounded shadow">
-            <h2 class="font-bold mb-2">Saldo: R$ <span id="saldoCaixa">0.00</span></h2>
-        </div>
-    </div>
 </main>
 
-<nav class="fixed bottom-0 left-0 right-0 bg-white shadow-2xl grid grid-cols-4 border-t text-center">
-    <button onclick="aba('venda')" id="btn-venda" class="py-3 text-xs aba-ativa">VENDAS</button>
-    <button onclick="aba('produtos')" id="btn-produtos" class="py-3 text-xs">PROD</button>
+<nav class="fixed bottom-0 left-0 right-0 bg-white shadow-2xl grid-cols-4 border-t text-center">
     <button onclick="aba('clientes')" id="btn-clientes" class="py-3 text-xs">CLI</button>
     <button onclick="aba('fornecedores')" id="btn-fornecedores" class="py-3 text-xs">FOR</button>
     <button onclick="aba('loja')" id="btn-loja" class="py-3 text-xs">LOJA</button>
     <button onclick="aba('pagar')" id="btn-pagar" class="py-3 text-xs">PAGAR</button>
-    <button onclick="aba('receber')" id="btn-receber" class="py-3 text-xs">RECEB</button>
-    <button onclick="aba('caixa')" id="btn-caixa" class="py-3 text-xs">CAIXA</button>
 </nav>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d",storageBucket: "web-pdv-6546d.appspot.com",messagingSenderId: "985739667688",appId: "1:985739667688:web:742dab33141e39fd97815d"};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let carrinho = [], produtos = [], clientes = [], fornecedores = [], vendas = [], movimentacoes = [], lojaData = {};
-let tipoMov = ''; const SENHA_ZERAR = "1234";
+let clientes = [], fornecedores = [];
 const $ = id => document.getElementById(id);
 window.aba = id => { document.querySelectorAll('main > div').forEach(d=>d.classList.add('hidden')); $(`aba-${id}`).classList.remove('hidden'); document.querySelectorAll('nav button').forEach(b=>b.classList.remove('aba-ativa')); $(`btn-${id}`).classList.add('aba-ativa') }
 
@@ -180,76 +100,31 @@ window.sair = () => signOut(auth);
 onAuthStateChanged(auth, u => { if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden');carregarTudo()}else{$('login').classList.remove('hidden');$('app').classList.add('hidden')} });
 
 async function carregarTudo(){
-    try{
-        produtos = (await getDocs(collection(db,"produtos"))).docs.map(d=>({id:d.id,...d.data()}));
-        clientes = (await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
-        fornecedores = (await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
-        vendas = (await getDocs(collection(db,"vendas"))).docs.map(d=>({id:d.id,...d.data()}));
-        movimentacoes = (await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
-        const lojaSnap = await getDoc(doc(db,"loja","dados"));
-        if(lojaSnap.exists()){lojaData=lojaSnap.data(); $('nomeLoja').value=lojaData.nome||'';$('cnpjLoja').value=lojaData.cnpj||'';$('telLoja').value=lojaData.tel||'';$('endLoja').value=lojaData.end||''}
-
-        // ALERTA
-        let hoje = new Date(); let em3Dias = new Date(); em3Dias.setDate(hoje.getDate() + 3);
-        let pagarSnap = await getDocs(collection(db,"contasPagar"));
-        let contasVencer = pagarSnap.docs.filter(d=>{ let dta = new Date(d.data().venc); return d.data().status=="Pendente" && dta >= hoje && dta <= em3Dias });
-        if(contasVencer.length > 0){ $('alertaContas').innerHTML = `🚨 ${contasVencer.length} conta(s) a pagar nos próximos 3 dias!`; $('alertaContas').classList.remove('hidden'); } else { $('alertaContas').classList.add('hidden'); }
-
-        listarProd(); listarCli(); listarFor(); listarPagar(); listarReceb(); carregarSelects(); caixaSaldo();
-    } catch(e){ console.log("Erro carregarTudo:", e) }
+    clientes = (await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
+    fornecedores = (await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
+    const lojaSnap = await getDoc(doc(db,"loja","dados"));
+    if(lojaSnap.exists()){let lojaData=lojaSnap.data(); $('nomeLoja').value=lojaData.nome||''}
+    listarCli(); listarFor(); carregarSelects();
 }
 
 function carregarSelects(){
-    $('clienteVenda').innerHTML='<option value="">Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
     $('forPagar').innerHTML='<option value="">Selecione Fornecedor</option>'+fornecedores.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('');
-    $('cliReceb').innerHTML='<option value="">Selecione Cliente</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
 }
 
-// CRUDS
-window.salvarCli = async () => { await addDoc(collection(db,"clientes"),{nome:$('nomeCli').value,tel:$('telCli').value,cpf:$('cpfCli').value}); alert("Salvo!"); $('nomeCli').value='';$('telCli').value='';$('cpfCli').value=''; carregarTudo() }
-function listarCli(){ $('tabelaCli').innerHTML = clientes.map(c=>`<div class="border-b py-2">${c.nome}<br><small>${c.tel}</small></div>`).join('') }
+window.salvarCli = async () => { await addDoc(collection(db,"clientes"),{nome:$('nomeCli').value,tel:$('telCli').value}); alert("Cliente Salvo!"); $('nomeCli').value='';$('telCli').value=''; carregarTudo() }
+function listarCli(){ $('tabelaCli').innerHTML = clientes.map(c=>`<div class="border-b py-2">${c.nome}</div>`).join('') || "<p>Nenhum cliente</p>" }
 
-window.salvarFor = async () => { await addDoc(collection(db,"fornecedores"),{nome:$('nomeFor').value,tel:$('telFor').value,cnpj:$('cnpjFor').value}); alert("Salvo!"); $('nomeFor').value='';$('telFor').value='';$('cnpjFor').value=''; carregarTudo() }
-function listarFor(){ $('tabelaFor').innerHTML = fornecedores.map(f=>`<div class="border-b py-2">${f.nome}<br><small>${f.tel}</small></div>`).join('') }
+window.salvarFor = async () => { await addDoc(collection(db,"fornecedores"),{nome:$('nomeFor').value}); alert("Fornecedor Salvo!"); $('nomeFor').value=''; carregarTudo() }
+function listarFor(){ $('tabelaFor').innerHTML = fornecedores.map(f=>`<div class="border-b py-2">${f.nome}</div>`).join('') || "<p>Nenhum fornecedor</p>" }
 
-window.salvarLoja = async () => { await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value,cnpj:$('cnpjLoja').value,tel:$('telLoja').value,end:$('endLoja').value}); alert("Dados da Loja Salvos!") }
+window.salvarLoja = async () => { await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value}); alert("Loja Salva!") }
 
-window.salvarProd = async () => { await addDoc(collection(db,"produtos"),{cod:$('cod').value,nome:$('nome').value,custo:+$('custo').value,preco:+$('preco').value,estoque:+$('estoque').value,estMin:+$('estMin').value}); alert("Salvo!"); limparProd(); carregarTudo() }
-function limparProd(){$('cod').value='';$('nome').value='';$('custo').value='';$('preco').value='';$('estoque').value='';$('estMin').value='';}
-function listarProd(){ $('tabelaProd').innerHTML = produtos.map(p=>{ let classe = p.estoque <= (p.estMin||0)? 'bg-red-200 border-2 border-red-500' : 'bg-white'; return `<div class="p-2 rounded ${classe}">${p.nome}<br><small>Est:${p.estoque} | Min:${p.estMin||0}</small></div>` }).join('') }
-
-// CONTAS
 window.salvarPagar = async () => {
-    const desc = $('descPagar').value; const total = +$('valorPagar').value; const parcelas = +$('parcelasPagar').value || 1; const venc = $('vencPagar').value; const forId = $('forPagar').value;
+    const desc = $('descPagar').value; const total = +$('valorPagar').value; const venc = $('vencPagar').value; const forId = $('forPagar').value;
     if(!desc ||!total ||!venc ||!forId) return alert("Preencha TUDO");
-    const valorParcela = (total/parcelas).toFixed(2);
-    for(let i=0; i<parcelas; i++){ let dataVenc = new Date(venc); dataVenc.setMonth(dataVenc.getMonth() + i); await addDoc(collection(db,"contasPagar"),{desc: `${desc} ${i+1}/${parcelas}`, valor: +valorParcela, venc: dataVenc.toISOString().split('T')[0], for: forId, status: "Pendente"}) }
-    alert(`${parcelas} parcela(s) lançada(s)!`); $('descPagar').value='';$('valorPagar').value='';$('parcelasPagar').value='1';$('vencPagar').value=''; carregarTudo()
+    await addDoc(collection(db,"contasPagar"),{desc: desc, valor: total, venc: venc, for: forId, status: "Pendente"})
+    alert("Conta Lançada!"); $('descPagar').value='';$('valorPagar').value='';$('vencPagar').value=''; carregarTudo()
 }
-function listarPagar(){ getDocs(collection(db,"contasPagar")).then(s=>{ let contas = s.docs.filter(d=>d.data().status=="Pendente"); $('tabelaPagar').innerHTML = contas.length==0? "<p>Nenhuma conta</p>" : contas.map(d=>{ let data = d.data(); return `<div class="flex justify-between border-b py-2"><div><b>${data.desc}</b><br>R$${data.valor} - Venc:${data.venc}</div><button onclick="pagarConta('${d.id}',${data.valor})" class="bg-green-500 text-white px-3 py-1 rounded">PAGAR</button></div>` }).join('') }) }
-window.pagarConta = async (id, valor) => { await updateDoc(doc(db,"contasPagar",id),{status:"Pago"}); await addDoc(collection(db,"movimentacoes"),{tipo:"Saida",desc:"Pagamento Conta",valor:+valor,data:Timestamp.now()}); alert("Conta Paga!"); carregarTudo() }
-
-window.salvarReceb = async () => {
-    const desc = $('descReceb').value; const total = +$('valorReceb').value; const parcelas = +$('parcelasReceb').value || 1; const venc = $('vencReceb').value; const cliId = $('cliReceb').value;
-    if(!desc ||!total ||!venc ||!cliId) return alert("Preencha TUDO");
-    const valorParcela = (total/parcelas).toFixed(2);
-    for(let i=0; i<parcelas; i++){ let dataVenc = new Date(venc); dataVenc.setMonth(dataVenc.getMonth() + i); await addDoc(collection(db,"contasReceber"),{desc: `${desc} ${i+1}/${parcelas}`, valor: +valorParcela, venc: dataVenc.toISOString().split('T')[0], cli: cliId, status: "Pendente"}) }
-    alert(`${parcelas} parcela(s) lançada(s)!`); $('descReceb').value='';$('valorReceb').value='';$('parcelasReceb').value='1';$('vencReceb').value=''; carregarTudo()
-}
-function listarReceb(){ getDocs(collection(db,"contasReceber")).then(s=>{ let contas = s.docs.filter(d=>d.data().status=="Pendente"); $('tabelaReceb').innerHTML = contas.length==0? "<p>Nenhuma conta</p>" : contas.map(d=>{ let data = d.data(); return `<div class="flex justify-between border-b py-2"><div><b>${data.desc}</b><br>R$${data.valor} - Venc:${data.venc}</div><button onclick="receberConta('${d.id}',${data.valor})" class="bg-green-500 text-white px-3 py-1 rounded">RECEBER</button></div>` }).join('') }) }
-window.receberConta = async (id, valor) => { await updateDoc(doc(db,"contasReceber",id),{status:"Recebido"}); await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Recebimento Conta",valor:+valor,data:Timestamp.now()}); alert("Conta Recebida!"); carregarTudo() }
-
-// CAIXA
-window.mostrarEntrada = () => {tipoMov='Entrada'; $('formMov').classList.remove('hidden')}
-window.mostrarSangria = () => {tipoMov='Saida'; $('formMov').classList.remove('hidden')}
-window.salvarMov = async () => { await addDoc(collection(db,"movimentacoes"),{tipo:tipoMov,desc:$('descMov').value,valor:+$('valorMov').value,data:Timestamp.now()}); alert("Salvo!"); $('formMov').classList.add('hidden'); $('descMov').value='';$('valorMov').value=''; carregarTudo() }
-async function caixaSaldo(){ let entradas = movimentacoes.filter(m=>m.tipo=="Entrada").reduce((s,m)=>s+m.valor,0); let saidas = movimentacoes.filter(m=>m.tipo=="Saida").reduce((s,m)=>s+m.valor,0); $('saldoCaixa').innerText=(entradas - saidas).toFixed(2) }
-
-// VENDA E BACKUP
-function buscar(){}
-function vender(){}
-window.reimprimirUltima = () => alert("Função venda ainda será adicionada");
-window.exportarExcel = async () => { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(produtos), "Produtos"); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientes), "Clientes"); XLSX.writeFile(wb, `Backup_${new Date().toLocaleDateString()}.xlsx`); alert("Backup baixado!") }
 </script>
 </body>
 </html>
