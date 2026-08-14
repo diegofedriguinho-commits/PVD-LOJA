@@ -27,6 +27,8 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <input id="email" class="w-full border p-2 mb-2 rounded" placeholder="Email">
     <input id="senha" type="password" class="w-full border p-2 mb-2 rounded" placeholder="Senha">
     <button onclick="entrar()" class="w-full btn bg-blue-600 text-white">ENTRAR</button>
+    <button onclick="cadastrar()" class="w-full btn bg-gray-500 text-white mt-2">CADASTRAR</button>
+    <p id="erro" class="text-red-500 text-center mt-2 text-sm"></p>
   </div>
 </div>
 
@@ -54,10 +56,9 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     </div>
   </div>
 
-  <!-- 2.PRODUTOS COM PREÇO CUSTO -->
+  <!-- 2.PRODUTOS -->
   <div id="produtos" class="aba">
     <div class="bg-white p-3 rounded shadow mb-3">
-      <h2 class="font-bold mb-2">+ Produto</h2>
       <input type="hidden" id="idProd">
       <input id="nomeProd" placeholder="Nome" class="w-full border p-2 mb-2 rounded">
       <input id="custoProd" type="number" placeholder="Preço de Custo" class="w-full border p-2 mb-2 rounded">
@@ -163,7 +164,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
@@ -175,20 +176,35 @@ let produtos=[], clientes=[], fornecedores=[], vendas=[], contasPagar=[], contas
 const $=id=>document.getElementById(id);
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on'); if(id=='relatorio') carregarGrafico(); if(id=='vendas') listarVendas();}
 
-window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value)
+window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText="Erro: "+e.message)
+window.cadastrar=()=>createUserWithEmailAndPassword(auth,$('email').value,$('senha').value).then(()=>alert("Usuário criado!")).catch(e=>$('erro').innerText="Erro: "+e.message)
 window.sair=()=>signOut(auth);
-onAuthStateChanged(auth,u=>{if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden');carregarTudo();mostrarAba('venda')}else{$('login').classList.remove('hidden');$('app').classList.add('hidden')}});
+
+// CORREÇÃO PRINCIPAL AQUI
+onAuthStateChanged(auth,u=>{
+  if(u){
+    $('login').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    carregarTudo(); // Agora carrega assim que logar
+    mostrarAba('venda')
+  }else{
+    $('login').classList.remove('hidden');
+    $('app').classList.add('hidden')
+  }
+});
 
 async function carregarTudo(){
-  produtos=(await getDocs(collection(db,"produtos"))).docs.map(d=>({id:d.id,...d.data()}));
-  clientes=(await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
-  fornecedores=(await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
-  vendas=(await getDocs(collection(db,"vendas"))).docs.map(d=>({id:d.id,...d.data()}));
-  contasPagar=(await getDocs(collection(db,"contasPagar"))).docs.map(d=>({id:d.id,...d.data()}));
-  contasReceber=(await getDocs(collection(db,"contasReceber"))).docs.map(d=>({id:d.id,...d.data()}));
-  movimentacoes=(await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
-  const l=await getDoc(doc(db,"loja","dados")); if(l.exists()){loja=l.data();$('tituloLoja').innerText=loja.nome||'PDV';$('nomeLoja').value=loja.nome||'';$('cnpjLoja').value=loja.cnpj||'';$('endLoja').value=loja.end||''}
-  listarProd();listarCli();listarFor();listarPagar();listarReceb();carregarSelects();caixaSaldo();buscar();
+  try{
+    produtos=(await getDocs(collection(db,"produtos"))).docs.map(d=>({id:d.id,...d.data()}));
+    clientes=(await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()}));
+    fornecedores=(await getDocs(collection(db,"fornecedores"))).docs.map(d=>({id:d.id,...d.data()}));
+    vendas=(await getDocs(collection(db,"vendas"))).docs.map(d=>({id:d.id,...d.data()}));
+    contasPagar=(await getDocs(collection(db,"contasPagar"))).docs.map(d=>({id:d.id,...d.data()}));
+    contasReceber=(await getDocs(collection(db,"contasReceber"))).docs.map(d=>({id:d.id,...d.data()}));
+    movimentacoes=(await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
+    const l=await getDoc(doc(db,"loja","dados")); if(l.exists()){loja=l.data();$('tituloLoja').innerText=loja.nome||'PDV';$('nomeLoja').value=loja.nome||'';$('cnpjLoja').value=loja.cnpj||'';$('endLoja').value=loja.end||''}
+    listarProd();listarCli();listarFor();listarPagar();listarReceb();carregarSelects();caixaSaldo();buscar();
+  }catch(e){console.log("Erro ao carregar:",e)}
 }
 
 // VENDAS
@@ -202,37 +218,38 @@ window.vender=async()=>{if(carrinho.length==0)return;const total=+$('total').inn
   imprimirVenda(vendaRef.id);carrinho=[];atualizarCarrinho();carregarTudo()
 }
 
-// PRODUTOS COM CUSTO
+// PRODUTOS
 window.salvarProd=async()=>{const data={nome:$('nomeProd').value,custo:+$('custoProd').value,preco:+$('precoProd').value,estoque:+$('estoqueProd').value};if($('idProd').value){await updateDoc(doc(db,"produtos",$('idProd').value),data)}else{await addDoc(collection(db,"produtos"),data)}limparProd();carregarTudo()}
 function listarProd(){$('tabelaProd').innerHTML=produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome}<br>Custo:R$${p.custo} Venda:R$${p.preco} Est:${p.estoque}</span><span><button onclick="editarProd('${p.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('produtos','${p.id}')" class="bg-red-500 text-white px-2 rounded">X</button></span></div>`).join('')}
 window.editarProd=id=>{const p=produtos.find(x=>x.id==id);$('idProd').value=p.id;$('nomeProd').value=p.nome;$('custoProd').value=p.custo;$('precoProd').value=p.preco;$('estoqueProd').value=p.estoque;$('btnProd').innerText='ATUALIZAR'}
 function limparProd(){$('idProd').value='';$('nomeProd').value='';$('custoProd').value='';$('precoProd').value='';$('estoqueProd').value='';$('btnProd').innerText='SALVAR'}
 
-// HISTORICO VENDAS - ESTORNO E 2ª VIA
+// HISTORICO VENDAS
 function listarVendas(){$('listaVendas').innerHTML=vendas.sort((a,b)=>b.data.toDate()-a.data.toDate()).map(v=>`<div class="border-b py-2 ${v.estornada?'bg-red-100':''}"><b>N:${v.id.substring(0,8)}</b> ${v.data.toDate().toLocaleString()}<br>${v.nomeCliente} - R$${v.total.toFixed(2)} - ${v.forma} ${v.estornada?'<b class="text-red-600">ESTORNADA</b>':''}<br>
 <button onclick="imprimirVenda('${v.id}')" class="bg-blue-500 text-white px-2 rounded mr-1">2ª VIA</button>
 ${!v.estornada?`<button onclick="estornarVenda('${v.id}')" class="bg-red-500 text-white px-2 rounded">ESTORNAR</button>`:''}</div>`).join('')}
 
-window.estornarVenda=async(id)=>{if(!confirm("Tem certeza que deseja estornar esta venda?"))return;const v=vendas.find(x=>x.id==id);
+window.estornarVenda=async(id)=>{if(!confirm("Tem certeza?"))return;const v=vendas.find(x=>x.id==id);
   await updateDoc(doc(db,"vendas",id),{estornada:true});
   for(const i of v.itens){const p=produtos.find(x=>x.id==i.id);await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque+i.qtd})}
   if(v.forma!="Prazo"){await addDoc(collection(db,"movimentacoes"),{tipo:"Saida",desc:`Estorno Venda ${id}`,valor:v.total,forma:v.forma,data:Timestamp.now()})}
   alert("Venda estornada!"); carregarTudo()
 }
 
-// RELATORIO VINCULADO + DASHBOARD
+// RELATORIO
 window.gerarRel=()=>{if(!$('dataIni').value||!$('dataFim').value)return alert("Selecione as datas");let ini=new Date($('dataIni').value);let fim=new Date($('dataFim').value);fim.setHours(23,59,59);
   let v=vendas.filter(x=>!x.estornada && x.data.toDate()>=ini&&x.data.toDate()<=fim);
   let total=v.reduce((s,x)=>s+x.total,0);
   let lucro=0; v.forEach(venda=>venda.itens.forEach(i=>{const p=produtos.find(prod=>prod.id==i.id); if(p) lucro+=(i.preco-p.custo)*i.qtd}));
   let porForma={Dinheiro:0,Cartao:0,Pix:0,Prazo:0};
   v.forEach(x=>porForma[x.forma]+=x.total);
-  $('resumoRel').innerHTML=`<p class="text-2xl font-bold">Total Vendas: R$${total.toFixed(2)}</p><p>Lucro Bruto: R$${lucro.toFixed(2)}</p><p>Vendas: ${v.length}</p><hr>
+  $('resumoRel').innerHTML=`<p class="text-2xl font-bold">Total: R$${total.toFixed(2)}</p><p>Lucro: R$${lucro.toFixed(2)}</p><p>Vendas: ${v.length}</p><hr>
   <p>Dinheiro: R$${porForma.Dinheiro.toFixed(2)}</p><p>Cartão: R$${porForma.Cartao.toFixed(2)}</p><p>PIX: R$${porForma.Pix.toFixed(2)}</p><p>Prazo: R$${porForma.Prazo.toFixed(2)}</p>`}
 
 function carregarGrafico(){const ctx=$('graficoVendas'); const ultimos7=vendas.filter(v=>!v.estornada).slice(-7);
   if(grafico) grafico.destroy();
   grafico=new Chart(ctx,{type:'bar',data:{labels:ultimos7.map(v=>v.data.toDate().toLocaleDateString()),datasets:[{label:'Vendas R$',data:ultimos7.map(v=>v.total),backgroundColor:'#2563eb'}]},options:{responsive:true}})
+}
 
 // OUTROS
 window.salvarCli=async()=>{const data={nome:$('nomeCli').value};$('idCli').value?await updateDoc(doc(db,"clientes",$('idCli').value),data):await addDoc(collection(db,"clientes"),data);carregarTudo()}
@@ -252,11 +269,9 @@ function carregarSelects(){$('clienteVenda').innerHTML='<option value="">Avulso<
 window.excluir=async(col,id)=>{if(confirm("Tem certeza?")){await deleteDoc(doc(db,col,id));carregarTudo()}}
 
 // IMPRESSÃO
-async function imprimirVenda(id){const vSnap=await getDoc(doc(db,"vendas",id));const data=vSnap.data(); if(data.estornada) return alert("Não é possível imprimir venda estornada");
+async function imprimirVenda(id){const vSnap=await getDoc(doc(db,"vendas",id));const data=vSnap.data(); if(data.estornada) return alert("Venda estornada");
   let itens=''; data.itens.forEach((i,idx)=>{ itens+=`${idx+1} ${i.nome}<br>   ${i.qtd} x R$${i.preco.toFixed(2)} = R$${(i.preco*i.qtd).toFixed(2)}<br>` });
-  let html=`<div class="center"><h2>${loja.nome||'CUPOM FISCAL'}</h2>CNPJ: ${loja.cnpj||''}<br>${loja.end||''}<hr>`;
-  html+=`<b>2ª VIA</b><br><b>VENDA N: ${id.substring(0,8)}</b><br><b>DATA: ${data.data.toDate().toLocaleString()}</b><br><b>CLIENTE: ${data.nomeCliente}</b><hr>`;
-  html+=`<b>ITEM DESCRICAO QTD VALOR</b><hr>${itens}<hr><b>TOTAL: R$${data.total.toFixed(2)}</b><br><b>FORMA: ${data.forma}</b><hr class="center">OBRIGADO!</div>`;
+  let html=`<div class="center"><h2>${loja.nome||'CUPOM'}</h2>CNPJ: ${loja.cnpj||''}<br>${loja.end||''}<hr><b>2ª VIA</b><br><b>VENDA N: ${id.substring(0,8)}</b><br><b>DATA: ${data.data.toDate().toLocaleString()}</b><br><b>CLIENTE: ${data.nomeCliente}</b><hr>${itens}<hr><b>TOTAL: R$${data.total.toFixed(2)}</b><br><b>FORMA: ${data.forma}</b><hr class="center">OBRIGADO!</div>`;
   $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
 }
 function imprimirFechamento(){
@@ -266,7 +281,6 @@ function imprimirFechamento(){
   html+=`<hr><b>SALDO FINAL: R$${($('saldoCaixa').innerText)}</b><hr class="center">OBRIGADO!</div>`;
   $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
 }
- window.cadastrar=()=>createUserWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText=e.message)
 </script>
 </body>
 </html>
