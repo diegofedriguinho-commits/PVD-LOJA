@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDV Iguaraçu FINAL</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 .btn{padding:12px;border-radius:8px;font-weight:bold}
@@ -11,6 +12,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 .menu{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd}
 .menu button{padding:10px;font-size:11px}
 .menu .on{background:#2563eb;color:white}
+.diamante{border:2px solid #f59e0b;background:#fffbeb}
 @media print { body * { visibility: hidden; } #imprimir, #imprimir * { visibility: visible; } #imprimir { position: absolute; left: 0; top: 0; width: 80mm; font-size: 14px; font-family: 'Courier New', monospace; line-height: 1.4;} #imprimir h2{font-size: 18px; font-weight: bold; text-align:center;} #imprimir hr{border: dashed 1px #000; margin: 4px 0;} #imprimir .center{text-align:center;} }
 </style>
 </head>
@@ -25,8 +27,6 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <input id="email" class="w-full border p-2 mb-2 rounded" placeholder="Email">
     <input id="senha" type="password" class="w-full border p-2 mb-2 rounded" placeholder="Senha">
     <button onclick="entrar()" class="w-full btn bg-blue-600 text-white">ENTRAR</button>
-    <button onclick="cadastrar()" class="w-full btn bg-gray-500 text-white mt-2">CADASTRAR</button>
-    <p id="erro" class="text-red-500 text-center mt-2"></p>
   </div>
 </div>
 
@@ -54,13 +54,14 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     </div>
   </div>
 
-  <!-- 2.PRODUTOS -->
+  <!-- 2.PRODUTOS COM PREÇO CUSTO -->
   <div id="produtos" class="aba">
     <div class="bg-white p-3 rounded shadow mb-3">
       <h2 class="font-bold mb-2">+ Produto</h2>
       <input type="hidden" id="idProd">
       <input id="nomeProd" placeholder="Nome" class="w-full border p-2 mb-2 rounded">
-      <input id="precoProd" type="number" placeholder="Preço" class="w-full border p-2 mb-2 rounded">
+      <input id="custoProd" type="number" placeholder="Preço de Custo" class="w-full border p-2 mb-2 rounded">
+      <input id="precoProd" type="number" placeholder="Preço de Venda" class="w-full border p-2 mb-2 rounded">
       <input id="estoqueProd" type="number" placeholder="Estoque" class="w-full border p-2 mb-2 rounded">
       <button id="btnProd" onclick="salvarProd()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
     </div>
@@ -70,12 +71,8 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <!-- 3.CLIENTES -->
   <div id="clientes" class="aba">
     <div class="bg-white p-3 rounded shadow mb-3">
-      <h2 class="font-bold mb-2">+ Cliente</h2>
       <input type="hidden" id="idCli">
       <input id="nomeCli" placeholder="Nome" class="w-full border p-2 mb-2 rounded">
-      <input id="telCli" placeholder="Telefone" class="w-full border p-2 mb-2 rounded">
-      <input id="cpfCli" placeholder="CPF" class="w-full border p-2 mb-2 rounded">
-      <input id="endCli" placeholder="Endereço" class="w-full border p-2 mb-2 rounded">
       <button id="btnCli" onclick="salvarCli()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
     </div>
     <div id="tabelaCli" class="bg-white p-3 rounded shadow"></div>
@@ -84,13 +81,8 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <!-- 4.FORNECEDORES -->
   <div id="fornecedores" class="aba">
     <div class="bg-white p-3 rounded shadow mb-3">
-      <h2 class="font-bold mb-2">+ Fornecedor</h2>
       <input type="hidden" id="idFor">
-      <input id="nomeFor" placeholder="Nome / Razão Social" class="w-full border p-2 mb-2 rounded">
-      <input id="cnpjFor" placeholder="CNPJ" class="w-full border p-2 mb-2 rounded">
-      <input id="telFor" placeholder="Telefone" class="w-full border p-2 mb-2 rounded">
-      <input id="emailFor" placeholder="Email" class="w-full border p-2 mb-2 rounded">
-      <input id="endFor" placeholder="Endereço" class="w-full border p-2 mb-2 rounded">
+      <input id="nomeFor" placeholder="Nome" class="w-full border p-2 mb-2 rounded">
       <button id="btnFor" onclick="salvarFor()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
     </div>
     <div id="tabelaFor" class="bg-white p-3 rounded shadow"></div>
@@ -99,39 +91,25 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <!-- 5.LOJA -->
   <div id="loja" class="aba">
     <div class="bg-white p-3 rounded shadow">
-      <h2 class="font-bold mb-2">Dados da Loja</h2>
       <input id="nomeLoja" placeholder="Nome Fantasia" class="w-full border p-2 mb-2 rounded">
-      <input id="razaoLoja" placeholder="Razão Social" class="w-full border p-2 mb-2 rounded">
       <input id="cnpjLoja" placeholder="CNPJ" class="w-full border p-2 mb-2 rounded">
-      <input id="ieLoja" placeholder="Inscrição Estadual" class="w-full border p-2 mb-2 rounded">
-      <input id="telLoja" placeholder="Telefone" class="w-full border p-2 mb-2 rounded">
-      <input id="emailLoja" placeholder="Email" class="w-full border p-2 mb-2 rounded">
-      <input id="endLoja" placeholder="Endereço Completo" class="w-full border p-2 mb-2 rounded">
+      <input id="endLoja" placeholder="Endereço" class="w-full border p-2 mb-2 rounded">
       <button onclick="salvarLoja()" class="w-full btn bg-blue-600 text-white">SALVAR LOJA</button>
     </div>
   </div>
 
   <!-- 6.CONTAS PAGAR -->
-  <div id="pagar" class="aba">
-    <div class="bg-white p-3 rounded shadow mb-3">
-      <h2 class="font-bold mb-2">+ Conta a Pagar Parcelada</h2>
-      <input id="descPagar" placeholder="Descrição" class="w-full border p-2 mb-2 rounded">
-      <input id="valorPagar" type="number" placeholder="Valor Total" class="w-full border p-2 mb-2 rounded">
-      <input id="parcelasPagar" type="number" value="1" placeholder="Qtd Parcelas" class="w-full border p-2 mb-2 rounded">
-      <input id="vencPagar" type="date" class="w-full border p-2 mb-2 rounded">
-      <select id="forPagar" class="w-full border p-2 mb-2 rounded"></select>
-      <button onclick="salvarPagar()" class="w-full btn bg-red-600 text-white">LANÇAR</button>
-    </div>
-    <div id="tabelaPagar" class="bg-white p-3 rounded shadow"></div>
-  </div>
+  <div id="pagar" class="aba"><div id="tabelaPagar" class="bg-white p-3 rounded shadow"></div></div>
 
   <!-- 7.CONTAS RECEBER -->
-  <div id="receber" class="aba">
-    <div id="tabelaReceb" class="bg-white p-3 rounded shadow"></div>
-  </div>
+  <div id="receber" class="aba"><div id="tabelaReceb" class="bg-white p-3 rounded shadow"></div></div>
 
-  <!-- 8.RELATORIO -->
+  <!-- 8.RELATORIO + DASHBOARD -->
   <div id="relatorio" class="aba">
+    <div class="bg-white p-3 rounded shadow mb-3">
+      <h2 class="font-bold mb-2">Dashboard</h2>
+      <canvas id="graficoVendas" height="150"></canvas>
+    </div>
     <div class="bg-white p-3 rounded shadow">
       <h2 class="font-bold mb-2">Relatório de Vendas</h2>
       <input id="dataIni" type="date" class="w-full border p-2 mb-2 rounded">
@@ -144,7 +122,6 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <!-- 9.CAIXA -->
   <div id="caixa" class="aba">
     <div class="bg-white p-3 rounded shadow mb-3">
-      <h2 class="font-bold mb-2">Movimentação</h2>
       <button onclick="mostrarMov('Entrada')" class="w-full btn bg-green-500 text-white mb-2">ENTRADA AVULSA</button>
       <button onclick="mostrarMov('Saida')" class="w-full btn bg-red-500 text-white mb-2">SANGRIA</button>
       <div id="formMov" class="hidden">
@@ -154,12 +131,20 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
       </div>
     </div>
     <div class="bg-white p-3 rounded shadow">
-      <h2 class="font-bold mb-2">Fechamento</h2>
       <p class="text-3xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
       <div id="detalheCaixa" class="mt-2 text-sm"></div>
       <button onclick="fecharCaixa()" class="w-full btn bg-purple-600 text-white mt-2">FECHAR CAIXA E IMPRIMIR</button>
     </div>
   </div>
+
+  <!-- 10.VENDAS - ESTORNO E 2ª VIA -->
+  <div id="vendas" class="aba">
+    <div class="bg-white p-3 rounded shadow">
+      <h2 class="font-bold mb-2">Histórico de Vendas</h2>
+      <div id="listaVendas"></div>
+    </div>
+  </div>
+
 </div>
 
 <nav class="menu">
@@ -172,12 +157,13 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <button onclick="mostrarAba('receber')" id="btn-receber">RECEB</button>
   <button onclick="mostrarAba('relatorio')" id="btn-relatorio">REL</button>
   <button onclick="mostrarAba('caixa')" id="btn-caixa">CAIXA</button>
+  <button onclick="mostrarAba('vendas')" id="btn-vendas" class="diamante">DIAMANTE</button>
 </nav>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, setDoc, getDoc, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
@@ -185,12 +171,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let produtos=[], clientes=[], fornecedores=[], vendas=[], contasPagar=[], contasReceber=[], movimentacoes=[], carrinho=[], loja={}, tipoMov='';
+let produtos=[], clientes=[], fornecedores=[], vendas=[], contasPagar=[], contasReceber=[], movimentacoes=[], carrinho=[], loja={}, tipoMov='', grafico;
 const $=id=>document.getElementById(id);
-window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on')}
+window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on'); if(id=='relatorio') carregarGrafico(); if(id=='vendas') listarVendas();}
 
-window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText=e.message)
-window.cadastrar=()=>createUserWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText=e.message)
+window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value)
 window.sair=()=>signOut(auth);
 onAuthStateChanged(auth,u=>{if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden');carregarTudo();mostrarAba('venda')}else{$('login').classList.remove('hidden');$('app').classList.add('hidden')}});
 
@@ -202,99 +187,83 @@ async function carregarTudo(){
   contasPagar=(await getDocs(collection(db,"contasPagar"))).docs.map(d=>({id:d.id,...d.data()}));
   contasReceber=(await getDocs(collection(db,"contasReceber"))).docs.map(d=>({id:d.id,...d.data()}));
   movimentacoes=(await getDocs(collection(db,"movimentacoes"))).docs.map(d=>({id:d.id,...d.data()}));
-  const l=await getDoc(doc(db,"loja","dados")); 
-  if(l.exists()){
-    loja=l.data();
-    $('tituloLoja').innerText=loja.nome||'PDV';
-    $('nomeLoja').value=loja.nome||''; $('razaoLoja').value=loja.razao||''; $('cnpjLoja').value=loja.cnpj||'';
-    $('ieLoja').value=loja.ie||''; $('telLoja').value=loja.tel||''; $('emailLoja').value=loja.email||''; $('endLoja').value=loja.end||'';
-  }
+  const l=await getDoc(doc(db,"loja","dados")); if(l.exists()){loja=l.data();$('tituloLoja').innerText=loja.nome||'PDV';$('nomeLoja').value=loja.nome||'';$('cnpjLoja').value=loja.cnpj||'';$('endLoja').value=loja.end||''}
   listarProd();listarCli();listarFor();listarPagar();listarReceb();carregarSelects();caixaSaldo();buscar();
 }
 
-// 1. VENDAS
+// VENDAS
 window.buscar=()=>{const t=$('busca').value.toLowerCase();$('listaProdVenda').innerHTML=produtos.filter(p=>p.nome.toLowerCase().includes(t)).map(p=>`<button onclick="addCarrinho('${p.id}')" class="bg-white p-3 rounded shadow"><b>${p.nome}</b><br>R$${p.preco}<br><small>Est:${p.estoque}</small></button>`).join('')}
 window.addCarrinho=id=>{const p=produtos.find(x=>x.id==id);if(p.estoque>0){const i=carrinho.find(x=>x.id==id);i?i.qtd++:carrinho.push({...p,qtd:1});atualizarCarrinho()}else alert("Sem estoque")}
 function atualizarCarrinho(){let t=0;$('carrinho').innerHTML=carrinho.map((p,i)=>{t+=p.preco*p.qtd;return`<div class="flex justify-between py-1"><span>${p.nome} x${p.qtd}</span><span>R$${(p.preco*p.qtd).toFixed(2)}</span></div>`}).join('');$('total').innerText=t.toFixed(2)}
-window.vender=async()=>{if(carrinho.length==0)return;const total=+$('total').innerText;const forma=$('formaPag').value;const clienteId=$('clienteVenda').value; const cliente=clientes.find(c=>c.id==clienteId); const vendaRef=await addDoc(collection(db,"vendas"),{itens:carrinho,total,cliente:clienteId,nomeCliente:cliente?cliente.nome:'Avulso',forma,data:Timestamp.now()});
+window.vender=async()=>{if(carrinho.length==0)return;const total=+$('total').innerText;const forma=$('formaPag').value;const clienteId=$('clienteVenda').value; const cliente=clientes.find(c=>c.id==clienteId); const vendaRef=await addDoc(collection(db,"vendas"),{itens:carrinho,total,cliente:clienteId,nomeCliente:cliente?cliente.nome:'Avulso',forma,data:Timestamp.now(),estornada:false});
   for(const i of carrinho){const p=produtos.find(x=>x.id==i.id);await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque-i.qtd})}
   if(forma!="Prazo"){await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Venda",valor:total,forma,data:Timestamp.now()})} 
   else {if(!clienteId) return alert("Selecione um cliente"); await addDoc(collection(db,"contasReceber"),{desc:`Venda ${vendaRef.id}`,valor:total,cliente:clienteId,status:"Pendente",pago:0,data:Timestamp.now()})}
   imprimirVenda(vendaRef.id);carrinho=[];atualizarCarrinho();carregarTudo()
 }
 
-// 2. PRODUTOS
-window.salvarProd=async()=>{const data={nome:$('nomeProd').value,preco:+$('precoProd').value,estoque:+$('estoqueProd').value};if($('idProd').value){await updateDoc(doc(db,"produtos",$('idProd').value),data)}else{await addDoc(collection(db,"produtos"),data)}limparProd();carregarTudo()}
-function listarProd(){$('tabelaProd').innerHTML=produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome} - R$${p.preco} - Est:${p.estoque}</span><span><button onclick="editarProd('${p.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('produtos','${p.id}')" class="bg-red-500 text-white px-2 rounded">X</button></span></div>`).join('')}
-window.editarProd=id=>{const p=produtos.find(x=>x.id==id);$('idProd').value=p.id;$('nomeProd').value=p.nome;$('precoProd').value=p.preco;$('estoqueProd').value=p.estoque;$('btnProd').innerText='ATUALIZAR'}
-function limparProd(){$('idProd').value='';$('nomeProd').value='';$('precoProd').value='';$('estoqueProd').value='';$('btnProd').innerText='SALVAR'}
+// PRODUTOS COM CUSTO
+window.salvarProd=async()=>{const data={nome:$('nomeProd').value,custo:+$('custoProd').value,preco:+$('precoProd').value,estoque:+$('estoqueProd').value};if($('idProd').value){await updateDoc(doc(db,"produtos",$('idProd').value),data)}else{await addDoc(collection(db,"produtos"),data)}limparProd();carregarTudo()}
+function listarProd(){$('tabelaProd').innerHTML=produtos.map(p=>`<div class="flex justify-between border-b py-2"><span>${p.nome}<br>Custo:R$${p.custo} Venda:R$${p.preco} Est:${p.estoque}</span><span><button onclick="editarProd('${p.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('produtos','${p.id}')" class="bg-red-500 text-white px-2 rounded">X</button></span></div>`).join('')}
+window.editarProd=id=>{const p=produtos.find(x=>x.id==id);$('idProd').value=p.id;$('nomeProd').value=p.nome;$('custoProd').value=p.custo;$('precoProd').value=p.preco;$('estoqueProd').value=p.estoque;$('btnProd').innerText='ATUALIZAR'}
+function limparProd(){$('idProd').value='';$('nomeProd').value='';$('custoProd').value='';$('precoProd').value='';$('estoqueProd').value='';$('btnProd').innerText='SALVAR'}
 
-// 3. CLIENTES
-window.salvarCli=async()=>{const data={nome:$('nomeCli').value,tel:$('telCli').value,cpf:$('cpfCli').value,end:$('endCli').value};if($('idCli').value){await updateDoc(doc(db,"clientes",$('idCli').value),data)}else{await addDoc(collection(db,"clientes"),data)}limparCli();carregarTudo()}
-function listarCli(){$('tabelaCli').innerHTML=clientes.map(c=>`<div class="border-b py-2"><b>${c.nome}</b><br>${c.tel} ${c.cpf} ${c.end}<br><button onclick="editarCli('${c.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('clientes','${c.id}')" class="bg-red-500 text-white px-2 rounded">X</button></div>`).join('')}
-window.editarCli=id=>{const c=clientes.find(x=>x.id==id);$('idCli').value=c.id;$('nomeCli').value=c.nome;$('telCli').value=c.tel;$('cpfCli').value=c.cpf;$('endCli').value=c.end;$('btnCli').innerText='ATUALIZAR'}
-function limparCli(){$('idCli').value='';$('nomeCli').value='';$('telCli').value='';$('cpfCli').value='';$('endCli').value='';$('btnCli').innerText='SALVAR'}
+// HISTORICO VENDAS - ESTORNO E 2ª VIA
+function listarVendas(){$('listaVendas').innerHTML=vendas.sort((a,b)=>b.data.toDate()-a.data.toDate()).map(v=>`<div class="border-b py-2 ${v.estornada?'bg-red-100':''}"><b>N:${v.id.substring(0,8)}</b> ${v.data.toDate().toLocaleString()}<br>${v.nomeCliente} - R$${v.total.toFixed(2)} - ${v.forma} ${v.estornada?'<b class="text-red-600">ESTORNADA</b>':''}<br>
+<button onclick="imprimirVenda('${v.id}')" class="bg-blue-500 text-white px-2 rounded mr-1">2ª VIA</button>
+${!v.estornada?`<button onclick="estornarVenda('${v.id}')" class="bg-red-500 text-white px-2 rounded">ESTORNAR</button>`:''}</div>`).join('')}
 
-// 4. FORNECEDORES
-window.salvarFor=async()=>{const data={nome:$('nomeFor').value,cnpj:$('cnpjFor').value,tel:$('telFor').value,email:$('emailFor').value,end:$('endFor').value};if($('idFor').value){await updateDoc(doc(db,"fornecedores",$('idFor').value),data)}else{await addDoc(collection(db,"fornecedores"),data)}limparFor();carregarTudo()}
-function listarFor(){$('tabelaFor').innerHTML=fornecedores.map(f=>`<div class="border-b py-2"><b>${f.nome}</b><br>CNPJ:${f.cnpj} Tel:${f.tel}<br>${f.email} ${f.end}<br><button onclick="editarFor('${f.id}')" class="bg-yellow-500 text-white px-2 rounded mr-1">E</button><button onclick="excluir('fornecedores','${f.id}')" class="bg-red-500 text-white px-2 rounded">X</button></div>`).join('')}
-window.editarFor=id=>{const f=fornecedores.find(x=>x.id==id);$('idFor').value=f.id;$('nomeFor').value=f.nome;$('cnpjFor').value=f.cnpj;$('telFor').value=f.tel;$('emailFor').value=f.email;$('endFor').value=f.end;$('btnFor').innerText='ATUALIZAR'}
-function limparFor(){$('idFor').value='';$('nomeFor').value='';$('cnpjFor').value='';$('telFor').value='';$('emailFor').value='';$('endFor').value='';$('btnFor').innerText='SALVAR'}
+window.estornarVenda=async(id)=>{if(!confirm("Tem certeza que deseja estornar esta venda?"))return;const v=vendas.find(x=>x.id==id);
+  await updateDoc(doc(db,"vendas",id),{estornada:true});
+  for(const i of v.itens){const p=produtos.find(x=>x.id==i.id);await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque+i.qtd})}
+  if(v.forma!="Prazo"){await addDoc(collection(db,"movimentacoes"),{tipo:"Saida",desc:`Estorno Venda ${id}`,valor:v.total,forma:v.forma,data:Timestamp.now()})}
+  alert("Venda estornada!"); carregarTudo()
+}
 
-// 5. LOJA
-window.salvarLoja=async()=>{await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value,razao:$('razaoLoja').value,cnpj:$('cnpjLoja').value,ie:$('ieLoja').value,tel:$('telLoja').value,email:$('emailLoja').value,end:$('endLoja').value});alert("Loja salva!");carregarTudo()}
-
-// 6. CONTAS PAGAR
-window.salvarPagar=async()=>{const total=+$('valorPagar').value;const parc=+$('parcelasPagar').value;for(let i=0;i<parc;i++){let venc=new Date($('vencPagar').value);venc.setMonth(venc.getMonth()+i);await addDoc(collection(db,"contasPagar"),{desc:`${$('descPagar').value} ${i+1}/${parc}`,valor:total/parc,venc:venc.toISOString().split('T')[0],for:$('forPagar').value,status:"Pendente"})}carregarTudo()}
-function listarPagar(){$('tabelaPagar').innerHTML=contasPagar.filter(d=>d.status=="Pendente").map(d=>`<div class="flex justify-between border-b py-2"><span>${d.desc} - R$${d.valor.toFixed(2)}</span><button onclick="pagarConta('${d.id}',${d.valor})" class="bg-green-500 text-white px-2 rounded">PAGAR</button></div>`).join('')||"Nenhuma conta"}
-window.pagarConta=async(id,valor)=>{await updateDoc(doc(db,"contasPagar",id),{status:"Pago"});await addDoc(collection(db,"movimentacoes"),{tipo:"Saida",desc:"Pag. Conta",valor,data:Timestamp.now()});carregarTudo()}
-
-// 7. CONTAS RECEBER
-function listarReceb(){$('tabelaReceb').innerHTML=contasReceber.filter(c=>c.status=="Pendente").map(c=>{const cliente=clientes.find(x=>x.id==c.cliente);const falta=c.valor-c.pago;return`<div class="border-b py-2"><b>${cliente?cliente.nome:'Cliente'}</b><br>${c.desc}<br>Total:R$${c.valor} Falta:R$${falta.toFixed(2)}<br><input id="valRec${c.id}" type="number" placeholder="Valor" class="w-1/2 border p-1 mr-1"><button onclick="receberParcial('${c.id}',${c.valor})" class="bg-green-500 text-white px-2 rounded">RECEBER</button></div>`}).join('')||"Nenhuma conta"}
-window.receberParcial=async(id,total)=>{const valor=+$(`valRec${id}`).value;const docSnap=await getDoc(doc(db,"contasReceber",id));const pago=docSnap.data().pago+valor;const status=pago>=total?"Recebido":"Pendente";await updateDoc(doc(db,"contasReceber",id),{pago,status});await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Rec. Conta",valor,forma:"Dinheiro",data:Timestamp.now()});carregarTudo()}
-
-// 8. RELATORIO
+// RELATORIO VINCULADO + DASHBOARD
 window.gerarRel=()=>{if(!$('dataIni').value||!$('dataFim').value)return alert("Selecione as datas");let ini=new Date($('dataIni').value);let fim=new Date($('dataFim').value);fim.setHours(23,59,59);
-  let v=vendas.filter(x=>x.data.toDate()>=ini&&x.data.toDate()<=fim);
+  let v=vendas.filter(x=>!x.estornada && x.data.toDate()>=ini&&x.data.toDate()<=fim);
   let total=v.reduce((s,x)=>s+x.total,0);
+  let lucro=0; v.forEach(venda=>venda.itens.forEach(i=>{const p=produtos.find(prod=>prod.id==i.id); if(p) lucro+=(i.preco-p.custo)*i.qtd}));
   let porForma={Dinheiro:0,Cartao:0,Pix:0,Prazo:0};
   v.forEach(x=>porForma[x.forma]+=x.total);
-  $('resumoRel').innerHTML=`<p class="text-2xl font-bold">Total: R$${total.toFixed(2)}</p><p>Vendas: ${v.length}</p><hr>
+  $('resumoRel').innerHTML=`<p class="text-2xl font-bold">Total Vendas: R$${total.toFixed(2)}</p><p>Lucro Bruto: R$${lucro.toFixed(2)}</p><p>Vendas: ${v.length}</p><hr>
   <p>Dinheiro: R$${porForma.Dinheiro.toFixed(2)}</p><p>Cartão: R$${porForma.Cartao.toFixed(2)}</p><p>PIX: R$${porForma.Pix.toFixed(2)}</p><p>Prazo: R$${porForma.Prazo.toFixed(2)}</p>`}
 
-// 9. CAIXA
+function carregarGrafico(){const ctx=$('graficoVendas'); const ultimos7=vendas.filter(v=>!v.estornada).slice(-7);
+  if(grafico) grafico.destroy();
+  grafico=new Chart(ctx,{type:'bar',data:{labels:ultimos7.map(v=>v.data.toDate().toLocaleDateString()),datasets:[{label:'Vendas R$',data:ultimos7.map(v=>v.total),backgroundColor:'#2563eb'}]},options:{responsive:true}})
+
+// OUTROS
+window.salvarCli=async()=>{const data={nome:$('nomeCli').value};$('idCli').value?await updateDoc(doc(db,"clientes",$('idCli').value),data):await addDoc(collection(db,"clientes"),data);carregarTudo()}
+function listarCli(){$('tabelaCli').innerHTML=clientes.map(c=>`<div class="border-b py-2">${c.nome}</div>`).join('')}
+window.salvarFor=async()=>{const data={nome:$('nomeFor').value};$('idFor').value?await updateDoc(doc(db,"fornecedores",$('idFor').value),data):await addDoc(collection(db,"fornecedores"),data);carregarTudo()}
+function listarFor(){$('tabelaFor').innerHTML=fornecedores.map(f=>`<div class="border-b py-2">${f.nome}</div>`).join('')}
+window.salvarLoja=async()=>{await setDoc(doc(db,"loja","dados"),{nome:$('nomeLoja').value,cnpj:$('cnpjLoja').value,end:$('endLoja').value});alert("Loja salva!")}
+function listarPagar(){$('tabelaPagar').innerHTML=contasPagar.filter(d=>d.status=="Pendente").map(d=>`<div class="flex justify-between border-b py-2"><span>${d.desc} - R$${d.valor.toFixed(2)}</span><button onclick="pagarConta('${d.id}',${d.valor})" class="bg-green-500 text-white px-2 rounded">PAGAR</button></div>`).join('')||"Nenhuma conta"}
+window.pagarConta=async(id,valor)=>{await updateDoc(doc(db,"contasPagar",id),{status:"Pago"});await addDoc(collection(db,"movimentacoes"),{tipo:"Saida",desc:"Pag. Conta",valor,data:Timestamp.now()});carregarTudo()}
+function listarReceb(){$('tabelaReceb').innerHTML=contasReceber.filter(c=>c.status=="Pendente").map(c=>{const cliente=clientes.find(x=>x.id==c.cliente);const falta=c.valor-c.pago;return`<div class="border-b py-2"><b>${cliente?cliente.nome:'Cliente'}</b><br>${c.desc}<br>Total:R$${c.valor} Falta:R$${falta.toFixed(2)}<br><input id="valRec${c.id}" type="number" placeholder="Valor" class="w-1/2 border p-1 mr-1"><button onclick="receberParcial('${c.id}',${c.valor})" class="bg-green-500 text-white px-2 rounded">RECEBER</button></div>`}).join('')||"Nenhuma conta"}
+window.receberParcial=async(id,total)=>{const valor=+$(`valRec${id}`).value;const docSnap=await getDoc(doc(db,"contasReceber",id));const pago=docSnap.data().pago+valor;const status=pago>=total?"Recebido":"Pendente";await updateDoc(doc(db,"contasReceber",id),{pago,status});await addDoc(collection(db,"movimentacoes"),{tipo:"Entrada",desc:"Rec. Conta",valor,forma:"Dinheiro",data:Timestamp.now()});carregarTudo()}
 window.mostrarMov=t=>{tipoMov=t;$('formMov').classList.remove('hidden')}
 window.salvarMov=async()=>{await addDoc(collection(db,"movimentacoes"),{tipo:tipoMov,desc:$('descMov').value,valor:+$('valorMov').value,forma:"Dinheiro",data:Timestamp.now()});$('formMov').classList.add('hidden');carregarTudo()}
-function caixaSaldo(){
-  let e=movimentacoes.filter(m=>m.tipo=="Entrada");
-  let s=movimentacoes.filter(m=>m.tipo=="Saida");
-  let saldo=e.reduce((a,b)=>a+b.valor,0)-s.reduce((a,b)=>a+b.valor,0);
-  $('saldoCaixa').innerText=saldo.toFixed(2);
-  let porForma={Dinheiro:0,Cartao:0,Pix:0};
-  e.filter(x=>x.forma!="Prazo").forEach(x=>{ if(x.forma) porForma[x.forma]+=x.valor });
-  $('detalheCaixa').innerHTML=`<b>Entradas:</b><br>Dinheiro: R$${porForma.Dinheiro.toFixed(2)}<br>Cartão: R$${porForma.Cartao.toFixed(2)}<br>PIX: R$${porForma.Pix.toFixed(2)}`
-}
+function caixaSaldo(){let e=movimentacoes.filter(m=>m.tipo=="Entrada");let s=movimentacoes.filter(m=>m.tipo=="Saida");let saldo=e.reduce((a,b)=>a+b.valor,0)-s.reduce((a,b)=>a+b.valor,0);$('saldoCaixa').innerText=saldo.toFixed(2);}
 window.fecharCaixa=()=>{caixaSaldo();imprimirFechamento()}
-
-// GERAIS
-function carregarSelects(){$('clienteVenda').innerHTML='<option value="">Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');$('forPagar').innerHTML=fornecedores.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('')}
+function carregarSelects(){$('clienteVenda').innerHTML='<option value="">Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}
 window.excluir=async(col,id)=>{if(confirm("Tem certeza?")){await deleteDoc(doc(db,col,id));carregarTudo()}}
 
 // IMPRESSÃO
-async function imprimirVenda(id){const vSnap=await getDoc(doc(db,"vendas",id));const data=vSnap.data();
+async function imprimirVenda(id){const vSnap=await getDoc(doc(db,"vendas",id));const data=vSnap.data(); if(data.estornada) return alert("Não é possível imprimir venda estornada");
   let itens=''; data.itens.forEach((i,idx)=>{ itens+=`${idx+1} ${i.nome}<br>   ${i.qtd} x R$${i.preco.toFixed(2)} = R$${(i.preco*i.qtd).toFixed(2)}<br>` });
-  let html=`<div class="center"><h2>${loja.nome||'CUPOM FISCAL'}</h2>${loja.razao||''}<br>CNPJ: ${loja.cnpj||''}<br>IE: ${loja.ie||''}<br>${loja.end||''}<br>Tel: ${loja.tel||''}<hr>`;
-  html+=`<b>VENDA N: ${id.substring(0,8)}</b><br><b>DATA: ${data.data.toDate().toLocaleString()}</b><br><b>CLIENTE: ${data.nomeCliente}</b><hr>`;
-  html+=`<b>ITEM DESCRICAO QTD VALOR</b><hr>${itens}<hr>`;
-  html+=`<b>SUBTOTAL: R$${data.total.toFixed(2)}</b><br><b>TOTAL: R$${data.total.toFixed(2)}</b><br><b>FORMA PAGTO: ${data.forma}</b><hr class="center">OBRIGADO E VOLTE SEMPRE!</div>`;
+  let html=`<div class="center"><h2>${loja.nome||'CUPOM FISCAL'}</h2>CNPJ: ${loja.cnpj||''}<br>${loja.end||''}<hr>`;
+  html+=`<b>2ª VIA</b><br><b>VENDA N: ${id.substring(0,8)}</b><br><b>DATA: ${data.data.toDate().toLocaleString()}</b><br><b>CLIENTE: ${data.nomeCliente}</b><hr>`;
+  html+=`<b>ITEM DESCRICAO QTD VALOR</b><hr>${itens}<hr><b>TOTAL: R$${data.total.toFixed(2)}</b><br><b>FORMA: ${data.forma}</b><hr class="center">OBRIGADO!</div>`;
   $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
 }
 function imprimirFechamento(){
   let e=movimentacoes.filter(m=>m.tipo=="Entrada"); let s=movimentacoes.filter(m=>m.tipo=="Saida");
-  let html=`<div class="center"><h2>${loja.nome||'FECHAMENTO DE CAIXA'}</h2>${loja.razao||''}<br>CNPJ: ${loja.cnpj||''}<br>${loja.end||''}<br>Tel: ${loja.tel||''}<hr>`;
-  html+=`<b>DATA: ${new Date().toLocaleString()}</b><hr><b>ENTRADAS</b><br>`; e.forEach(x=>html+=`${x.desc} - R$${x.valor.toFixed(2)}<br>`);
+  let html=`<div class="center"><h2>${loja.nome||'FECHAMENTO'}</h2>CNPJ: ${loja.cnpj||''}<br>${loja.end||''}<hr><b>DATA: ${new Date().toLocaleString()}</b><hr><b>ENTRADAS</b><br>`; e.forEach(x=>html+=`${x.desc} - R$${x.valor.toFixed(2)}<br>`);
   html+=`<hr><b>SAIDAS</b><br>`; s.forEach(x=>html+=`${x.desc} - R$${x.valor.toFixed(2)}<br>`);
-  html+=`<hr><b>TOTAL ENTRADAS: R$${e.reduce((a,b)=>a+b.valor,0).toFixed(2)}</b><br><b>TOTAL SAIDAS: R$${s.reduce((a,b)=>a+b.valor,0).toFixed(2)}</b><br><b>SALDO FINAL: R$${($('saldoCaixa').innerText)}</b><hr class="center">OBRIGADO E VOLTE SEMPRE!</div>`;
+  html+=`<hr><b>SALDO FINAL: R$${($('saldoCaixa').innerText)}</b><hr class="center">OBRIGADO!</div>`;
   $('imprimir').innerHTML=html; $('imprimir').classList.remove('hidden'); window.print(); $('imprimir').classList.add('hidden')
 }
 </script>
