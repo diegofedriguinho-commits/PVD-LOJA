@@ -235,15 +235,44 @@ window.imprimirFechamento=()=>{
   let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 
-// ZERAR SISTEMA
+// ZERAR SISTEMA - VERSÃO CORRIGIDA
 async function deletarColecao(nomeColecao) {
-  const q = query(collection(db, nomeColecao), limit(400));
-  const snap = await getDocs(q);
-  if (snap.empty) return 0;
-  const batch = writeBatch(db);
-  snap.docs.forEach(d => batch.delete(d.ref));
-  await batch.commit();
-  return snap.size;
+  try {
+    const q = query(collection(db, nomeColecao), limit(500));
+    const snap = await getDocs(q);
+    if (snap.empty) return 0;
+    const batch = writeBatch(db);
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    return snap.size;
+  } catch(e) {
+    console.error("Erro ao apagar "+nomeColecao, e);
+    return 0;
+  }
+}
+
+window.zerarSistema=async()=>{
+  let senha=prompt("ATENÇÃO! Isso apaga TUDO. Digite a senha: LOLA2025");
+  if(senha!=SENHA_ZERAR)return alert("Senha incorreta");
+  if(!confirm("TEM CERTEZA? Isso apaga Produtos, Clientes, Vendas... NÃO TEM VOLTA!"))return;
+  
+  $('statusZerar').innerText = "Apagando... Não feche a página";
+  $('statusZerar').classList.add('animate-pulse');
+  
+  const colecoes=['produtos','clientes','vendas','receber','pagar','caixa','fornecedores','loja'];
+  for(const col of colecoes){
+    let totalApagado = 0; let apagados;
+    do {
+      apagados = await deletarColecao(col);
+      totalApagado += apagados;
+      $('statusZerar').innerText = `Apagando ${col}... ${totalApagado} registros`;
+      await new Promise(r => setTimeout(r, 500)); // da um tempo pro firebase
+    } while (apagados > 0);
+  }
+  
+  $('statusZerar').innerText = "Sistema zerado com sucesso! Recarregando...";
+  $('statusZerar').classList.remove('animate-pulse');
+  setTimeout(()=>location.reload(), 2000);
 }
 window.zerarSistema=async()=>{
   let senha=prompt("ATENÇÃO! Isso apaga TUDO. Digite a senha:");
