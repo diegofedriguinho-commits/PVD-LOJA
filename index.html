@@ -227,11 +227,23 @@ async function deletarColecao(nomeColecao) {
   await batch.commit();
   return snap.size;
 }
+// ZERAR SISTEMA - APENAS 1 VEZ
+async function deletarColecao(nomeColecao) {
+  const q = query(collection(db, nomeColecao), limit(500));
+  const snap = await getDocs(q);
+  if (snap.empty) return 0;
+  const batch = writeBatch(db);
+  snap.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+  return snap.size;
+}
+
 window.zerarSistema=async()=>{
   let senha=prompt("ATENÇÃO! Apaga TUDO. Senha: LOLA2025");
   if(senha!=SENHA_ZERAR)return alert("Senha incorreta");
-  if(!confirm("TEM CERTEZA?"))return;
-  $('statusZerar').innerText = "Apagando...";
+  if(!confirm("TEM CERTEZA? NÃO TEM VOLTA!"))return;
+  $('statusZerar').innerText = "Apagando... Não feche a página";
+  
   const colecoes=['produtos','clientes','vendas','receber','pagar','caixa','fornecedores','loja'];
   for(const col of colecoes){
     let apagados;
@@ -241,7 +253,7 @@ window.zerarSistema=async()=>{
       await new Promise(r => setTimeout(r, 300));
     } while (apagados > 0);
   }
-  $('statusZerar').innerText = "Zerado! Recarregando...";
+  $('statusZerar').innerText = "Sistema zerado! Recarregando...";
   setTimeout(()=>location.reload(), 1500);
 }
 </script>
