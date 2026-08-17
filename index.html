@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>D2 MINIMERCADO PDV</title>
+<title>D2 MINIMERCADO PDV V18.8</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
@@ -14,7 +14,6 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 .menu button{padding:10px 4px;font-size:10px;font-weight:bold;white-space:nowrap}
 .menu.on{background:#2563eb;color:white}
 .hidden{display:none}
-@media print {.no-print{display:none} body{background:white}}
 </style>
 </head>
 <body>
@@ -31,7 +30,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 </div>
 
 <div id="app" class="hidden">
-<header class="bg-blue-600 text-white p-3 flex justify-between items-center sticky top-0 z-20 no-print">
+<header class="bg-blue-600 text-white p-3 flex justify-between items-center sticky top-0 z-20">
   <b id="nomeLojaHeader">D2 MINIMERCADO</b><button onclick="sair()" class="bg-red-500 px-3 py-1 rounded">SAIR</button>
 </header>
 
@@ -49,13 +48,13 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
         <p class="text-lg">Subtotal: R$ <span id="subtotal">0.00</span></p>
         <input id="desconto" type="number" step="0.01" value="0" oninput="calcularTotal()" class="input mt-1" placeholder="Desconto R$">
         <p class="text-2xl font-bold text-green-600">Total: R$ <span id="total">0.00</span></p>
-       <select id="formaPag" onchange="mostrarTroco()" class="input mt-2">
-  <option value="Dinheiro">DINHEIRO</option>
-  <option value="Cartão">CARTÃO</option>
-  <option value="Pix">PIX</option>
-  <option value="Prazo">PRAZO</option>
-</select>
-<div id="divTroco" style="display:none">
+        <select id="formaPag" onchange="mostrarTroco()" class="input mt-2">
+          <option value="Dinheiro">DINHEIRO</option>
+          <option value="Cartão">CARTÃO</option>
+          <option value="Pix">PIX</option>
+          <option value="Prazo">PRAZO</option>
+        </select>
+        <div id="divTroco" style="display:block">
           <input id="valorRecebido" type="number" step="0.01" oninput="calcularTroco()" class="input mt-1" placeholder="Valor Recebido">
           <p class="text-xl font-bold text-blue-600">Troco: R$ <span id="troco">0.00</span></p>
         </div>
@@ -65,109 +64,17 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     </div>
   </div>
 
-  <div id="produtos" class="aba">
-    <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO PRODUTO</h2>
-      <input type="hidden" id="pId">
-      <div class="grid md:grid-cols-4 gap-2">
-        <input id="pNome" class="input" placeholder="Nome">
-        <input id="pCod" class="input" placeholder="Código Barras">
-        <input id="pCusto" type="number" step="0.01" class="input" placeholder="Preço Custo">
-        <input id="pPreco" type="number" step="0.01" class="input" placeholder="Preço Venda">
-        <input id="pEstoque" type="number" class="input" placeholder="Estoque">
-        <select id="pFornecedor" class="input"><option value="">Fornecedor</option></select>
-      </div>
-      <button onclick="salvarProduto()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR</button>
-    </div>
-    <div id="listaProdutos" class="grid md:grid-cols-2 gap-2"></div>
-  </div>
-
-  <div id="clientes" class="aba">
-    <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO CLIENTE</h2>
-      <input type="hidden" id="cId">
-      <div class="grid md:grid-cols-2 gap-2">
-        <input id="cNome" class="input" placeholder="Nome Completo">
-        <input id="cTel" class="input" placeholder="Telefone">
-        <input id="cCpf" class="input" placeholder="CPF">
-        <input id="cEmail" class="input" placeholder="Email">
-        <input id="cEnd" class="input md:col-span-2" placeholder="Endereço Completo">
-      </div>
-      <button onclick="salvarCliente()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR</button>
-    </div>
-    <div id="listaClientes" class="grid md:grid-cols-2 gap-2"></div>
-  </div>
-
-  <div id="fornecedores" class="aba">
-    <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO FORNECEDOR</h2>
-      <input type="hidden" id="fId">
-      <div class="grid md:grid-cols-2 gap-2">
-        <input id="fNome" class="input" placeholder="Razão Social">
-        <input id="fFantasia" class="input" placeholder="Nome Fantasia">
-        <input id="fCnpj" class="input" placeholder="CNPJ">
-        <input id="fTel" class="input" placeholder="Telefone">
-        <input id="fEmail" class="input" placeholder="Email">
-        <input id="fEnd" class="input md:col-span-2" placeholder="Endereço Completo">
-      </div>
-      <button onclick="salvarFornecedor()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR</button>
-    </div>
-    <div id="listaFornecedores" class="grid md:grid-cols-2 gap-2"></div>
-  </div>
-
-  <div id="loja" class="aba">
-    <div class="card mb-2"><h2 class="font-bold mb-2">DADOS DA LOJA</h2>
-      <input type="hidden" id="lId">
-      <input id="lNome" value="D2 MINIMERCADO" class="input mb-2" placeholder="Nome da Loja">
-      <input id="lEnd" value="RUA MANOEL ABRANTES FILHO 210 JD BELA VISTA" class="input mb-2" placeholder="Endereço Completo">
-      <input id="lTel" value="44997550818" class="input mb-2" placeholder="Telefone">
-      <button onclick="salvarLoja()" class="w-full btn bg-blue-600 text-white">SALVAR DADOS</button>
-    </div>
-  </div>
-
-  <div id="receber" class="aba">
-    <div class="card mb-2"><h2 class="font-bold mb-2">CONTAS A RECEBER</h2></div>
-    <div id="listaReceber" class="grid gap-2"></div>
-  </div>
-
-  <div id="pagar" class="aba">
-    <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRAR CONTA A PAGAR</h2>
-      <input id="pgDesc" class="input mb-2" placeholder="Descrição">
-      <input id="pgValor" type="number" class="input mb-2" placeholder="Valor Total">
-      <input id="pgParcelas" type="number" value="1" class="input mb-2" placeholder="Qtd Parcelas">
-      <select id="pgFornecedor" class="input mb-2"><option value="">Fornecedor</option></select>
-      <button onclick="salvarContaPagar()" class="w-full btn bg-red-600 text-white">SALVAR CONTA</button>
-    </div>
-    <div id="listaPagar" class="grid gap-2"></div>
-  </div>
-
-  <div id="relatorios" class="aba">
-    <div class="card mb-2"><h2 class="font-bold mb-2">RELATÓRIOS</h2>
-      <button onclick="relVendasDia()" class="btn bg-purple-600 text-white">Vendas do Dia</button>
-      <button onclick="relVendas()" class="btn bg-purple-600 text-white">Vendas por Pagamento</button>
-    </div>
-    <div id="resultadoRel" class="grid gap-2"></div>
-  </div>
-
-  <div id="caixa" class="aba">
-    <div class="grid md:grid-cols-2 gap-2">
-      <div class="card"><h2 class="font-bold mb-2">RESUMO CAIXA</h2>
-        <p>Saldo Total: <b class="text-green-600 text-xl">R$ <span id="saldoCaixa">0.00</span></b></p><hr class="my-1">
-        <p>Entradas do Mês: <b class="text-green-600">R$ <span id="entradasMes">0.00</span></b></p>
-        <p>Saídas do Mês: <b class="text-red-600">R$ <span id="saidasMes">0.00</span></b></p><hr class="my-1">
-        <p>Saldo do Mês: <b class="text-blue-600 text-2xl">R$ <span id="saldoMes">0.00</span></b></p>
-        <button onclick="fecharCaixa()" class="w-full btn bg-red-600 text-white mt-2">FECHAR CAIXA</button>
-      </div>
-      <div class="card"><h2 class="font-bold mb-2">MOVIMENTAÇÃO</h2>
-        <input id="mValor" type="number" class="input mb-2" placeholder="Valor">
-        <input id="mDesc" class="input mb-2" placeholder="Descrição">
-        <button onclick="entradaCaixa()" class="btn bg-green-600 text-white">ENTRADA</button>
-        <button onclick="saidaCaixa()" class="btn bg-red-600 text-white">SAÍDA</button>
-      </div>
-    </div>
-  </div>
+  <div id="produtos" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO PRODUTO</h2><input type="hidden" id="pId"><div class="grid md:grid-cols-4 gap-2"><input id="pNome" class="input" placeholder="Nome"><input id="pCod" class="input" placeholder="Código Barras"><input id="pCusto" type="number" step="0.01" class="input" placeholder="Preço Custo"><input id="pPreco" type="number" step="0.01" class="input" placeholder="Preço Venda"><input id="pEstoque" type="number" class="input" placeholder="Estoque"><select id="pFornecedor" class="input"><option value="">Fornecedor</option></select></div><button onclick="salvarProduto()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR</button></div><div id="listaProdutos" class="grid md:grid-cols-2 gap-2"></div></div>
+  <div id="clientes" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO CLIENTE</h2><input type="hidden" id="cId"><div class="grid md:grid-cols-2 gap-2"><input id="cNome" class="input" placeholder="Nome Completo"><input id="cTel" class="input" placeholder="Telefone"><input id="cCpf" class="input" placeholder="CPF"><input id="cEmail" class="input" placeholder="Email"><input id="cEnd" class="input md:col-span-2" placeholder="Endereço Completo"></div><button onclick="salvarCliente()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR</button></div><div id="listaClientes" class="grid md:grid-cols-2 gap-2"></div></div>
+  <div id="fornecedores" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO FORNECEDOR</h2><input type="hidden" id="fId"><div class="grid md:grid-cols-2 gap-2"><input id="fNome" class="input" placeholder="Razão Social"><input id="fFantasia" class="input" placeholder="Nome Fantasia"><input id="fCnpj" class="input" placeholder="CNPJ"><input id="fTel" class="input" placeholder="Telefone"><input id="fEmail" class="input" placeholder="Email"><input id="fEnd" class="input md:col-span-2" placeholder="Endereço Completo"></div><button onclick="salvarFornecedor()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR</button></div><div id="listaFornecedores" class="grid md:grid-cols-2 gap-2"></div></div>
+  <div id="loja" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">DADOS DA LOJA</h2><input type="hidden" id="lId"><input id="lNome" value="D2 MINIMERCADO" class="input mb-2" placeholder="Nome da Loja"><input id="lEnd" value="RUA MANOEL ABRANTES FILHO 210 JD BELA VISTA" class="input mb-2" placeholder="Endereço Completo"><input id="lTel" value="44997550818" class="input mb-2" placeholder="Telefone"><button onclick="salvarLoja()" class="w-full btn bg-blue-600 text-white">SALVAR DADOS</button></div></div>
+  <div id="receber" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">CONTAS A RECEBER</h2></div><div id="listaReceber" class="grid gap-2"></div></div>
+  <div id="pagar" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">CADASTRAR CONTA A PAGAR</h2><input id="pgDesc" class="input mb-2" placeholder="Descrição"><input id="pgValor" type="number" class="input mb-2" placeholder="Valor Total"><input id="pgParcelas" type="number" value="1" class="input mb-2" placeholder="Qtd Parcelas"><select id="pgFornecedor" class="input mb-2"><option value="">Fornecedor</option></select><button onclick="salvarContaPagar()" class="w-full btn bg-red-600 text-white">SALVAR CONTA</button></div><div id="listaPagar" class="grid gap-2"></div></div>
+  <div id="relatorios" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">RELATÓRIOS</h2><button onclick="relVendasDia()" class="btn bg-purple-600 text-white">Vendas do Dia</button><button onclick="relVendas()" class="btn bg-purple-600 text-white">Vendas por Pagamento</button></div><div id="resultadoRel" class="grid gap-2"></div></div>
+  <div id="caixa" class="aba"><div class="grid md:grid-cols-2 gap-2"><div class="card"><h2 class="font-bold mb-2">RESUMO CAIXA</h2><p>Saldo Total: <b class="text-green-600 text-xl">R$ <span id="saldoCaixa">0.00</span></b></p><hr class="my-1"><p>Entradas do Mês: <b class="text-green-600">R$ <span id="entradasMes">0.00</span></b></p><p>Saídas do Mês: <b class="text-red-600">R$ <span id="saidasMes">0.00</span></b></p><hr class="my-1"><p>Saldo do Mês: <b class="text-blue-600 text-2xl">R$ <span id="saldoMes">0.00</span></b></p><button onclick="fecharCaixa()" class="w-full btn bg-red-600 text-white mt-2">FECHAR CAIXA</button></div><div class="card"><h2 class="font-bold mb-2">MOVIMENTAÇÃO</h2><input id="mValor" type="number" class="input mb-2" placeholder="Valor"><input id="mDesc" class="input mb-2" placeholder="Descrição"><button onclick="entradaCaixa()" class="btn bg-green-600 text-white">ENTRADA</button><button onclick="saidaCaixa()" class="btn bg-red-600 text-white">SAÍDA</button></div></div></div>
 </div>
 
-<div id="cupom" class="hidden"></div>
-
-<nav class="menu no-print">
+<nav class="menu">
   <button onclick="mostrarAba('venda')" id="btn-venda" class="on">VENDAS</button>
   <button onclick="mostrarAba('produtos')" id="btn-produtos">PRODUTOS</button>
   <button onclick="mostrarAba('clientes')" id="btn-clientes">CLIENTES</button>
@@ -178,7 +85,6 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <button onclick="mostrarAba('relatorios')" id="btn-relatorios">RELAT</button>
   <button onclick="mostrarAba('caixa')" id="btn-caixa">CAIXA</button>
 </nav>
-</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
@@ -208,26 +114,19 @@ function carregarTudo(){
   onSnapshot(collection(db,"receber"),snap=>{receber=snap.docs.map(d=>({id:d.id,...d.data()})); listarReceber();});
   onSnapshot(collection(db,"pagar"),snap=>{pagar=snap.docs.map(d=>({id:d.id,...d.data()})); listarPagar();});
   onSnapshot(collection(db,"loja"),snap=>{if(!snap.empty){loja=snap.docs[0].data(); $('lId').value=snap.docs[0].id; $('lNome').value=loja.nome; $('lEnd').value=loja.end; $('lTel').value=loja.tel; $('nomeLojaHeader').innerText=loja.nome}});
-
-  // CORREÇÃO FECHAMENTO DE CAIXA AQUI
   onSnapshot(collection(db,"caixa"),snap=>{
     movCaixa=snap.docs.map(d=>({id:d.id,...d.data()}));
     saldoCaixa=movCaixa.reduce((a,d)=>a+d.valor,0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2);
     const hoje=new Date(); const inicioMes=new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-
-    // Ignora 'fechamento' e soma só por tipo
     const movMes=movCaixa.filter(m=>m.data?.seconds && new Date(m.data.seconds*1000) >= inicioMes && m.tipo!= 'fechamento');
     const entradasMes=movMes.filter(m=>m.tipo == 'entrada').reduce((a,b)=>a+b.valor,0);
     const saidasMes=movMes.filter(m=>m.tipo == 'saida').reduce((a,b)=>a+b.valor,0);
-
     $('entradasMes').innerText=entradasMes.toFixed(2);
     $('saidasMes').innerText=Math.abs(saidasMes).toFixed(2);
     $('saldoMes').innerText=(entradasMes+saidasMes).toFixed(2);
   });
 }
-
-window.salvarLoja=async()=>{let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value}; if($('lId').value){await setDoc(doc(db,"loja",$('lId').value),data)}else{await addDoc(collection(db,"loja"),data)} alert("Dados salvos!")}
-
+  window.salvarLoja=async()=>{let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value}; if($('lId').value){await setDoc(doc(db,"loja",$('lId').value),data)}else{await addDoc(collection(db,"loja"),data)} alert("Dados salvos!")}
 window.buscarProd=()=>{$('listaProd').innerHTML=produtos.map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer">${p.nome} - R$${p.preco.toFixed(2)} [${p.estoque}]</div>`).join('')}
 window.listarProdutos=()=>{$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card"><b>${p.nome}</b><br>Cod:${p.cod} | R$${p.preco} | Est:${p.estoque} | Forn:${p.fornecedorNome||''}<div class="mt-2"><button onclick="editarProduto('${p.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirProduto('${p.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
 window.salvarProduto=async()=>{let forn=fornecedores.find(f=>f.id==$('pFornecedor').value); let data={nome:$('pNome').value,cod:$('pCod').value,custo:parseFloat($('pCusto').value)||0,preco:parseFloat($('pPreco').value)||0,estoque:parseInt($('pEstoque').value)||0,fornecedorId:$('pFornecedor').value,fornecedorNome:forn?.nomeFantasia||''}; if($('pId').value){await updateDoc(doc(db,"produtos",$('pId').value),data)}else{await addDoc(collection(db,"produtos"),data)} limparProd();}
@@ -248,7 +147,8 @@ window.editarFornecedor=id=>{let f=fornecedores.find(x=>x.id==id);$('fId').value
 window.excluirFornecedor=async id=>{if(confirm("Excluir?"))await deleteDoc(doc(db,"fornecedores",id))}
 function limparFornecedor(){$('fId').value='';$('fNome').value='';$('fFantasia').value='';$('fCnpj').value='';$('fTel').value='';$('fEmail').value='';$('fEnd').value='';}
 function carregarFornecedoresSelect(){let opt='<option value="">Fornecedor</option>'+fornecedores.map(f=>`<option value="${f.id}">${f.nomeFantasia}</option>`).join('');$('pFornecedor').innerHTML=opt; $('pgFornecedor').innerHTML=opt}
- window.addCarrinho=async id=>{
+
+window.addCarrinho=async id=>{
   let p=produtos.find(x=>x.id==id);if(!p||p.estoque<=0)return alert("Sem estoque");
   let item=carrinho.find(i=>i.id==id);
   if(item){item.qtd++; item.total=item.qtd*p.preco}else{carrinho.push({id:p.id,nome:p.nome,preco:p.preco,qtd:1,total:p.preco})}
@@ -264,18 +164,9 @@ window.atualizarCarrinho=()=>{
   subtotal=carrinho.reduce((a,i)=>a+i.total,0);$('subtotal').innerText=subtotal.toFixed(2); calcularTotal();
 }
 window.calcularTotal=()=>{let desc=parseFloat($('desconto').value)||0; total=subtotal-desc; $('total').innerText=total.toFixed(2); calcularTroco();}
-window.mostrarTroco=()=>{
-  if($('formaPag').value=='Dinheiro'){
-    $('divTroco').style.display = 'block'
-  } else {
-    $('divTroco').style.display = 'none'
-    $('valorRecebido').value = 0 // zera pra não dar troco errado
-    calcularTroco()
-  }
-}
+window.mostrarTroco=()=>{if($('formaPag').value=='Dinheiro'){$('divTroco').style.display = 'block'} else {$('divTroco').style.display = 'none'; $('valorRecebido').value = 0; calcularTroco()}}
 window.calcularTroco=()=>{let recebido=parseFloat($('valorRecebido').value)||0; $('troco').innerText=(recebido-total).toFixed(2);}
-
-window.finalizarVenda=async()=>{
+  window.finalizarVenda=async()=>{
   if(carrinho.length==0)return alert("Carrinho vazio");
   let forma=$('formaPag').value; let clienteId=$('clienteVenda').value; let cliente=clientes.find(c=>c.id==clienteId); let desconto=parseFloat($('desconto').value)||0; let troco=parseFloat($('troco').innerText)||0;
   let numVenda = ultimoNumVenda + 1;
@@ -284,7 +175,9 @@ window.finalizarVenda=async()=>{
   if(forma!='Prazo'){await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:total,desc:`Venda ${forma}`,data:serverTimestamp()});}
   else if(clienteId){await addDoc(collection(db,"receber"),{clienteId,cliente:cliente.nome,valorTotal:total,valorPago:0,saldo:total,vendaId:vendaRef.id,numVenda,data:serverTimestamp()})}
   imprimirCupom(carrinho,subtotal,desconto,total,forma,troco,cliente?.nome||'Avulso',numVenda);
-  carrinho=[];subtotal=0;total=0;$('desconto').value=0;$('valorRecebido').value=0;atualizarCarrinho();
+
+  // LIMPEZA TOTAL APOS VENDA
+  carrinho=[];subtotal=0;total=0;$('desconto').value=0;$('valorRecebido').value=0;$('troco').innerText='0.00';$('formaPag').value='Dinheiro';mostrarTroco();atualizarCarrinho();
 }
 
 window.relVendasDia=()=>{const hoje=new Date().toLocaleDateString(); const vendasHoje=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000).toLocaleDateString()==hoje);
@@ -296,12 +189,15 @@ window.receberParcial=async(id)=>{let r=receber.find(x=>x.id==id); let valor=par
 window.salvarContaPagar=async()=>{let forn=fornecedores.find(f=>f.id==$('pgFornecedor').value); let valor=parseFloat($('pgValor').value); let parcelas=parseInt($('pgParcelas').value); for(let i=1;i<=parcelas;i++){await addDoc(collection(db,"pagar"),{desc:`${$('pgDesc').value} - ${i}/${parcelas}`,valor:valor/parcelas,pago:false,fornecedorId:$('pgFornecedor').value,fornecedorNome:forn?.nomeFantasia||'',data:serverTimestamp()})} alert("Conta cadastrada")}
 window.listarPagar=()=>{$('listaPagar').innerHTML=pagar.map(p=>`<div class="card ${p.pago?'border-green-500':'border-red-500'}"><b>${p.desc}</b><br>Forn:${p.fornecedorNome||''}<br>R$${p.valor.toFixed(2)} ${!p.pago?`<button onclick="pagarParcela('${p.id}')" class="btn bg-red-600 text-white mt-1">PAGAR</button>`:''}</div>`).join('')}
 window.pagarParcela=async(id)=>{let p=pagar.find(x=>x.id==id); await updateDoc(doc(db,"pagar",id),{pago:true}); await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-p.valor,desc:`Pagto ${p.desc}`,data:serverTimestamp()});}
-  window.entradaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
+
+window.entradaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 window.saidaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
-window.fecharCaixa=()=>{
-  imprimirFechamento(); 
-  // CORREÇÃO: Não lança mais no caixa pra não zerar o resumo
-  alert("Caixa Fechado! O saldo total voltou pra R$0.00. O resumo do mês continua.")
+window.fecharCaixa=async()=>{
+  imprimirFechamento();
+  saldoCaixa = 0;
+  $('saldoCaixa').innerText = '0.00';
+  await addDoc(collection(db,"caixa"),{tipo:'fechamento',valor:0,desc:'Fechamento do Caixa',data:serverTimestamp()})
+  alert("Caixa Fechado! Pode fazer nova venda. O resumo do mês não foi alterado.")
 }
 
 window.imprimirCupom=(itens,subtotal,desconto,total,forma,troco,clienteNome,numVenda)=>{
