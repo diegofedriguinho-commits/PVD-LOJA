@@ -26,6 +26,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <input id="senha" type="password" value="123456" class="input mb-2">
     <button onclick="entrar()" class="w-full btn bg-blue-600 text-white">ENTRAR</button>
     <button onclick="zerarSistema()" class="w-full btn bg-red-800 text-white mt-2">ZERAR SISTEMA</button>
+    <p id="statusZerar" class="text-center text-sm mt-2 text-red-600"></p>
   </div>
 </div>
 
@@ -168,7 +169,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, setDoc, writeBatch, query, limit } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
@@ -293,21 +294,36 @@ window.imprimirFechamento=()=>{
   let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 
-// ZERAR SISTEMA CORRIGIDO COM BATCH
+// ZERAR SISTEMA CORRIGIDO - APAGA EM LOTES DE 400
+async function deletarColecao(nomeColecao) {
+  const q = query(collection(db, nomeColecao), limit(400));
+  const snap = await getDocs(q);
+  if (snap.empty) return 0;
+  const batch = writeBatch(db);
+  snap.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+  return snap.size;
+}
+
 window.zerarSistema=async()=>{
   let senha=prompt("ATENÇÃO! Isso apaga TUDO. Digite a senha:");
   if(senha!=SENHA_ZERAR)return alert("Senha incorreta");
   if(!confirm("Tem certeza? Isso não tem volta!"))return;
 
+  $('statusZerar').innerText = "Apagando... Aguarde";
   const colecoes=['produtos','clientes','vendas','receber','pagar','caixa','loja'];
+
   for(const col of colecoes){
-    const snap=await getDocs(collection(db,col));
-    const batch = writeBatch(db); // Apaga em lote
-    snap.docs.forEach(d=>{ batch.delete(doc(db,col,d.id)); });
-    await batch.commit(); // Espera terminar antes de ir pra próxima
+    let totalApagado = 0;
+    let apagados;
+    do {
+      apagados = await deletarColecao(col);
+      totalApagado += apagados;
+      $('statusZerar').innerText = `Apagando ${col}... ${totalApagado} docs`;
+    } while (apagados > 0); // repete até zerar a coleção
   }
-  alert("Sistema zerado com sucesso! Recarregue a página.");
-  location.reload();
+  $('statusZerar').innerText = "Sistema zerado! Recarregando...";
+  setTimeout(()=>location.reload(), 2000);
 }
 </script>
 </body>
