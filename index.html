@@ -35,7 +35,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 </header>
 
 <div class="p-2 pb-24">
-  <!-- VENDAS -->
+  <!-- VENDAS COM DESCONTO E TROCO -->
   <div id="venda" class="aba ativa">
     <div class="grid lg:grid-cols-2 gap-2">
       <div class="card">
@@ -46,9 +46,9 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
       <div class="card">
         <h2 class="font-bold mb-2">2. CARRINHO</h2>
         <div id="carrinho" class="max-h-40 overflow-y-auto"></div>
-        <p class="text-xl font-bold text-center">Subtotal: R$ <span id="subtotal">0.00</span></p>
-        <input id="desconto" type="number" step="0.01" value="0" onkeyup="calcularTotal()" class="input mt-1" placeholder="Desconto R$">
-        <p class="text-2xl font-bold text-center text-green-600">Total: R$ <span id="total">0.00</span></p>
+        <p class="text-lg">Subtotal: R$ <span id="subtotal">0.00</span></p>
+        <input id="desconto" type="number" step="0.01" value="0" oninput="calcularTotal()" class="input mt-1" placeholder="Desconto R$">
+        <p class="text-2xl font-bold text-green-600">Total: R$ <span id="total">0.00</span></p>
         
         <select id="formaPag" onchange="mostrarTroco()" class="input mt-2">
           <option value="Dinheiro">DINHEIRO</option>
@@ -56,9 +56,9 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
           <option value="Pix">PIX</option>
           <option value="Prazo">PRAZO</option>
         </select>
-        <div id="divTroco" class="hidden">
-          <input id="valorRecebido" type="number" step="0.01" onkeyup="calcularTroco()" class="input mt-1" placeholder="Valor Recebido">
-          <p class="text-xl font-bold text-center text-blue-600">Troco: R$ <span id="troco">0.00</span></p>
+        <div id="divTroco">
+          <input id="valorRecebido" type="number" step="0.01" oninput="calcularTroco()" class="input mt-1" placeholder="Valor Recebido">
+          <p class="text-xl font-bold text-blue-600">Troco: R$ <span id="troco">0.00</span></p>
         </div>
         <select id="clienteVenda" class="input mt-2"><option value="">Cliente Avulso</option></select>
         <button onclick="finalizarVenda()" class="w-full btn bg-green-600 text-white mt-2">FINALIZAR VENDA</button>
@@ -123,15 +123,14 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <div id="resultadoRel"></div>
   </div>
 
-  <!-- CAIXA -->
+  <!-- CAIXA COM SALDO DO MES -->
   <div id="caixa" class="aba">
     <div class="grid md:grid-cols-2 gap-2">
       <div class="card"><h2 class="font-bold mb-2">RESUMO CAIXA</h2>
-        <p>Saldo Total: <b class="text-green-600">R$ <span id="saldoCaixa">0.00</span></b></p>
-        <p>Entradas Mês: <b class="text-green-600">R$ <span id="entradasMes">0.00</span></b></p>
-        <p>Saídas Mês: <b class="text-red-600">R$ <span id="saidasMes">0.00</span></b></p>
-        <hr class="my-2">
-        <p>Saldo do Mês: <b class="text-blue-600 text-xl">R$ <span id="saldoMes">0.00</span></b></p>
+        <p>Saldo Total: <b class="text-green-600 text-xl">R$ <span id="saldoCaixa">0.00</span></b></p><hr class="my-1">
+        <p>Entradas do Mês: <b class="text-green-600">R$ <span id="entradasMes">0.00</span></b></p>
+        <p>Saídas do Mês: <b class="text-red-600">R$ <span id="saidasMes">0.00</span></b></p><hr class="my-1">
+        <p>Saldo do Mês: <b class="text-blue-600 text-2xl">R$ <span id="saldoMes">0.00</span></b></p>
         <button onclick="fecharCaixa()" class="w-full btn bg-red-600 text-white mt-2">FECHAR CAIXA</button>
       </div>
       <div class="card"><h2 class="font-bold mb-2">MOVIMENTAÇÃO</h2>
@@ -206,7 +205,7 @@ window.editarProduto=id=>{let p=produtos.find(x=>x.id==id);$('pId').value=p.id;$
 window.excluirProduto=async id=>{if(confirm("Excluir?"))await deleteDoc(doc(db,"produtos",id))}
 function limparProd(){$('pId').value='';$('pNome').value='';$('pCod').value='';$('pCusto').value='';$('pPreco').value='';$('pEstoque').value=''}
 
-window.listarClientes=()=>{$('listaClientes').innerHTML=clientes.map(c=>`<div class="card"><b>${c.nome}</b><br>${c.tel}<div class="mt-2"><button onclick="editarCliente('${c.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirCliente('${c.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
+window.listarClientes=()=>{$('listaClientes').innerHTML=clientes.map(c=>`<div class="card"><b>${c.nome}</b><br>${c.tel}<br>${c.end}<div class="mt-2"><button onclick="editarCliente('${c.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirCliente('${c.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
 window.salvarCliente=async()=>{let data={nome:$('cNome').value,tel:$('cTel').value,cpf:$('cCpf').value,email:$('cEmail').value,end:$('cEnd').value}; if($('cId').value){await updateDoc(doc(db,"clientes",$('cId').value),data)}else{await addDoc(collection(db,"clientes"),data)} limparCliente();}
 window.editarCliente=id=>{let c=clientes.find(x=>x.id==id);$('cId').value=c.id;$('cNome').value=c.nome;$('cTel').value=c.tel;$('cCpf').value=c.cpf;$('cEmail').value=c.email;$('cEnd').value=c.end}
 window.excluirCliente=async id=>{if(confirm("Excluir?"))await deleteDoc(doc(db,"clientes",id))}
