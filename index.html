@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LOJA PDV</title>
+<title>LOLA PDV</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
@@ -21,7 +21,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 
 <div id="login" class="h-screen flex items-center justify-center p-4">
   <div class="card w-full max-w-sm">
-    <h1 class="text-center text-2xl font-bold mb-4">LOJA PDV</h1>
+    <h1 class="text-center text-2xl font-bold mb-4">LOLA PDV</h1>
     <input id="email" value="admin@admin.com" class="input mb-2">
     <input id="senha" type="password" value="123456" class="input mb-2">
     <button onclick="entrar()" class="w-full btn bg-blue-600 text-white">ENTRAR</button>
@@ -31,7 +31,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 
 <div id="app" class="hidden">
 <header class="bg-blue-600 text-white p-3 flex justify-between items-center sticky top-0 z-20 no-print">
-  <b>LOJA PDV</b><button onclick="sair()" class="bg-red-500 px-3 py-1 rounded">SAIR</button>
+  <b>LOLA PDV</b><button onclick="sair()" class="bg-red-500 px-3 py-1 rounded">SAIR</button>
 </header>
 
 <div class="p-2 pb-24">
@@ -166,7 +166,7 @@ const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDo
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 const $=id=>document.getElementById(id);
 let produtos=[], clientes=[], vendas=[], receber=[], pagar=[], movCaixa=[], carrinho=[], subtotal=0, total=0, saldoCaixa=0;
-const SENHA_ZERAR = "LOJA2025";
+const SENHA_ZERAR = "LOLA2025";
 
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
 window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>alert("Erro login"))
@@ -266,7 +266,7 @@ window.fecharCaixa=()=>{imprimirFechamento(); addDoc(collection(db,"caixa"),{tip
 // IMPRESSÃO
 window.imprimirCupom=(itens,subtotal,desconto,total,forma,troco,cliente)=>{
   let html=`<div style="width:300px;font-family:monospace;text-align:center">
-  <h2>LOJA</h2><p>Rua Principal, 123 - Maringá PR</p><p>Tel: (44) 99999-9999</p><hr>
+  <h2>LOLA</h2><p>Rua Principal, 123 - Maringá PR</p><p>Tel: (44) 99999-9999</p><hr>
   <p style="text-align:left">CLIENTE: ${cliente?.nome||'Avulso'}</p><p style="text-align:left">PAGTO: ${forma}</p><hr>`;
   itens.forEach(i=>html+=`<div style="text-align:left">${i.nome} ${i.qtd}x R$${i.preco.toFixed(2)}</div>`);
   html+=`<hr><div style="text-align:left">Subtotal: R$${subtotal.toFixed(2)}</div>`;
@@ -279,7 +279,7 @@ window.imprimirCupom=(itens,subtotal,desconto,total,forma,troco,cliente)=>{
 window.imprimirFechamento=()=>{
   let entradas=movCaixa.filter(m=>m.valor>0).reduce((a,b)=>a+b.valor,0);
   let saidas=movCaixa.filter(m=>m.valor<0).reduce((a,b)=>a+b.valor,0);
-  let html=`<div style="width:300px;font-family:monospace;text-align:center"><h2>LOJA - FECHAMENTO</h2><p>Entradas: R$${entradas.toFixed(2)}</p><p>Saídas: R$${Math.abs(saidas).toFixed(2)}</p><hr><h3>SALDO: R$${saldoCaixa.toFixed(2)}</h3></div>`;
+  let html=`<div style="width:300px;font-family:monospace;text-align:center"><h2>LOLA - FECHAMENTO</h2><p>Entradas: R$${entradas.toFixed(2)}</p><p>Saídas: R$${Math.abs(saidas).toFixed(2)}</p><hr><h3>SALDO: R$${saldoCaixa.toFixed(2)}</h3></div>`;
   let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 
