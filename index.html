@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV IGARAÇU V16.1</title>
+<title>LOLA PDV</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
@@ -21,16 +21,17 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 
 <div id="login" class="h-screen flex items-center justify-center p-4">
   <div class="card w-full max-w-sm">
-    <h1 class="text-center text-2xl font-bold mb-4">PDV IGARAÇU</h1>
+    <h1 class="text-center text-2xl font-bold mb-4">LOLA PDV</h1>
     <input id="email" value="admin@admin.com" class="input mb-2">
     <input id="senha" type="password" value="123456" class="input mb-2">
     <button onclick="entrar()" class="w-full btn bg-blue-600 text-white">ENTRAR</button>
+    <button onclick="zerarSistema()" class="w-full btn bg-red-800 text-white mt-2">ZERAR SISTEMA</button>
   </div>
 </div>
 
 <div id="app" class="hidden">
 <header class="bg-blue-600 text-white p-3 flex justify-between items-center sticky top-0 z-20 no-print">
-  <b>PDV IGARAÇU</b><button onclick="sair()" class="bg-red-500 px-3 py-1 rounded">SAIR</button>
+  <b>LOLA PDV</b><button onclick="sair()" class="bg-red-500 px-3 py-1 rounded">SAIR</button>
 </header>
 
 <div class="p-2 pb-24">
@@ -68,6 +69,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
         <input id="pCusto" type="number" step="0.01" class="input" placeholder="Preço Custo">
         <input id="pPreco" type="number" step="0.01" class="input" placeholder="Preço Venda">
         <input id="pEstoque" type="number" class="input" placeholder="Estoque">
+        <input id="pMin" type="number" class="input" placeholder="Estoque Mínimo">
       </div>
       <button onclick="salvarProduto()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR</button>
     </div>
@@ -78,9 +80,14 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <div id="clientes" class="aba">
     <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO CLIENTE</h2>
       <input type="hidden" id="cId">
-      <input id="cNome" class="input mb-2" placeholder="Nome">
-      <input id="cTel" class="input mb-2" placeholder="Telefone">
-      <button onclick="salvarCliente()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
+      <div class="grid md:grid-cols-2 gap-2">
+        <input id="cNome" class="input" placeholder="Nome Completo">
+        <input id="cTel" class="input" placeholder="Telefone">
+        <input id="cCpf" class="input" placeholder="CPF">
+        <input id="cEmail" class="input" placeholder="Email">
+        <input id="cEnd" class="input md:col-span-2" placeholder="Endereço Completo">
+      </div>
+      <button onclick="salvarCliente()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR</button>
     </div>
     <div id="listaClientes" class="grid md:grid-cols-2 gap-2"></div>
   </div>
@@ -142,12 +149,13 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 const $=id=>document.getElementById(id);
 let produtos=[], clientes=[], vendas=[], receber=[], pagar=[], movCaixa=[], carrinho=[], total=0, saldoCaixa=0;
+const SENHA_ZERAR = "LOLA2025";
 
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
 window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>alert("Erro login"))
@@ -167,12 +175,20 @@ function carregarTudo(){
   onSnapshot(collection(db,"caixa"),snap=>{movCaixa=snap.docs.map(d=>({id:d.id,...d.data()})); saldoCaixa=movCaixa.reduce((a,d)=>a+d.valor,0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2)});
 }
 
-// PRODUTOS E CLIENTES
+// PRODUTOS CRUD
 window.buscarProd=()=>{$('listaProd').innerHTML=produtos.map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer">${p.nome} - R$${p.preco.toFixed(2)} [${p.estoque}]</div>`).join('')}
-window.listarProdutos=()=>{$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card"><b>${p.nome}</b><br>R$${p.preco} | Est:${p.estoque}</div>`).join('')}
-window.salvarProduto=async()=>{await addDoc(collection(db,"produtos"),{nome:$('pNome').value,cod:$('pCod').value,custo:parseFloat($('pCusto').value)||0,preco:parseFloat($('pPreco').value)||0,estoque:parseInt($('pEstoque').value)||0});}
-window.listarClientes=()=>{$('listaClientes').innerHTML=clientes.map(c=>`<div class="card"><b>${c.nome}</b><br>${c.tel}</div>`).join('')}
-window.salvarCliente=async()=>{await addDoc(collection(db,"clientes"),{nome:$('cNome').value,tel:$('cTel').value}); $('cNome').value='';$('cTel').value='';}
+window.listarProdutos=()=>{$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card"><b>${p.nome}</b><br>Cod:${p.cod} | Custo:R$${p.custo} | Venda:R$${p.preco} | Est:${p.estoque}<div class="mt-2"><button onclick="editarProduto('${p.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirProduto('${p.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
+window.salvarProduto=async()=>{let data={nome:$('pNome').value,cod:$('pCod').value,custo:parseFloat($('pCusto').value)||0,preco:parseFloat($('pPreco').value)||0,estoque:parseInt($('pEstoque').value)||0,min:parseInt($('pMin').value)||0}; if($('pId').value){await updateDoc(doc(db,"produtos",$('pId').value),data)}else{await addDoc(collection(db,"produtos"),data)} limparProd();}
+window.editarProduto=id=>{let p=produtos.find(x=>x.id==id);$('pId').value=p.id;$('pNome').value=p.nome;$('pCod').value=p.cod;$('pCusto').value=p.custo;$('pPreco').value=p.preco;$('pEstoque').value=p.estoque;$('pMin').value=p.min}
+window.excluirProduto=async id=>{if(confirm("Excluir produto?"))await deleteDoc(doc(db,"produtos",id))}
+function limparProd(){$('pId').value='';$('pNome').value='';$('pCod').value='';$('pCusto').value='';$('pPreco').value='';$('pEstoque').value='';$('pMin').value=''}
+
+// CLIENTES CRUD COMPLETO
+window.listarClientes=()=>{$('listaClientes').innerHTML=clientes.map(c=>`<div class="card"><b>${c.nome}</b><br>Tel:${c.tel} | CPF:${c.cpf}<br>Email:${c.email}<br>End:${c.end}<div class="mt-2"><button onclick="editarCliente('${c.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirCliente('${c.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
+window.salvarCliente=async()=>{let data={nome:$('cNome').value,tel:$('cTel').value,cpf:$('cCpf').value,email:$('cEmail').value,end:$('cEnd').value}; if($('cId').value){await updateDoc(doc(db,"clientes",$('cId').value),data)}else{await addDoc(collection(db,"clientes"),data)} limparCliente();}
+window.editarCliente=id=>{let c=clientes.find(x=>x.id==id);$('cId').value=c.id;$('cNome').value=c.nome;$('cTel').value=c.tel;$('cCpf').value=c.cpf;$('cEmail').value=c.email;$('cEnd').value=c.end}
+window.excluirCliente=async id=>{if(confirm("Excluir cliente?"))await deleteDoc(doc(db,"clientes",id))}
+function limparCliente(){$('cId').value='';$('cNome').value='';$('cTel').value='';$('cCpf').value='';$('cEmail').value='';$('cEnd').value='';}
 function carregarClientesSelect(){$('clienteVenda').innerHTML='<option value="">Cliente Avulso</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}
 
 // CARRINHO
@@ -192,68 +208,65 @@ window.atualizarCarrinho=()=>{
   total=carrinho.reduce((a,i)=>a+i.total,0);$('total').innerText=total.toFixed(2);
 }
 
-// VENDAS COM FORMA DE PAGAMENTO
+// VENDAS
 window.finalizarVenda=async()=>{
   if(carrinho.length==0)return alert("Carrinho vazio");
-  let forma=$('formaPag').value; let clienteId=$('clienteVenda').value;
-  let vendaRef=await addDoc(collection(db,"vendas"),{itens:carrinho,total,forma,clienteId,data:serverTimestamp()});
+  let forma=$('formaPag').value; let clienteId=$('clienteVenda').value; let cliente=clientes.find(c=>c.id==clienteId);
+  let vendaRef=await addDoc(collection(db,"vendas"),{itens:carrinho,total,forma,clienteId,cliente:cliente?.nome||'Avulso',data:serverTimestamp()});
   for(let i of carrinho){let p=produtos.find(x=>x.id==i.id);await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque-i.qtd})}
   
   if(forma=='Prazo' && clienteId){
-    await addDoc(collection(db,"receber"),{clienteId,cliente:clientes.find(c=>c.id==clienteId).nome,valorTotal:total,valorPago:0,saldo:total,vendaId:vendaRef.id,data:serverTimestamp()})
+    await addDoc(collection(db,"receber"),{clienteId,cliente:cliente.nome,valorTotal:total,valorPago:0,saldo:total,vendaId:vendaRef.id,data:serverTimestamp()})
   }else{
     await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:total,desc:`Venda ${forma}`,data:serverTimestamp()});
   }
-  imprimirCupom(carrinho,total,vendaRef.id,forma);
+  imprimirCupom(carrinho,total,vendaRef.id,forma,cliente);
   carrinho=[];total=0;atualizarCarrinho();
 }
 
-// CONTAS A RECEBER
-window.listarReceber=()=>{$('listaReceber').innerHTML=receber.map(r=>`<div class="card border-yellow-500"><b>${r.cliente}</b><br>Total: R$${r.valorTotal.toFixed(2)} | Pago: R$${r.valorPago.toFixed(2)} | Saldo: R$${r.saldo.toFixed(2)}<div class="mt-2"><input id="rec${r.id}" type="number" class="input" placeholder="Valor a receber"><button onclick="receberParcial('${r.id}')" class="btn bg-green-600 text-white mt-1">RECEBER</button></div></div>`).join('')}
-window.receberParcial=async(id)=>{
-  let r=receber.find(x=>x.id==id); let valor=parseFloat($(`rec${id}`).value);
-  if(valor<=0 || valor>r.saldo)return alert("Valor inválido");
-  let novoPago=r.valorPago+valor; let novoSaldo=r.saldo-valor;
-  await updateDoc(doc(db,"receber",id),{valorPago:novoPago,saldo:novoSaldo});
-  await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:valor,desc:`Recebimento ${r.cliente}`,data:serverTimestamp()});
-  if(novoSaldo==0)alert("Conta quitada!");
-}
+// CONTAS A RECEBER E PAGAR
+window.listarReceber=()=>{$('listaReceber').innerHTML=receber.map(r=>`<div class="card border-yellow-500"><b>${r.cliente}</b><br>Total: R$${r.valorTotal.toFixed(2)} | Saldo: R$${r.saldo.toFixed(2)}<div class="mt-2"><input id="rec${r.id}" type="number" class="input" placeholder="Valor"><button onclick="receberParcial('${r.id}')" class="btn bg-green-600 text-white mt-1">RECEBER</button></div></div>`).join('')}
+window.receberParcial=async(id)=>{let r=receber.find(x=>x.id==id); let valor=parseFloat($(`rec${r.id}`).value); await updateDoc(doc(db,"receber",id),{valorPago:r.valorPago+valor,saldo:r.saldo-valor}); await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:valor,desc:`Receb ${r.cliente}`,data:serverTimestamp()});}
 
-// CONTAS A PAGAR
-window.salvarContaPagar=async()=>{
-  let valor=parseFloat($('pgValor').value); let parcelas=parseInt($('pgParcelas').value);
-  let valorParcela=valor/parcelas;
-  for(let i=1;i<=parcelas;i++){
-    await addDoc(collection(db,"pagar"),{desc:`${$('pgDesc').value} - Parcela ${i}/${parcelas}`,valor:valorParcela,pago:false,data:serverTimestamp()})
-  }
-  alert("Conta cadastrada em "+parcelas+"x");
-}
-window.listarPagar=()=>{$('listaPagar').innerHTML=pagar.map(p=>`<div class="card ${p.pago?'border-green-500':'border-red-500'}"><b>${p.desc}</b><br>R$${p.valor.toFixed(2)} ${p.pago?'(PAGO)':''}<br>${!p.pago?`<button onclick="pagarParcela('${p.id}')" class="btn bg-red-600 text-white mt-1">PAGAR</button>`:''}</div>`).join('')}
-window.pagarParcela=async(id)=>{
-  await updateDoc(doc(db,"pagar",id),{pago:true});
-  let p=pagar.find(x=>x.id==id);
-  await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-p.valor,desc:`Pagto ${p.desc}`,data:serverTimestamp()});
-}
+window.salvarContaPagar=async()=>{let valor=parseFloat($('pgValor').value); let parcelas=parseInt($('pgParcelas').value); for(let i=1;i<=parcelas;i++){await addDoc(collection(db,"pagar"),{desc:`${$('pgDesc').value} - ${i}/${parcelas}`,valor:valor/parcelas,pago:false,data:serverTimestamp()})} alert("Conta cadastrada")}
+window.listarPagar=()=>{$('listaPagar').innerHTML=pagar.map(p=>`<div class="card ${p.pago?'border-green-500':'border-red-500'}"><b>${p.desc}</b><br>R$${p.valor.toFixed(2)} ${!p.pago?`<button onclick="pagarParcela('${p.id}')" class="btn bg-red-600 text-white mt-1">PAGAR</button>`:''}</div>`).join('')}
+window.pagarParcela=async(id)=>{let p=pagar.find(x=>x.id==id); await updateDoc(doc(db,"pagar",id),{pago:true}); await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-p.valor,desc:`Pagto ${p.desc}`,data:serverTimestamp()});}
 
-// RELATORIOS
+// RELATORIOS E CAIXA
 window.relVendas=()=>{$('resultadoRel').innerHTML=`<div class="card">Dinheiro: R$${vendas.filter(v=>v.forma=='Dinheiro').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Cartão: R$${vendas.filter(v=>v.forma=='Cartão').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Pix: R$${vendas.filter(v=>v.forma=='Pix').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Prazo: R$${vendas.filter(v=>v.forma=='Prazo').reduce((a,b)=>a+b.total,0).toFixed(2)}</div>`}
-
-// CAIXA
 window.entradaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 window.saidaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 window.fecharCaixa=()=>{imprimirFechamento(); addDoc(collection(db,"caixa"),{tipo:'fechamento',valor:-saldoCaixa,desc:'Fechamento',data:serverTimestamp()})}
 
-window.imprimirCupom=(itens,total,id,forma)=>{
-  let html=`<div style="width:300px;font-family:monospace"><h2>PDV IGARAÇU</h2><p>PAGTO: ${forma}</p><hr>`;
-  itens.forEach(i=>html+=`<div>${i.nome} ${i.qtd}x R$${i.preco.toFixed(2)}</div>`);
-  html+=`<hr><h3>TOTAL: R$${total.toFixed(2)}</h3></div>`;
-  $('cupom').innerHTML=html;setTimeout(()=>window.print(),100);
+// IMPRESSÃO SÓ DO CUPOM
+window.imprimirCupom=(itens,total,id,forma,cliente)=>{
+  let html=`<div style="width:300px;font-family:monospace;text-align:center">
+  <h2>LOLA</h2>
+  <p>Rua Principal, 123 - Maringá PR</p>
+  <p>Tel: (44) 99999-9999</p><hr>
+  <p style="text-align:left">VENDA: ${id.substring(0,8)}</p>
+  <p style="text-align:left">CLIENTE: ${cliente?.nome||'Avulso'}</p>
+  <p style="text-align:left">PAGTO: ${forma}</p><hr>`;
+  itens.forEach(i=>html+=`<div style="text-align:left">${i.nome} ${i.qtd}x R$${i.preco.toFixed(2)}</div>`);
+  html+=`<hr><h3>TOTAL: R$${total.toFixed(2)}</h3><p>Obrigado e Volte Sempre!</p></div>`;
+  let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 window.imprimirFechamento=()=>{
   let entradas=movCaixa.filter(m=>m.tipo=='entrada').reduce((a,b)=>a+b.valor,0);
   let saidas=movCaixa.filter(m=>m.tipo=='saida').reduce((a,b)=>a+b.valor,0);
-  let html=`<div style="width:300px;font-family:monospace"><h2>FECHAMENTO CAIXA</h2><p>Entradas: R$${entradas.toFixed(2)}</p><p>Saídas: R$${Math.abs(saidas).toFixed(2)}</p><hr><h3>SALDO: R$${saldoCaixa.toFixed(2)}</h3></div>`;
-  $('cupom').innerHTML=html;setTimeout(()=>window.print(),100);
+  let html=`<div style="width:300px;font-family:monospace;text-align:center"><h2>LOLA - FECHAMENTO</h2><p>Entradas: R$${entradas.toFixed(2)}</p><p>Saídas: R$${Math.abs(saidas).toFixed(2)}</p><hr><h3>SALDO: R$${saldoCaixa.toFixed(2)}</h3></div>`;
+  let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
+}
+
+// BOTAO ZERAR SISTEMA
+window.zerarSistema=async()=>{
+  let senha=prompt("ATENÇÃO! Isso apaga TUDO. Digite a senha:"); 
+  if(senha!=SENHA_ZERAR)return alert("Senha incorreta");
+  if(!confirm("Tem certeza? Isso não tem volta!"))return;
+  ['produtos','clientes','vendas','receber','pagar','caixa'].forEach(async col=>{
+    const snap=await getDocs(collection(db,col)); snap.forEach(d=>deleteDoc(doc(db,col,d.id)));
+  });
+  alert("Sistema zerado com sucesso!");
 }
 </script>
 </body>
