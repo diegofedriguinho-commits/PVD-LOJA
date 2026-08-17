@@ -87,19 +87,44 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebas
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, setDoc, writeBatch, query, limit, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
-const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+const firebaseConfig = {
+  apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
+  authDomain: "web-pdv-6546d.firebaseapp.com",
+  projectId: "web-pdv-6546d",
+  storageBucket: "web-pdv-6546d.appspot.com",
+  messagingSenderId: "1",
+  appId: "1:1:web:1"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 const $=id=>document.getElementById(id);
 let produtos=[], clientes=[], fornecedores=[], vendas=[], receber=[], pagar=[], movCaixa=[], loja={nome:'D2 MINIMERCADO',end:'RUA MANOEL ABRANTES FILHO 210 JD BELA VISTA',tel:'44997550818'}, carrinho=[], subtotal=0, total=0, saldoCaixa=0, ultimoNumVenda=0;
 const SENHA_ZERAR = "LOLA2025";
 
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
-window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>alert("Erro login: "+e.message))
+
+window.entrar=async()=>{
+  try{
+    await signInWithEmailAndPassword(auth,$('email').value,$('senha').value)
+  }catch(e){
+    alert("Erro login: "+e.message)
+    console.log(e)
+  }
+}
+
 window.sair=()=>signOut(auth);
 
 onAuthStateChanged(auth,u=>{
-  if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden'); carregarTudo();}
-  else{$('login').classList.remove('hidden');$('app').classList.add('hidden')}
+  console.log("Status login:", u)
+  if(u){
+    $('login').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    carregarTudo();
+  }else{
+    $('login').classList.remove('hidden');
+    $('app').classList.add('hidden')
+  }
 });
 
 function carregarTudo(){
@@ -122,6 +147,7 @@ function carregarTudo(){
     $('saidasMes').innerText=Math.abs(saidasMes).toFixed(2);
     $('saldoMes').innerText=(entradasMes+saidasMes).toFixed(2);
   });
+}
 }
   window.salvarLoja=async()=>{let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value}; if($('lId').value){await setDoc(doc(db,"loja",$('lId').value),data)}else{await addDoc(collection(db,"loja"),data)} alert("Dados salvos!")}
 
