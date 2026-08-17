@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV IGARAÇU V15</title>
+<title>PDV IGARAÇU V16</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
@@ -36,6 +36,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 </header>
 
 <div class="p-2 pb-24">
+  <!-- VENDAS -->
   <div id="venda" class="aba ativa">
     <div class="grid lg:grid-cols-2 gap-2">
       <div class="card">
@@ -52,18 +53,24 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     </div>
   </div>
 
+  <!-- PRODUTOS -->
   <div id="produtos" class="aba">
     <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO PRODUTO</h2>
-      <div class="grid md:grid-cols-3 gap-2">
+      <input type="hidden" id="pId">
+      <div class="grid md:grid-cols-4 gap-2">
         <input id="pNome" class="input" placeholder="Nome">
+        <input id="pCod" class="input" placeholder="Código Barras">
+        <input id="pCusto" type="number" step="0.01" class="input" placeholder="Preço Custo">
         <input id="pPreco" type="number" step="0.01" class="input" placeholder="Preço Venda">
         <input id="pEstoque" type="number" class="input" placeholder="Estoque">
+        <input id="pMin" type="number" class="input" placeholder="Estoque Mínimo">
       </div>
       <button onclick="salvarProduto()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR PRODUTO</button>
     </div>
     <div id="listaProdutos" class="grid md:grid-cols-2 gap-2"></div>
   </div>
 
+  <!-- CLIENTES -->
   <div id="clientes" class="aba">
     <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO CLIENTE</h2>
       <input type="hidden" id="cId">
@@ -74,6 +81,7 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <div id="listaClientes" class="grid md:grid-cols-2 gap-2"></div>
   </div>
 
+  <!-- FORNECEDORES -->
   <div id="fornecedores" class="aba">
     <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO FORNECEDOR</h2>
       <input type="hidden" id="fId">
@@ -84,13 +92,30 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     <div id="listaFornecedores"></div>
   </div>
 
+  <!-- RELATORIOS -->
   <div id="relatorios" class="aba">
-    <div class="card mb-2"><h2 class="font-bold mb-2">VENDAS</h2></div>
-    <div id="listaVendas" class="grid gap-2"></div>
+    <div class="card mb-2"><h2 class="font-bold mb-2">RELATÓRIOS GERAIS</h2>
+      <button onclick="relVendasGeral()" class="btn bg-purple-600 text-white">Vendas Geral</button>
+      <button onclick="relEstoqueBaixo()" class="btn bg-orange-600 text-white">Estoque Baixo</button>
+    </div>
+    <div id="resultadoRel" class="grid gap-2"></div>
   </div>
 
+  <!-- CAIXA -->
   <div id="caixa" class="aba">
-    <div class="card"><h2 class="font-bold mb-2">CAIXA: R$ <span id="saldoCaixa">0.00</span></h2></div>
+    <div class="grid md:grid-cols-2 gap-2">
+      <div class="card"><h2 class="font-bold mb-2">CAIXA ATUAL</h2>
+        <p class="text-4xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
+        <button onclick="fecharCaixa()" class="w-full btn bg-red-600 text-white mt-2">FECHAR CAIXA</button>
+        <button onclick="zerarCaixa()" class="w-full btn bg-gray-600 text-white mt-2">ZERAR CAIXA</button>
+      </div>
+      <div class="card"><h2 class="font-bold mb-2">MOVIMENTAÇÃO</h2>
+        <input id="mValor" type="number" class="input mb-2" placeholder="Valor">
+        <input id="mDesc" class="input mb-2" placeholder="Descrição">
+        <button onclick="entradaCaixa()" class="btn bg-green-600 text-white">ENTRADA</button>
+        <button onclick="saidaCaixa()" class="btn bg-red-600 text-white">SAÍDA</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -114,7 +139,8 @@ import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 const $=id=>document.getElementById(id);
-let produtos=[], clientes=[], fornecedores=[], vendas=[], carrinho=[], total=0, saldoCaixa=0;
+let produtos=[], clientes=[], fornecedores=[], vendas=[], movCaixa=[], carrinho=[], total=0, saldoCaixa=0;
+const SENHA_ZERAR = "1234"; // SENHA PRA ZERAR CAIXA
 
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
 window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText="Erro: "+e.message)
@@ -129,37 +155,45 @@ function carregarTudo(){
   onSnapshot(collection(db,"produtos"),snap=>{produtos=snap.docs.map(d=>({id:d.id,...d.data()})); buscarProd(); listarProdutos();});
   onSnapshot(collection(db,"clientes"),snap=>{clientes=snap.docs.map(d=>({id:d.id,...d.data()})); listarClientes();});
   onSnapshot(collection(db,"fornecedores"),snap=>{fornecedores=snap.docs.map(d=>({id:d.id,...d.data()})); listarFornecedores();});
-  onSnapshot(collection(db,"vendas"),snap=>{vendas=snap.docs.map(d=>({id:d.id,...d.data()})); listarVendas();});
-  onSnapshot(collection(db,"caixa"),snap=>{saldoCaixa=snap.docs.reduce((a,d)=>a+d.data().valor,0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2)});
+  onSnapshot(collection(db,"vendas"),snap=>{vendas=snap.docs.map(d=>({id:d.id,...d.data()}));});
+  onSnapshot(collection(db,"caixa"),snap=>{movCaixa=snap.docs.map(d=>({id:d.id,...d.data()})); saldoCaixa=movCaixa.reduce((a,d)=>a+d.valor,0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2)});
 }
 
-// PRODUTOS
+// PRODUTOS CRUD COMPLETO
 window.buscarProd=()=>{$('listaProd').innerHTML=produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase())).map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer">${p.nome} - R$${p.preco.toFixed(2)} [${p.estoque}]</div>`).join('')}
-window.listarProdutos=()=>{$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card"><b>${p.nome}</b><br>Estoque: ${p.estoque} | R$${p.preco.toFixed(2)}</div>`).join('')}
-window.salvarProduto=async()=>{await addDoc(collection(db,"produtos"),{nome:$('pNome').value,preco:parseFloat($('pPreco').value)||0,estoque:parseInt($('pEstoque').value)||0});$('pNome').value='';$('pPreco').value='';$('pEstoque').value=''}
+window.listarProdutos=()=>{$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card"><b>${p.nome}</b><br>Cod:${p.cod} | Custo:R$${p.custo} | Venda:R$${p.preco} | Est:${p.estoque}<div class="mt-2"><button onclick="editarProduto('${p.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirProduto('${p.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
+window.salvarProduto=async()=>{let data={nome:$('pNome').value,cod:$('pCod').value,custo:parseFloat($('pCusto').value)||0,preco:parseFloat($('pPreco').value)||0,estoque:parseInt($('pEstoque').value)||0,min:parseInt($('pMin').value)||0}; if($('pId').value){await updateDoc(doc(db,"produtos",$('pId').value),data)}else{await addDoc(collection(db,"produtos"),data)} limparProd();}
+window.editarProduto=id=>{let p=produtos.find(x=>x.id==id);$('pId').value=p.id;$('pNome').value=p.nome;$('pCod').value=p.cod;$('pCusto').value=p.custo;$('pPreco').value=p.preco;$('pEstoque').value=p.estoque;$('pMin').value=p.min}
+window.excluirProduto=async id=>{if(confirm("Excluir produto?"))await deleteDoc(doc(db,"produtos",id))}
+function limparProd(){$('pId').value='';$('pNome').value='';$('pCod').value='';$('pCusto').value='';$('pPreco').value='';$('pEstoque').value='';$('pMin').value=''}
 
-// CLIENTES
+// CLIENTES E FORNECEDORES CRUD
 window.listarClientes=()=>{$('listaClientes').innerHTML=clientes.map(c=>`<div class="card"><b>${c.nome}</b><br>${c.tel}<div class="mt-2"><button onclick="editarCliente('${c.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirCliente('${c.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
 window.salvarCliente=async()=>{let data={nome:$('cNome').value,tel:$('cTel').value}; if($('cId').value){await updateDoc(doc(db,"clientes",$('cId').value),data)}else{await addDoc(collection(db,"clientes"),data)} $('cId').value='';$('cNome').value='';$('cTel').value='';}
 window.editarCliente=id=>{let c=clientes.find(x=>x.id==id);$('cId').value=c.id;$('cNome').value=c.nome;$('cTel').value=c.tel}
 window.excluirCliente=async id=>{if(confirm("Excluir?"))await deleteDoc(doc(db,"clientes",id))}
 
-// FORNECEDORES
 window.listarFornecedores=()=>{$('listaFornecedores').innerHTML=fornecedores.map(f=>`<div class="card"><b>${f.nome}</b><br>${f.tel}<div class="mt-2"><button onclick="editarFornecedor('${f.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirFornecedor('${f.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
 window.salvarFornecedor=async()=>{let data={nome:$('fNome').value,tel:$('fTel').value}; if($('fId').value){await updateDoc(doc(db,"fornecedores",$('fId').value),data)}else{await addDoc(collection(db,"fornecedores"),data)} $('fId').value='';$('fNome').value='';$('fTel').value='';}
 window.editarFornecedor=id=>{let f=fornecedores.find(x=>x.id==id);$('fId').value=f.id;$('fNome').value=f.nome;$('fTel').value=f.tel}
 window.excluirFornecedor=async id=>{if(confirm("Excluir?"))await deleteDoc(doc(db,"fornecedores",id))}
 
-// CARRINHO
+// CARRINHO + - 
 window.addCarrinho=async id=>{
   let p=produtos.find(x=>x.id==id);if(!p||p.estoque<=0)return alert("Sem estoque");
   let item=carrinho.find(i=>i.id==id);
   if(item){item.qtd++; item.total=item.qtd*p.preco}else{carrinho.push({id:p.id,nome:p.nome,preco:p.preco,qtd:1,total:p.preco})}
   atualizarCarrinho();
 }
+window.remCarrinho=async id=>{
+  let item=carrinho.find(i=>i.id==id);
+  if(item.qtd>1){item.qtd--; item.total=item.qtd*item.preco}else{carrinho=carrinho.filter(i=>i.id!=id)}
+  atualizarCarrinho();
+}
 window.atualizarCarrinho=()=>{
   $('carrinho').innerHTML=carrinho.map(i=>`<div class="flex justify-between items-center border-b py-1">
-    <div>${i.nome} <button onclick="addCarrinho('${i.id}')" class="bg-green-500 text-white px-2 rounded">+</button> ${i.qtd}x</div>
+    <div>${i.nome}</div>
+    <div><button onclick="remCarrinho('${i.id}')" class="bg-red-500 text-white px-2 rounded">-</button> ${i.qtd} <button onclick="addCarrinho('${i.id}')" class="bg-green-500 text-white px-2 rounded">+</button></div>
     <div>R$${i.total.toFixed(2)}</div></div>`).join('');
   total=carrinho.reduce((a,i)=>a+i.total,0);$('total').innerText=total.toFixed(2);
 }
@@ -167,17 +201,33 @@ window.finalizarVenda=async()=>{
   if(carrinho.length==0)return alert("Carrinho vazio");
   let vendaRef=await addDoc(collection(db,"vendas"),{itens:carrinho,total, data:serverTimestamp()});
   for(let i of carrinho){let p=produtos.find(x=>x.id==i.id);await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque-i.qtd})}
-  await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:total,data:serverTimestamp()});
+  await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:total,desc:'Venda',data:serverTimestamp()});
   imprimirCupom(carrinho,total,vendaRef.id,'1ª VIA');
   carrinho=[];total=0;atualizarCarrinho();
 }
 
-// RELATORIOS
-window.listarVendas=()=>{$('listaVendas').innerHTML=vendas.map(v=>`<div class="card"><b>VENDA ${v.id.substring(0,5)}</b> - R$${v.total.toFixed(2)}<br><button onclick='imprimirCupom(${JSON.stringify(v.itens)},"${v.total}","${v.id}","2ª VIA")' class="btn bg-blue-500 text-white text-sm mt-1">IMPRIMIR 2ª VIA</button></div>`).join('')}
+// RELATORIOS GERAL
+window.relVendasGeral=()=>{$('resultadoRel').innerHTML=vendas.map(v=>`<div class="card"><b>VENDA ${v.id.substring(0,5)}</b> - R$${v.total.toFixed(2)} - ${new Date(v.data.seconds*1000).toLocaleDateString()}<br><button onclick='imprimirCupom(${JSON.stringify(v.itens)},"${v.total}","${v.id}","2ª VIA")' class="btn bg-blue-500 text-white text-sm mt-1">IMPRIMIR 2ª VIA</button></div>`).join('')}
+window.relEstoqueBaixo=()=>{$('resultadoRel').innerHTML=produtos.filter(p=>p.estoque<=p.min).map(p=>`<div class="card border-red-500">${p.nome} - Estoque: ${p.estoque}</div>`).join('')}
+
+// CAIXA
+window.entradaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()});$('mValor').value='';$('mDesc').value=''}
+window.saidaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()});$('mValor').value='';$('mDesc').value=''}
+window.fecharCaixa=()=>{imprimirFechamento(); addDoc(collection(db,"caixa"),{tipo:'fechamento',valor:-saldoCaixa,desc:'Fechamento',data:serverTimestamp()})}
+window.zerarCaixa=()=>{let senha=prompt("Digite a senha para zerar o caixa:"); if(senha==SENHA_ZERAR){addDoc(collection(db,"caixa"),{tipo:'zerar',valor:-saldoCaixa,desc:'Zerado',data:serverTimestamp()});alert("Caixa zerado")}else{alert("Senha incorreta")}}
+
 window.imprimirCupom=(itens,total,id,via)=>{
-  let html=`<div style="width:300px;font-family:monospace"><h2>PDV IGARAÇU</h2><p>${via}</p><p>VENDA: ${id.substring(0,8)}</p><hr>`;
+  let html=`<div style="width:300px;font-family:monospace"><h2 class="text-center">PDV IGARAÇU</h2><p class="text-center">${via}</p><p>VENDA: ${id.substring(0,8)}</p><hr>`;
   itens.forEach(i=>html+=`<div>${i.nome} ${i.qtd}x R$${i.preco.toFixed(2)}</div>`);
   html+=`<hr><h3>TOTAL: R$${parseFloat(total).toFixed(2)}</h3></div>`;
+  $('cupom').innerHTML=html;setTimeout(()=>window.print(),100);
+}
+window.imprimirFechamento=()=>{
+  let entradas=movCaixa.filter(m=>m.tipo=='entrada').reduce((a,b)=>a+b.valor,0);
+  let saidas=movCaixa.filter(m=>m.tipo=='saida').reduce((a,b)=>a+b.valor,0);
+  let html=`<div style="width:300px;font-family:monospace"><h2 class="text-center">FECHAMENTO CAIXA</h2><hr>`;
+  html+=`<p>Entradas: R$${entradas.toFixed(2)}</p><p>Saídas: R$${Math.abs(saidas).toFixed(2)}</p><hr>`;
+  html+=`<h3>SALDO: R$${saldoCaixa.toFixed(2)}</h3></div>`;
   $('cupom').innerHTML=html;setTimeout(()=>window.print(),100);
 }
 </script>
