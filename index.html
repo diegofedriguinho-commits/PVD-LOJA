@@ -1,20 +1,130 @@
-<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8"><title>PDV</title>
-<script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-100">
-<div id="login" class="h-screen flex items-center justify-center"><div class="bg-white p-6 rounded shadow w-80">
-<h1 class="text-center text-2xl font-bold mb-4">PDV LOGIN</h1>
-<input id="email" value="admin@admin.com" class="w-full border p-2 mb-2 rounded">
-<input id="senha" value="123456" type="password" class="w-full border p-2 mb-2 rounded">
-<button onclick="entrar()" class="w-full bg-blue-600 text-white p-2 rounded">ENTRAR</button>
-<p id="erro" class="text-red-500 text-center mt-2"></p></div></div>
-<div id="app" class="hidden p-4"><h1 class="text-2xl">ENTROU! ✅</h1><button onclick="sair()" class="bg-red-500 text-white p-2 rounded">SAIR</button></div>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDV IGARAÇU ONLINE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
+.btn{padding:12px;border-radius:8px;font-weight:bold;cursor:pointer}
+.input{padding:10px;border:1px solid #ccc;border-radius:8px;width:100%}
+.card{background:white;padding:16px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.aba{display:none}.ativa{display:block}
+.menu{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd;z-index:10}
+.menu button{padding:10px;font-size:11px}
+.menu .on{background:#2563eb;color:white}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<!-- TELA LOGIN -->
+<div id="login" class="h-screen flex items-center justify-center p-4">
+  <div class="card w-full max-w-sm">
+    <h1 class="text-center text-2xl font-bold mb-4">PDV IGARAÇU</h1>
+    <input id="email" type="email" value="admin@admin.com" class="input mb-2" placeholder="Email">
+    <input id="senha" type="password" value="123456" class="input mb-2" placeholder="Senha">
+    <button onclick="entrar()" class="w-full btn bg-blue-600 text-white">ENTRAR</button>
+    <p id="erro" class="text-red-500 text-center mt-2 text-sm"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+<header class="bg-blue-600 text-white p-3 flex justify-between items-center sticky top-0">
+  <b>PDV IGARAÇU</b><button onclick="sair()" class="bg-red-500 px-3 py-1 rounded">SAIR</button>
+</header>
+
+<div class="p-2 pb-24">
+  <div id="venda" class="aba ativa">
+    <div class="grid md:grid-cols-2 gap-2">
+      <div class="card">
+        <h2 class="font-bold mb-2">1. PRODUTOS</h2>
+        <input id="buscaProd" onkeyup="buscarProd()" class="input mb-2" placeholder="Buscar produto">
+        <div id="listaProd" class="max-h-60 overflow-y-auto"></div>
+        <button onclick="novoProd()" class="w-full btn bg-green-600 text-white mt-2">+ NOVO PRODUTO</button>
+      </div>
+      <div class="card">
+        <h2 class="font-bold mb-2">2. CARRINHO</h2>
+        <div id="carrinho" class="max-h-60 overflow-y-auto"></div>
+        <p class="text-3xl font-bold text-center mt-2">Total: R$ <span id="total">0.00</span></p>
+        <button onclick="finalizarVenda()" class="w-full btn bg-green-600 text-white mt-2">FINALIZAR VENDA</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="clientes" class="aba">
+    <div class="card"><h2 class="font-bold mb-2">+ CLIENTE</h2>
+      <input id="nomeCli" class="input mb-2" placeholder="Nome Completo">
+      <input id="telCli" class="input mb-2" placeholder="Telefone">
+      <button onclick="salvarCliente()" class="w-full btn bg-blue-600 text-white">SALVAR CLIENTE</button>
+    </div>
+    <div id="listaCli" class="mt-2"></div>
+  </div>
+
+  <div id="fornecedores" class="aba">
+    <div class="card"><h2 class="font-bold mb-2">+ FORNECEDOR</h2>
+      <input id="nomeFor" class="input mb-2" placeholder="Nome Fornecedor">
+      <input id="telFor" class="input mb-2" placeholder="Telefone">
+      <button onclick="salvarFornecedor()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
+    </div>
+  </div>
+
+  <div id="relatorios" class="aba">
+    <div class="card"><h2 class="font-bold mb-2">RELATÓRIOS</h2><canvas id="graficoVendas"></canvas></div>
+  </div>
+
+  <div id="caixa" class="aba">
+    <div class="card"><h2 class="font-bold mb-2">CAIXA</h2>
+      <p class="text-3xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
+      <button onclick="fecharCaixa()" class="w-full btn bg-purple-600 text-white mt-2">FECHAR CAIXA</button>
+    </div>
+  </div>
+</div>
+
+<nav class="menu">
+  <button onclick="mostrarAba('venda')" id="btn-venda" class="on">VENDAS</button>
+  <button onclick="mostrarAba('clientes')" id="btn-clientes">CLIENTES</button>
+  <button onclick="mostrarAba('fornecedores')" id="btn-fornecedores">FORNEC</button>
+  <button onclick="mostrarAba('relatorios')" id="btn-relatorios">RELAT</button>
+  <button onclick="mostrarAba('caixa')" id="btn-caixa">CAIXA</button>
+</nav>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
-const app = initializeApp(firebaseConfig); const auth = getAuth(app);
+const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 const $=id=>document.getElementById(id);
-window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText=e.message)
+let produtos=[], clientes=[], carrinho=[], total=0, grafico;
+
+window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on'); if(id=='relatorios') carregarGrafico();}
+window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText="Erro: "+e.message)
 window.sair=()=>signOut(auth);
-onAuthStateChanged(auth,u=>{if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden')}else{$('login').classList.remove('hidden');$('app').classList.add('hidden')}});
-</script></body></html>
+
+onAuthStateChanged(auth,u=>{
+  if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden'); carregarDados();}
+  else{$('login').classList.remove('hidden');$('app').classList.add('hidden')}
+});
+
+async function carregarDados(){
+  onSnapshot(collection(db,"produtos"),snap=>{produtos=snap.docs.map(d=>({id:d.id,...d.data()})); buscarProd();});
+  onSnapshot(collection(db,"clientes"),snap=>{clientes=snap.docs.map(d=>({id:d.id,...d.data()})); listarClientes();});
+}
+
+window.buscarProd=()=>{$('listaProd').innerHTML=produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase())).map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer hover:bg-gray-100">${p.nome} - R$${p.preco.toFixed(2)}</div>`).join('')}
+window.addCarrinho=id=>{let p=produtos.find(x=>x.id==id);carrinho.push(p);total+=p.preco;$('carrinho').innerHTML+=`<div>${p.nome} - R$${p.preco.toFixed(2)}</div>`;$('total').innerText=total.toFixed(2)}
+window.finalizarVenda=async()=>{if(carrinho.length==0)return alert("Carrinho vazio");await addDoc(collection(db,"vendas"),{itens:carrinho,total, data:serverTimestamp()});carrinho=[];total=0;$('carrinho').innerHTML='';$('total').innerText='0.00';alert("Venda salva!")}
+window.novoProd=async()=>{let nome=prompt("Nome do produto");let preco=parseFloat(prompt("Preço"));if(nome&&preco)await addDoc(collection(db,"produtos"),{nome,preco})}
+window.salvarCliente=async()=>{if($('nomeCli').value=='')return;await addDoc(collection(db,"clientes"),{nome:$('nomeCli').value,tel:$('telCli').value});$('nomeCli').value='';$('telCli').value='';alert("Cliente salvo")}
+window.listarClientes=()=>{$('listaCli').innerHTML=clientes.map(c=>`<div class="card mb-1">${c.nome} - ${c.tel}</div>`).join('')}
+window.salvarFornecedor=async()=>{if($('nomeFor').value=='')return;await addDoc(collection(db,"fornecedores"),{nome:$('nomeFor').value,tel:$('telFor').value});alert("Fornecedor salvo")}
+window.carregarGrafico=()=>{const ctx=$('graficoVendas');if(grafico)grafico.destroy();grafico=new Chart(ctx,{type:'bar',data:{labels:['Seg','Ter','Qua'],datasets:[{label:'Vendas',data:[12,19,3],backgroundColor:'#2563eb'}]}})}
+window.fecharCaixa=()=>alert("Caixa fechado. Total: R$"+total.toFixed(2))
+</script>
+</body>
+</html>
