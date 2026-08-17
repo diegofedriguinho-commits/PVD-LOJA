@@ -76,7 +76,8 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <button onclick="mostrarAba('caixa')" id="btn-caixa">CAIXA</button>
 </nav>
 </div>
-<script type="module">
+
+  <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, setDoc, writeBatch, query, limit, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
@@ -85,7 +86,7 @@ const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDo
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 const $=id=>document.getElementById(id);
 let produtos=[], clientes=[], fornecedores=[], vendas=[], receber=[], pagar=[], movCaixa=[], loja={nome:'D2 MINIMERCADO',end:'RUA MANOEL ABRANTES FILHO 210 JD BELA VISTA',tel:'44997550818'}, carrinho=[], subtotal=0, total=0, saldoCaixa=0, ultimoNumVenda=0;
-const SENHA_ZERAR = "975508";
+const SENHA_ZERAR = "LOLA2025";
 
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
 window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>alert("Erro login"))
