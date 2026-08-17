@@ -49,12 +49,8 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
         <p class="text-lg">Subtotal: R$ <span id="subtotal">0.00</span></p>
         <input id="desconto" type="number" step="0.01" value="0" oninput="calcularTotal()" class="input mt-1" placeholder="Desconto R$">
         <p class="text-2xl font-bold text-green-600">Total: R$ <span id="total">0.00</span></p>
-
         <select id="formaPag" onchange="mostrarTroco()" class="input mt-2">
-          <option value="Dinheiro">DINHEIRO</option>
-          <option value="Cartão">CARTÃO</option>
-          <option value="Pix">PIX</option>
-          <option value="Prazo">PRAZO</option>
+          <option value="Dinheiro">DINHEIRO</option><option value="Cartão">CARTÃO</option><option value="Pix">PIX</option><option value="Prazo">PRAZO</option>
         </select>
         <div id="divTroco">
           <input id="valorRecebido" type="number" step="0.01" oninput="calcularTroco()" class="input mt-1" placeholder="Valor Recebido">
@@ -101,8 +97,9 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <!-- LOJA -->
   <div id="loja" class="aba">
     <div class="card mb-2"><h2 class="font-bold mb-2">DADOS DA LOJA</h2>
+      <input type="hidden" id="lId">
       <input id="lNome" class="input mb-2" placeholder="Nome da Loja">
-      <input id="lEnd" class="input mb-2" placeholder="Endereço">
+      <input id="lEnd" class="input mb-2" placeholder="Endereço Completo">
       <input id="lTel" class="input mb-2" placeholder="Telefone">
       <button onclick="salvarLoja()" class="w-full btn bg-blue-600 text-white">SALVAR DADOS</button>
     </div>
@@ -128,8 +125,8 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
   <!-- RELATORIOS -->
   <div id="relatorios" class="aba">
     <div class="card mb-2"><h2 class="font-bold mb-2">RELATÓRIOS</h2>
-      <button onclick="relVendasDia()" class="btn bg-purple-600 text-white">Vendas por Dia</button>
-      <button onclick="relVendas()" class="btn bg-purple-600 text-white">Por Forma Pagto</button>
+      <button onclick="relVendasDia()" class="btn bg-purple-600 text-white">Vendas do Dia</button>
+      <button onclick="relVendas()" class="btn bg-purple-600 text-white">Vendas por Pagamento</button>
     </div>
     <div id="resultadoRel" class="grid gap-2"></div>
   </div>
@@ -171,12 +168,12 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 const $=id=>document.getElementById(id);
-let produtos=[], clientes=[], vendas=[], receber=[], pagar=[], movCaixa=[], carrinho=[], subtotal=0, total=0, saldoCaixa=0, dadosLoja={nome:'LOLA',end:'Rua Principal, 123',tel:'(44) 99999-9999'};
+let produtos=[], clientes=[], vendas=[], receber=[], pagar=[], movCaixa=[], loja={nome:'LOLA',end:'',tel:''}, carrinho=[], subtotal=0, total=0, saldoCaixa=0;
 const SENHA_ZERAR = "LOLA2025";
 
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
@@ -194,7 +191,7 @@ function carregarTudo(){
   onSnapshot(collection(db,"vendas"),snap=>{vendas=snap.docs.map(d=>({id:d.id,...d.data()}));});
   onSnapshot(collection(db,"receber"),snap=>{receber=snap.docs.map(d=>({id:d.id,...d.data()})); listarReceber();});
   onSnapshot(collection(db,"pagar"),snap=>{pagar=snap.docs.map(d=>({id:d.id,...d.data()})); listarPagar();});
-  onSnapshot(collection(db,"loja"),snap=>{if(snap.docs[0]){dadosLoja=snap.docs[0].data(); $('nomeLojaHeader').innerText=dadosLoja.nome; $('lNome').value=dadosLoja.nome; $('lEnd').value=dadosLoja.end; $('lTel').value=dadosLoja.tel}});
+  onSnapshot(collection(db,"loja"),snap=>{if(!snap.empty){loja=snap.docs[0].data(); $('lId').value=snap.docs[0].id; $('lNome').value=loja.nome; $('lEnd').value=loja.end; $('lTel').value=loja.tel; $('nomeLojaHeader').innerText=loja.nome}});
   onSnapshot(collection(db,"caixa"),snap=>{
     movCaixa=snap.docs.map(d=>({id:d.id,...d.data()}));
     saldoCaixa=movCaixa.reduce((a,d)=>a+d.valor,0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2);
@@ -209,7 +206,7 @@ function carregarTudo(){
 }
 
 // LOJA
-window.salvarLoja=async()=>{let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value}; const snap=await getDocs(collection(db,"loja")); if(snap.docs[0]){await updateDoc(doc(db,"loja",snap.docs[0].id),data)}else{await addDoc(collection(db,"loja"),data)} alert("Dados salvos!")}
+window.salvarLoja=async()=>{let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value}; if($('lId').value){await setDoc(doc(db,"loja",$('lId').value),data)}else{await addDoc(collection(db,"loja"),data)} alert("Dados salvos!")}
 
 // PRODUTOS E CLIENTES CRUD
 window.buscarProd=()=>{$('listaProd').innerHTML=produtos.map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer">${p.nome} - R$${p.preco.toFixed(2)} [${p.estoque}]</div>`).join('')}
@@ -252,24 +249,20 @@ window.finalizarVenda=async()=>{
   let forma=$('formaPag').value; let clienteId=$('clienteVenda').value; let cliente=clientes.find(c=>c.id==clienteId); let desconto=parseFloat($('desconto').value)||0; let troco=parseFloat($('troco').innerText)||0;
   let vendaRef=await addDoc(collection(db,"vendas"),{itens:carrinho,subtotal,desconto,total,forma,clienteId,cliente:cliente?.nome||'Avulso',troco,data:serverTimestamp()});
   for(let i of carrinho){let p=produtos.find(x=>x.id==i.id);await updateDoc(doc(db,"produtos",i.id),{estoque:p.estoque-i.qtd})}
-
-  if(forma!='Prazo'){
-    await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:total,desc:`Venda ${forma}`,data:serverTimestamp()});
-  }else if(clienteId){
-    await addDoc(collection(db,"receber"),{clienteId,cliente:cliente.nome,valorTotal:total,valorPago:0,saldo:total,vendaId:vendaRef.id,data:serverTimestamp()})
-  }
-  imprimirCupom(carrinho,subtotal,desconto,total,forma,troco,cliente,vendaRef.id,'1ª VIA');
+  if(forma!='Prazo'){await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:total,desc:`Venda ${forma}`,data:serverTimestamp()});}
+  else if(clienteId){await addDoc(collection(db,"receber"),{clienteId,cliente:cliente.nome,valorTotal:total,valorPago:0,saldo:total,vendaId:vendaRef.id,data:serverTimestamp()})}
+  imprimirCupom(carrinho,subtotal,desconto,total,forma,troco,cliente,vendaRef.id);
   carrinho=[];subtotal=0;total=0;$('desconto').value=0;$('valorRecebido').value=0;atualizarCarrinho();
 }
 
-// RELATORIOS
-window.relVendasDia=()=>{let dias={}; vendas.forEach(v=>{let dia=new Date(v.data.seconds*1000).toLocaleDateString(); dias[dia]=(dias[dia]||0)+v.total}); $('resultadoRel').innerHTML=Object.keys(dias).map(d=>`<div class="card"><b>${d}</b> - R$${dias[d].toFixed(2)}</div>`).join('')}
-window.relVendas=()=>{$('resultadoRel').innerHTML=`<div class="card">Dinheiro: R$${vendas.filter(v=>v.forma=='Dinheiro').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Cartão: R$${vendas.filter(v=>v.forma=='Cartão').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Pix: R$${vendas.filter(v=>v.forma=='Pix').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Prazo: R$${vendas.filter(v=>v.forma=='Prazo').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><hr>${vendas.map(v=>`<div class="card"><b>${v.id.substring(0,6)}</b> - ${new Date(v.data.seconds*1000).toLocaleString()} - R$${v.total.toFixed(2)}<button onclick="imprimirCupom(${JSON.stringify(v.itens)},${v.subtotal},${v.desconto},${v.total},'${v.forma}',${v.troco},'${v.cliente}','${v.id}','2ª VIA')" class="btn bg-blue-500 text-white text-sm mt-1">IMPRIMIR 2ª VIA</button></div>`).join('')}`}
+// RELATORIOS COM 2ª VIA
+window.relVendasDia=()=>{const hoje=new Date().toLocaleDateString(); const vendasHoje=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000).toLocaleDateString()==hoje);
+$('resultadoRel').innerHTML=vendasHoje.map(v=>`<div class="card"><b>VENDA ${v.id.substring(0,5)}</b> - R$${v.total.toFixed(2)} - ${v.cliente}<br><button onclick='imprimirCupom(${JSON.stringify(v.itens)},"${v.subtotal}","${v.desconto}","${v.total}","${v.forma}","${v.troco}","${v.cliente}","${v.id}")' class="btn bg-blue-500 text-white text-sm mt-1">IMPRIMIR 2ª VIA</button></div>`).join('') || '<p>Nenhuma venda hoje</p>'}
+window.relVendas=()=>{$('resultadoRel').innerHTML=`<div class="card">Dinheiro: R$${vendas.filter(v=>v.forma=='Dinheiro').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Cartão: R$${vendas.filter(v=>v.forma=='Cartão').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Pix: R$${vendas.filter(v=>v.forma=='Pix').reduce((a,b)=>a+b.total,0).toFixed(2)}</div><div class="card">Prazo: R$${vendas.filter(v=>v.forma=='Prazo').reduce((a,b)=>a+b.total,0).toFixed(2)}</div>`}
 
 // CONTAS A RECEBER E PAGAR
 window.listarReceber=()=>{$('listaReceber').innerHTML=receber.map(r=>`<div class="card border-yellow-500"><b>${r.cliente}</b><br>Saldo: R$${r.saldo.toFixed(2)}<div class="mt-2"><input id="rec${r.id}" type="number" class="input" placeholder="Valor"><button onclick="receberParcial('${r.id}')" class="btn bg-green-600 text-white mt-1">RECEBER</button></div></div>`).join('')}
 window.receberParcial=async(id)=>{let r=receber.find(x=>x.id==id); let valor=parseFloat($(`rec${r.id}`).value); await updateDoc(doc(db,"receber",id),{valorPago:r.valorPago+valor,saldo:r.saldo-valor}); await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:valor,desc:`Receb ${r.cliente}`,data:serverTimestamp()});}
-
 window.salvarContaPagar=async()=>{let valor=parseFloat($('pgValor').value); let parcelas=parseInt($('pgParcelas').value); for(let i=1;i<=parcelas;i++){await addDoc(collection(db,"pagar"),{desc:`${$('pgDesc').value} - ${i}/${parcelas}`,valor:valor/parcelas,pago:false,data:serverTimestamp()})} alert("Conta cadastrada")}
 window.listarPagar=()=>{$('listaPagar').innerHTML=pagar.map(p=>`<div class="card ${p.pago?'border-green-500':'border-red-500'}"><b>${p.desc}</b><br>R$${p.valor.toFixed(2)} ${!p.pago?`<button onclick="pagarParcela('${p.id}')" class="btn bg-red-600 text-white mt-1">PAGAR</button>`:''}</div>`).join('')}
 window.pagarParcela=async(id)=>{let p=pagar.find(x=>x.id==id); await updateDoc(doc(db,"pagar",id),{pago:true}); await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-p.valor,desc:`Pagto ${p.desc}`,data:serverTimestamp()});}
@@ -279,37 +272,42 @@ window.entradaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'entrada
 window.saidaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 window.fecharCaixa=()=>{imprimirFechamento(); addDoc(collection(db,"caixa"),{tipo:'fechamento',valor:-saldoCaixa,desc:'Fechamento',data:serverTimestamp()})}
 
-// IMPRESSÃO
-window.imprimirCupom=(itens,subtotal,desconto,total,forma,troco,cliente,id,via)=>{
+// IMPRESSÃO COM DADOS DA LOJA
+window.imprimirCupom=(itens,subtotal,desconto,total,forma,troco,cliente,id)=>{
   let html=`<div style="width:300px;font-family:monospace;text-align:center">
-  <h2>${dadosLoja.nome}</h2><p>${dadosLoja.end}</p><p>${dadosLoja.tel}</p><p>${via}</p><hr>
-  <p style="text-align:left">VENDA: ${id.substring(0,8)}</p><p style="text-align:left">CLIENTE: ${cliente}</p><p style="text-align:left">PAGTO: ${forma}</p><hr>`;
+  <h2>${loja.nome}</h2><p>${loja.end}</p><p>Tel: ${loja.tel}</p><hr>
+  <p style="text-align:left">VENDA: ${id.substring(0,8)}</p>
+  <p style="text-align:left">CLIENTE: ${cliente}</p><p style="text-align:left">PAGTO: ${forma}</p><hr>`;
   itens.forEach(i=>html+=`<div style="text-align:left">${i.nome} ${i.qtd}x R$${i.preco.toFixed(2)}</div>`);
-  html+=`<hr><div style="text-align:left">Subtotal: R$${subtotal.toFixed(2)}</div>`;
-  if(desconto>0)html+=`<div style="text-align:left">Desconto: -R$${desconto.toFixed(2)}</div>`;
-  html+=`<h3>TOTAL: R$${total.toFixed(2)}</h3>`;
-  if(forma=='Dinheiro' && troco>0)html+=`<div>Recebido: R$${(total+troco).toFixed(2)}</div><div>Troco: R$${troco.toFixed(2)}</div>`;
+  html+=`<hr><div style="text-align:left">Subtotal: R$${parseFloat(subtotal).toFixed(2)}</div>`;
+  if(parseFloat(desconto)>0)html+=`<div style="text-align:left">Desconto: -R$${parseFloat(desconto).toFixed(2)}</div>`;
+  html+=`<h3>TOTAL: R$${parseFloat(total).toFixed(2)}</h3>`;
+  if(forma=='Dinheiro' && parseFloat(troco)>0)html+=`<div>Recebido: R$${(parseFloat(total)+parseFloat(troco)).toFixed(2)}</div><div>Troco: R$${parseFloat(troco).toFixed(2)}</div>`;
   html+=`<p>Obrigado e Volte Sempre!</p></div>`;
   let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 window.imprimirFechamento=()=>{
   let entradas=movCaixa.filter(m=>m.valor>0).reduce((a,b)=>a+b.valor,0);
   let saidas=movCaixa.filter(m=>m.valor<0).reduce((a,b)=>a+b.valor,0);
-  let html=`<div style="width:300px;font-family:monospace;text-align:center"><h2>${dadosLoja.nome} - FECHAMENTO</h2><p>Entradas: R$${entradas.toFixed(2)}</p><p>Saídas: R$${Math.abs(saidas).toFixed(2)}</p><hr><h3>SALDO: R$${saldoCaixa.toFixed(2)}</h3></div>`;
+  let html=`<div style="width:300px;font-family:monospace;text-align:center"><h2>${loja.nome} - FECHAMENTO</h2><p>Entradas: R$${entradas.toFixed(2)}</p><p>Saídas: R$${Math.abs(saidas).toFixed(2)}</p><hr><h3>SALDO: R$${saldoCaixa.toFixed(2)}</h3></div>`;
   let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 
-// ZERAR SISTEMA CORRIGIDO
+// ZERAR SISTEMA CORRIGIDO COM BATCH
 window.zerarSistema=async()=>{
   let senha=prompt("ATENÇÃO! Isso apaga TUDO. Digite a senha:");
   if(senha!=SENHA_ZERAR)return alert("Senha incorreta");
   if(!confirm("Tem certeza? Isso não tem volta!"))return;
-  const collections = ['produtos','clientes','vendas','receber','pagar','caixa','loja'];
-  for(const col of collections){
+
+  const colecoes=['produtos','clientes','vendas','receber','pagar','caixa','loja'];
+  for(const col of colecoes){
     const snap=await getDocs(collection(db,col));
-    for(const d of snap.docs){ await deleteDoc(doc(db,col,d.id)); }
+    const batch = writeBatch(db); // Apaga em lote
+    snap.docs.forEach(d=>{ batch.delete(doc(db,col,d.id)); });
+    await batch.commit(); // Espera terminar antes de ir pra próxima
   }
-  alert("Sistema zerado com sucesso!");
+  alert("Sistema zerado com sucesso! Recarregue a página.");
+  location.reload();
 }
 </script>
 </body>
