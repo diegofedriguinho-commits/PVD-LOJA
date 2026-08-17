@@ -2,28 +2,29 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV IGARAÇU ONLINE</title>
+<title>PDV IGARAÇU COMPLETO</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
-.btn{padding:12px;border-radius:8px;font-weight:bold;cursor:pointer}
+.btn{padding:10px 14px;border-radius:8px;font-weight:bold;cursor:pointer}
 .input{padding:10px;border:1px solid #ccc;border-radius:8px;width:100%}
 .card{background:white;padding:16px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .aba{display:none}.ativa{display:block}
-.menu{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd;z-index:10}
-.menu button{padding:10px;font-size:11px}
+.menu{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd;z-index:10}
+.menu button{padding:8px;font-size:10px}
 .menu .on{background:#2563eb;color:white}
+.badge{background:#ef4444;color:white;border-radius:999px;padding:2px 6px;font-size:10px}
 .hidden{display:none}
 </style>
 </head>
 <body>
 
-<!-- TELA LOGIN -->
+<!-- LOGIN -->
 <div id="login" class="h-screen flex items-center justify-center p-4">
   <div class="card w-full max-w-sm">
     <h1 class="text-center text-2xl font-bold mb-4">PDV IGARAÇU</h1>
-    <input id="email" type="email" value="admin@admin.com" class="input mb-2" placeholder="Email">
+    <input id="email" value="admin@admin.com" class="input mb-2" placeholder="Email">
     <input id="senha" type="password" value="123456" class="input mb-2" placeholder="Senha">
     <button onclick="entrar()" class="w-full btn bg-blue-600 text-white">ENTRAR</button>
     <p id="erro" class="text-red-500 text-center mt-2 text-sm"></p>
@@ -32,17 +33,18 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 
 <!-- APP -->
 <div id="app" class="hidden">
-<header class="bg-blue-600 text-white p-3 flex justify-between items-center sticky top-0">
+<header class="bg-blue-600 text-white p-3 flex justify-between items-center sticky top-0 z-20">
   <b>PDV IGARAÇU</b><button onclick="sair()" class="bg-red-500 px-3 py-1 rounded">SAIR</button>
 </header>
 
 <div class="p-2 pb-24">
+  <!-- VENDAS -->
   <div id="venda" class="aba ativa">
-    <div class="grid md:grid-cols-2 gap-2">
+    <div class="grid lg:grid-cols-2 gap-2">
       <div class="card">
         <h2 class="font-bold mb-2">1. PRODUTOS</h2>
         <input id="buscaProd" onkeyup="buscarProd()" class="input mb-2" placeholder="Buscar produto">
-        <div id="listaProd" class="max-h-60 overflow-y-auto"></div>
+        <div id="listaProd" class="max-h-80 overflow-y-auto"></div>
         <button onclick="novoProd()" class="w-full btn bg-green-600 text-white mt-2">+ NOVO PRODUTO</button>
       </div>
       <div class="card">
@@ -54,37 +56,80 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
     </div>
   </div>
 
+  <!-- PRODUTOS -->
+  <div id="produtos" class="aba">
+    <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO PRODUTO</h2>
+      <div class="grid md:grid-cols-3 gap-2">
+        <input id="pNome" class="input" placeholder="Nome">
+        <input id="pPreco" type="number" step="0.01" class="input" placeholder="Preço Venda">
+        <input id="pCusto" type="number" step="0.01" class="input" placeholder="Preço Custo">
+        <input id="pEstoque" type="number" class="input" placeholder="Estoque">
+        <input id="pMin" type="number" class="input" placeholder="Estoque Mínimo">
+        <input id="pCod" class="input" placeholder="Código Barras">
+      </div>
+      <button onclick="salvarProduto()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR PRODUTO</button>
+    </div>
+    <div id="listaProdutos" class="grid md:grid-cols-2 gap-2"></div>
+  </div>
+
+  <!-- CLIENTES -->
   <div id="clientes" class="aba">
-    <div class="card"><h2 class="font-bold mb-2">+ CLIENTE</h2>
-      <input id="nomeCli" class="input mb-2" placeholder="Nome Completo">
-      <input id="telCli" class="input mb-2" placeholder="Telefone">
-      <button onclick="salvarCliente()" class="w-full btn bg-blue-600 text-white">SALVAR CLIENTE</button>
+    <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO CLIENTE</h2>
+      <div class="grid md:grid-cols-3 gap-2">
+        <input id="cNome" class="input" placeholder="Nome Completo">
+        <input id="cTel" class="input" placeholder="Telefone">
+        <input id="cCpf" class="input" placeholder="CPF">
+        <input id="cEnd" class="input md:col-span-3" placeholder="Endereço">
+      </div>
+      <button onclick="salvarCliente()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR CLIENTE</button>
     </div>
-    <div id="listaCli" class="mt-2"></div>
+    <div id="listaClientes" class="grid md:grid-cols-2 gap-2"></div>
   </div>
 
+  <!-- FORNECEDORES -->
   <div id="fornecedores" class="aba">
-    <div class="card"><h2 class="font-bold mb-2">+ FORNECEDOR</h2>
-      <input id="nomeFor" class="input mb-2" placeholder="Nome Fornecedor">
-      <input id="telFor" class="input mb-2" placeholder="Telefone">
-      <button onclick="salvarFornecedor()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
+    <div class="card mb-2"><h2 class="font-bold mb-2">CADASTRO FORNECEDOR</h2>
+      <div class="grid md:grid-cols-3 gap-2">
+        <input id="fNome" class="input" placeholder="Razão Social">
+        <input id="fTel" class="input" placeholder="Telefone">
+        <input id="fCnpj" class="input" placeholder="CNPJ">
+      </div>
+      <button onclick="salvarFornecedor()" class="w-full btn bg-blue-600 text-white mt-2">SALVAR FORNECEDOR</button>
     </div>
+    <div id="listaFornecedores"></div>
   </div>
 
+  <!-- RELATORIOS -->
   <div id="relatorios" class="aba">
-    <div class="card"><h2 class="font-bold mb-2">RELATÓRIOS</h2><canvas id="graficoVendas"></canvas></div>
+    <div class="card mb-2"><h2 class="font-bold mb-2">RELATÓRIOS</h2>
+      <button onclick="relVendas()" class="btn bg-purple-600 text-white mr-2">Vendas Hoje</button>
+      <button onclick="relEstoqueBaixo()" class="btn bg-orange-600 text-white">Estoque Baixo</button>
+    </div>
+    <div class="card"><canvas id="graficoVendas"></canvas></div>
+    <div id="resultadoRel" class="mt-2"></div>
   </div>
 
+  <!-- CAIXA -->
   <div id="caixa" class="aba">
-    <div class="card"><h2 class="font-bold mb-2">CAIXA</h2>
-      <p class="text-3xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
-      <button onclick="fecharCaixa()" class="w-full btn bg-purple-600 text-white mt-2">FECHAR CAIXA</button>
+    <div class="grid md:grid-cols-2 gap-2">
+      <div class="card"><h2 class="font-bold mb-2">CAIXA</h2>
+        <p class="text-4xl font-bold text-center text-green-600">R$ <span id="saldoCaixa">0.00</span></p>
+        <button onclick="abrirCaixa()" class="w-full btn bg-green-600 text-white mt-2">ABRIR CAIXA</button>
+        <button onclick="fecharCaixa()" class="w-full btn bg-red-600 text-white mt-2">FECHAR CAIXA</button>
+      </div>
+      <div class="card"><h2 class="font-bold mb-2">MOVIMENTAÇÃO</h2>
+        <input id="mValor" type="number" class="input mb-2" placeholder="Valor">
+        <input id="mDesc" class="input mb-2" placeholder="Descrição">
+        <button onclick="entradaCaixa()" class="btn bg-green-600 text-white">ENTRADA</button>
+        <button onclick="saidaCaixa()" class="btn bg-red-600 text-white">SAÍDA</button>
+      </div>
     </div>
   </div>
 </div>
 
 <nav class="menu">
   <button onclick="mostrarAba('venda')" id="btn-venda" class="on">VENDAS</button>
+  <button onclick="mostrarAba('produtos')" id="btn-produtos">PRODUTOS</button>
   <button onclick="mostrarAba('clientes')" id="btn-clientes">CLIENTES</button>
   <button onclick="mostrarAba('fornecedores')" id="btn-fornecedores">FORNEC</button>
   <button onclick="mostrarAba('relatorios')" id="btn-relatorios">RELAT</button>
@@ -95,36 +140,61 @@ body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
 const $=id=>document.getElementById(id);
-let produtos=[], clientes=[], carrinho=[], total=0, grafico;
+let produtos=[], clientes=[], fornecedores=[], carrinho=[], total=0, saldoCaixa=0, grafico;
 
-window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on'); if(id=='relatorios') carregarGrafico();}
+window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
 window.entrar=()=>signInWithEmailAndPassword(auth,$('email').value,$('senha').value).catch(e=>$('erro').innerText="Erro: "+e.message)
 window.sair=()=>signOut(auth);
 
 onAuthStateChanged(auth,u=>{
-  if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden'); carregarDados();}
+  if(u){$('login').classList.add('hidden');$('app').classList.remove('hidden'); carregarTudo();}
   else{$('login').classList.remove('hidden');$('app').classList.add('hidden')}
 });
 
-async function carregarDados(){
-  onSnapshot(collection(db,"produtos"),snap=>{produtos=snap.docs.map(d=>({id:d.id,...d.data()})); buscarProd();});
+function carregarTudo(){
+  onSnapshot(collection(db,"produtos"),snap=>{produtos=snap.docs.map(d=>({id:d.id,...d.data()})); buscarProd(); listarProdutos();});
   onSnapshot(collection(db,"clientes"),snap=>{clientes=snap.docs.map(d=>({id:d.id,...d.data()})); listarClientes();});
+  onSnapshot(collection(db,"fornecedores"),snap=>{fornecedores=snap.docs.map(d=>({id:d.id,...d.data()})); listarFornecedores();});
+  onSnapshot(collection(db,"caixa"),snap=>{saldoCaixa=snap.docs.reduce((a,d)=>a+d.data().valor,0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2)});
 }
 
-window.buscarProd=()=>{$('listaProd').innerHTML=produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase())).map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer hover:bg-gray-100">${p.nome} - R$${p.preco.toFixed(2)}</div>`).join('')}
-window.addCarrinho=id=>{let p=produtos.find(x=>x.id==id);carrinho.push(p);total+=p.preco;$('carrinho').innerHTML+=`<div>${p.nome} - R$${p.preco.toFixed(2)}</div>`;$('total').innerText=total.toFixed(2)}
-window.finalizarVenda=async()=>{if(carrinho.length==0)return alert("Carrinho vazio");await addDoc(collection(db,"vendas"),{itens:carrinho,total, data:serverTimestamp()});carrinho=[];total=0;$('carrinho').innerHTML='';$('total').innerText='0.00';alert("Venda salva!")}
-window.novoProd=async()=>{let nome=prompt("Nome do produto");let preco=parseFloat(prompt("Preço"));if(nome&&preco)await addDoc(collection(db,"produtos"),{nome,preco})}
-window.salvarCliente=async()=>{if($('nomeCli').value=='')return;await addDoc(collection(db,"clientes"),{nome:$('nomeCli').value,tel:$('telCli').value});$('nomeCli').value='';$('telCli').value='';alert("Cliente salvo")}
-window.listarClientes=()=>{$('listaCli').innerHTML=clientes.map(c=>`<div class="card mb-1">${c.nome} - ${c.tel}</div>`).join('')}
-window.salvarFornecedor=async()=>{if($('nomeFor').value=='')return;await addDoc(collection(db,"fornecedores"),{nome:$('nomeFor').value,tel:$('telFor').value});alert("Fornecedor salvo")}
-window.carregarGrafico=()=>{const ctx=$('graficoVendas');if(grafico)grafico.destroy();grafico=new Chart(ctx,{type:'bar',data:{labels:['Seg','Ter','Qua'],datasets:[{label:'Vendas',data:[12,19,3],backgroundColor:'#2563eb'}]}})}
-window.fecharCaixa=()=>alert("Caixa fechado. Total: R$"+total.toFixed(2))
+// PRODUTOS
+window.buscarProd=()=>{$('listaProd').innerHTML=produtos.map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer hover:bg-gray-100 flex justify-between">${p.nome} <span>R$${p.preco.toFixed(2)} <span class="badge">${p.estoque}</span></span></div>`).join('')}
+window.listarProdutos=()=>{$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card ${p.estoque<=p.min?'border-red-500':''}"><b>${p.nome}</b><br>Estoque: ${p.estoque} | Preço: R$${p.preco.toFixed(2)}</div>`).join('')}
+window.salvarProduto=async()=>{await addDoc(collection(db,"produtos"),{nome:$('pNome').value,preco:parseFloat($('pPreco').value),custo:parseFloat($('pCusto').value),estoque:parseInt($('pEstoque').value),min:parseInt($('pMin').value),cod:$('pCod').value});alert("Produto salvo")}
+
+// CLIENTES
+window.listarClientes=()=>{$('listaClientes').innerHTML=clientes.map(c=>`<div class="card"><b>${c.nome}</b><br>${c.tel} | ${c.cpf}</div>`).join('')}
+window.salvarCliente=async()=>{await addDoc(collection(db,"clientes"),{nome:$('cNome').value,tel:$('cTel').value,cpf:$('cCpf').value,end:$('cEnd').value});alert("Cliente salvo")}
+
+// FORNECEDORES
+window.listarFornecedores=()=>{$('listaFornecedores').innerHTML=fornecedores.map(f=>`<div class="card mb-1"><b>${f.nome}</b><br>${f.tel} | ${f.cnpj}</div>`).join('')}
+window.salvarFornecedor=async()=>{await addDoc(collection(db,"fornecedores"),{nome:$('fNome').value,tel:$('fTel').value,cnpj:$('fCnpj').value});alert("Fornecedor salvo")}
+
+// VENDAS + BAIXA ESTOQUE
+window.addCarrinho=async id=>{let p=produtos.find(x=>x.id==id);if(p.estoque<=0)return alert("Sem estoque");carrinho.push(p);total+=p.preco;$('carrinho').innerHTML+=`<div>${p.nome} - R$${p.preco.toFixed(2)}</div>`;$('total').innerText=total.toFixed(2)}
+window.finalizarVenda=async()=>{if(carrinho.length==0)return alert("Carrinho vazio");
+  await addDoc(collection(db,"vendas"),{itens:carrinho,total, data:serverTimestamp()});
+  for(let p of carrinho){await updateDoc(doc(db,"produtos",p.id),{estoque:p.estoque-1})}
+  await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:total,data:serverTimestamp()});
+  carrinho=[];total=0;$('carrinho').innerHTML='';$('total').innerText='0.00';alert("Venda finalizada e estoque baixado!")
+}
+
+// RELATORIOS
+window.relVendas=()=>{$('resultadoRel').innerHTML=`<div class="card">Total Vendido Hoje: R$${total.toFixed(2)}</div>`}
+window.relEstoqueBaixo=()=>{$('resultadoRel').innerHTML=produtos.filter(p=>p.estoque<=p.min).map(p=>`<div class="card border-red-500">${p.nome} - Estoque: ${p.estoque}</div>`).join('')}
+window.carregarGrafico=()=>{const ctx=$('graficoVendas');if(grafico)grafico.destroy();grafico=new Chart(ctx,{type:'bar',data:{labels:['Seg','Ter','Qua'],datasets:[{label:'Vendas',data:[120,190,80],backgroundColor:'#2563eb'}]}})}
+
+// CAIXA
+window.abrirCaixa=async()=>{let v=parseFloat(prompt("Valor inicial"));if(v)await addDoc(collection(db,"caixa"),{tipo:'abertura',valor:v,data:serverTimestamp()})}
+window.fecharCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'fechamento',valor:-saldoCaixa,data:serverTimestamp()});alert("Caixa fechado")}
+window.entradaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
+window.saidaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 </script>
 </body>
 </html>
