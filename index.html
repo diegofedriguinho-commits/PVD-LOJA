@@ -205,13 +205,18 @@ function carregarTudo(){
   onSnapshot(collection(db,"receber"),snap=>{receber=snap.docs.map(d=>({id:d.id,...d.data()})); listarReceber();});
   onSnapshot(collection(db,"pagar"),snap=>{pagar=snap.docs.map(d=>({id:d.id,...d.data()})); listarPagar();});
   onSnapshot(collection(db,"loja"),snap=>{if(!snap.empty){loja=snap.docs[0].data(); $('lId').value=snap.docs[0].id; $('lNome').value=loja.nome; $('lEnd').value=loja.end; $('lTel').value=loja.tel; $('nomeLojaHeader').innerText=loja.nome}});
+
+  // CORREÇÃO FECHAMENTO DE CAIXA AQUI
   onSnapshot(collection(db,"caixa"),snap=>{
     movCaixa=snap.docs.map(d=>({id:d.id,...d.data()}));
     saldoCaixa=movCaixa.reduce((a,d)=>a+d.valor,0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2);
     const hoje=new Date(); const inicioMes=new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const movMes=movCaixa.filter(m=>m.data?.seconds && new Date(m.data.seconds*1000) >= inicioMes);
-    const entradasMes=movMes.filter(m=>m.valor>0).reduce((a,b)=>a+b.valor,0);
-    const saidasMes=movMes.filter(m=>m.valor<0).reduce((a,b)=>a+b.valor,0);
+
+    // Ignora 'fechamento' e soma só por tipo
+    const movMes=movCaixa.filter(m=>m.data?.seconds && new Date(m.data.seconds*1000) >= inicioMes && m.tipo!= 'fechamento');
+    const entradasMes=movMes.filter(m=>m.tipo == 'entrada').reduce((a,b)=>a+b.valor,0);
+    const saidasMes=movMes.filter(m=>m.tipo == 'saida').reduce((a,b)=>a+b.valor,0);
+
     $('entradasMes').innerText=entradasMes.toFixed(2);
     $('saidasMes').innerText=Math.abs(saidasMes).toFixed(2);
     $('saldoMes').innerText=(entradasMes+saidasMes).toFixed(2);
@@ -240,7 +245,7 @@ window.editarFornecedor=id=>{let f=fornecedores.find(x=>x.id==id);$('fId').value
 window.excluirFornecedor=async id=>{if(confirm("Excluir?"))await deleteDoc(doc(db,"fornecedores",id))}
 function limparFornecedor(){$('fId').value='';$('fNome').value='';$('fFantasia').value='';$('fCnpj').value='';$('fTel').value='';$('fEmail').value='';$('fEnd').value='';}
 function carregarFornecedoresSelect(){let opt='<option value="">Fornecedor</option>'+fornecedores.map(f=>`<option value="${f.id}">${f.nomeFantasia}</option>`).join('');$('pFornecedor').innerHTML=opt; $('pgFornecedor').innerHTML=opt}
-  window.addCarrinho=async id=>{
+ window.addCarrinho=async id=>{
   let p=produtos.find(x=>x.id==id);if(!p||p.estoque<=0)return alert("Sem estoque");
   let item=carrinho.find(i=>i.id==id);
   if(item){item.qtd++; item.total=item.qtd*p.preco}else{carrinho.push({id:p.id,nome:p.nome,preco:p.preco,qtd:1,total:p.preco})}
@@ -280,8 +285,7 @@ window.receberParcial=async(id)=>{let r=receber.find(x=>x.id==id); let valor=par
 window.salvarContaPagar=async()=>{let forn=fornecedores.find(f=>f.id==$('pgFornecedor').value); let valor=parseFloat($('pgValor').value); let parcelas=parseInt($('pgParcelas').value); for(let i=1;i<=parcelas;i++){await addDoc(collection(db,"pagar"),{desc:`${$('pgDesc').value} - ${i}/${parcelas}`,valor:valor/parcelas,pago:false,fornecedorId:$('pgFornecedor').value,fornecedorNome:forn?.nomeFantasia||'',data:serverTimestamp()})} alert("Conta cadastrada")}
 window.listarPagar=()=>{$('listaPagar').innerHTML=pagar.map(p=>`<div class="card ${p.pago?'border-green-500':'border-red-500'}"><b>${p.desc}</b><br>Forn:${p.fornecedorNome||''}<br>R$${p.valor.toFixed(2)} ${!p.pago?`<button onclick="pagarParcela('${p.id}')" class="btn bg-red-600 text-white mt-1">PAGAR</button>`:''}</div>`).join('')}
 window.pagarParcela=async(id)=>{let p=pagar.find(x=>x.id==id); await updateDoc(doc(db,"pagar",id),{pago:true}); await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-p.valor,desc:`Pagto ${p.desc}`,data:serverTimestamp()});}
-
-window.entradaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
+  window.entradaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 window.saidaCaixa=async()=>{await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 window.fecharCaixa=()=>{imprimirFechamento(); addDoc(collection(db,"caixa"),{tipo:'fechamento',valor:-saldoCaixa,desc:'Fechamento',data:serverTimestamp()})}
 
@@ -299,8 +303,8 @@ window.imprimirCupom=(itens,subtotal,desconto,total,forma,troco,clienteNome,numV
   let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
 window.imprimirFechamento=()=>{
-  let entradas=movCaixa.filter(m=>m.valor>0).reduce((a,b)=>a+b.valor,0);
-  let saidas=movCaixa.filter(m=>m.valor<0).reduce((a,b)=>a+b.valor,0);
+  let entradas=movCaixa.filter(m=>m.tipo=='entrada').reduce((a,b)=>a+b.valor,0);
+  let saidas=movCaixa.filter(m=>m.tipo=='saida').reduce((a,b)=>a+b.valor,0);
   let html=`<div style="width:300px;font-family:monospace;text-align:center"><h2>${loja.nome} - FECHAMENTO</h2><p>Entradas: R$${entradas.toFixed(2)}</p><p>Saídas: R$${Math.abs(saidas).toFixed(2)}</p><hr><h3>SALDO: R$${saldoCaixa.toFixed(2)}</h3></div>`;
   let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
 }
