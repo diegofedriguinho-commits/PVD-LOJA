@@ -141,30 +141,8 @@ window.entradaCaixa=async()=>{if(!$('mValor').value) return alert("Digite o valo
 window.saidaCaixa=async()=>{if(!$('mValor').value) return alert("Digite o valor"); await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()}); $('mValor').value=''; $('mDesc').value='';}
 
 window.addPrimeiro=()=>{let filtro = produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase()) || p.cod == $('buscaProd').value); if(filtro.length == 1) { addCarrinho(filtro[0].id); $('buscaProd').value=''; $('buscaProd').focus(); }}
-window.zerarSistema=async()=>{
-  if(usuarioLogado != 'gerente') return alert("Só o GERENTE pode zerar!");
-  let senha = prompt("ATENÇÃO! ISSO APAGA TUDO!\nDigite a senha LOLA2025 para confirmar:");
-  if(senha != SENHA_ZERAR) return alert("Senha incorreta!");
-  if(!confirm("TEM CERTEZA? Isso vai apagar TODOS os dados. Não tem volta!")) return;
-  
-  await apagarColecao("vendas");
-  await apagarColecao("clientes");
-  await apagarColecao("produtos");
-  await apagarColecao("fornecedores");
-  await apagarColecao("receber");
-  await apagarColecao("pagar");
-  await apagarColecao("caixa");
-  
-  alert("Sistema zerado com sucesso!");
-  location.reload();
 }
 
-async function apagarColecao(nomeColecao){
-  const snap = await getDocs(collection(db, nomeColecao));
-  const batch = writeBatch(db);
-  snap.docs.forEach((d)=>{ batch.delete(doc(db, nomeColecao, d.id)); });
-  await batch.commit();
-}
 </script>
 </body>
 </html>
