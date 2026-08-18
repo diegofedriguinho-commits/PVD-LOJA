@@ -147,7 +147,7 @@ window.iniciarFechamento=()=>{
   $('valorContado').oninput = ()=>{
     let contado = parseFloat($('valorContado').value)||0;
     let diferenca = contado - valor;
-    if(diferenca == 0) $('resultadoConferencia').innerHTML = `<span class="text-green-600">CAIXA FECHOU! R$0.00</span>`;
+    if(diferenca == 0) $('resultadoConferencia').innerHTML = `<span class="text-green-600"CAIXA FECHOU! R$0.00</span>`;
     if(diferenca > 0) $('resultadoConferencia').innerHTML = `<span class="text-blue-600">SOBROU: R$${diferenca.toFixed(2)}</span>`;
     if(diferenca < 0) $('resultadoConferencia').innerHTML = `<span class="text-red-600">FALTOU: R$${Math.abs(diferenca).toFixed(2)}</span>`;
   }
