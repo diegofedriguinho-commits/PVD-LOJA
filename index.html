@@ -129,7 +129,120 @@ window.iniciarFechamento=()=>{let valor = saldoCaixa; $('valorDeveriaTer').inner
 window.confirmarFechamento=async()=>{imprimirFechamento(); if(saldoCaixa > 0) await addDoc(collection(db,"caixa"),{tipo:'retirada_fechamento',valor:-saldoCaixa,desc:'Retirada Fechamento',data:serverTimestamp()}); $('divFechamento').classList.add('hidden'); $('btnConfirmarFech').classList.add('hidden'); $('valorContado').value=''; alert("Caixa Fechado! Saldo zerado.");}
 window.imprimirFechamento=()=>{let entradas=movCaixa.filter(m=>m.tipo=='entrada').reduce((a,b)=>a+(b.valor||0),0); let saidas=movCaixa.filter(m=>m.tipo=='saida').reduce((a,b)=>a+(b.valor||0),0); let contado = parseFloat($('valorContado').value)||0; let diferenca = contado - saldoCaixa; let html=<div style="width:300px;font-family:monospace;text-align:center"><h2>${loja.nome} - FECHAMENTO</h2><p>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p><hr><p style="text-align:left">Entradas: R$${entradas.toFixed(2)}</p><p style="text-align:left">Saídas: R$${Math.abs(saidas).toFixed(2)}</p><p style="text-align:left">Saldo Sistema: R$${saldoCaixa.toFixed(2)}</p><hr><p style="text-align:left">Valor Contado: R$${contado.toFixed(2)}</p><h3>DIFERENÇA: R$${diferenca.toFixed(2)}</h3><hr><p>Responsável: _______________</p></div>;let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();}
 window.estornarVenda=async(id)=>{if(!permissoes[usuarioLogado].podeEstornar){ alert('SÓ GERENTE PODE ESTORNAR!'); return; } if(!confirm("TEM CERTEZA?"))return; /COLA O RESTO DA SUA FUNÇÃO DE ESTORNO AQUI/}
+// ZERAR SISTEMA
+async function deletarColecao(nomeColecao) {
+  const q = query(collection(db, nomeColecao), limit(500));
+  const snap = await getDocs(q);
+  if (snap.empty) return 0;
+  const batch = writeBatch(db);
+  snap.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+  return snap.size;
+}
 
+window.zerarSistema=async()=>{
+  let senha=prompt("ATENÇÃO! Apaga TUDO. Senha: LOLA2025");
+  if(senha!=SENHA_ZERAR)return alert("Senha incorreta");
+  if(!confirm("TEM CERTEZA? NÃO TEM VOLTA!"))return;
+  $('statusZerar').innerText = "Apagando... Não feche a página";
+  
+  const colecoes=['produtos','clientes','vendas','receber','pagar','caixa','fornecedores','loja'];
+  for(const col of colecoes){
+    let apagados;
+    do {
+      apagados = await deletarColecao(col);
+      $('statusZerar').innerText = `Apagando ${col}...`;
+      await new Promise(r => setTimeout(r, 300));
+    } while (apagados > 0);
+  }
+  $('statusZerar').innerText = "Sistema zerado! Recarregando...";
+  setTimeout(()=>location.reload(), 1500);
+}
+    window.addPrimeiro=()=>{
+  let filtro = produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase()) || p.cod == $('buscaProd').value);
+  if(filtro.length == 1) { addCarrinho(filtro[0].id); $('buscaProd').value=''; $('buscaProd').focus(); }
+}
+window.iniciarFechamento=()=>{
+  let valor = saldoCaixa;
+  $('valorDeveriaTer').innerText = valor.toFixed(2);
+  $('divFechamento').classList.remove('hidden');
+  $('btnConfirmarFech').classList.remove('hidden');
+  $('valorContado').focus();
+  
+  $('valorContado').oninput = ()=>{
+    let contado = parseFloat($('valorContado').value)||0;
+    let diferenca = contado - valor;
+    if(diferenca == 0) $('resultadoConferencia').innerHTML = `<span class="text-green-600"CAIXA FECHOU! R$0.00</span>`;
+    if(diferenca > 0) $('resultadoConferencia').innerHTML = `<span class="text-blue-600">SOBROU: R$${diferenca.toFixed(2)}</span>`;
+    if(diferenca < 0) $('resultadoConferencia').innerHTML = `<span class="text-red-600">FALTOU: R$${Math.abs(diferenca).toFixed(2)}</span>`;
+  }
+}
+
+window.confirmarFechamento=async()=>{
+  imprimirFechamento();
+  if(saldoCaixa > 0) await addDoc(collection(db,"caixa"),{tipo:'retirada_fechamento',valor:-saldoCaixa,desc:'Retirada Fechamento',data:serverTimestamp()});
+  
+  $('divFechamento').classList.add('hidden');
+  $('btnConfirmarFech').classList.add('hidden');
+  $('valorContado').value='';
+  alert("Caixa Fechado! Saldo zerado.");
+}
+        window.imprimirFechamento=()=>{
+  let entradas=movCaixa.filter(m=>m.tipo=='entrada').reduce((a,b)=>a+(b.valor||0),0);
+  let saidas=movCaixa.filter(m=>m.tipo=='saida').reduce((a,b)=>a+(b.valor||0),0);
+  let contado = parseFloat($('valorContado').value)||0;
+  let diferenca = contado - saldoCaixa;
+  
+  let html=`<div style="width:300px;font-family:monospace;text-align:center">
+    <h2>${loja.nome} - FECHAMENTO</h2>
+    <p>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p><hr>
+    <p style="text-align:left">Entradas: R$${entradas.toFixed(2)}</p>
+    <p style="text-align:left">Saídas: R$${Math.abs(saidas).toFixed(2)}</p>
+    <p style="text-align:left">Saldo Sistema: R$${saldoCaixa.toFixed(2)}</p><hr>
+    <p style="text-align:left">Valor Contado: R$${contado.toFixed(2)}</p>
+    <h3>DIFERENÇA: R$${diferenca.toFixed(2)}</h3><hr>
+    <p>Responsável: _______________</p>
+    </div>`;
+  let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
+}
+        let usuarioLogado = null;
+let permissoes = {
+  caixa: {senha: '1234', podeEstornar: false, podeVerCusto: false, podeFecharCaixa: false},
+  gerente: {senha: '9999', podeEstornar: true, podeVerCusto: true, podeFecharCaixa: true}
+}
+
+window.logar=()=>{
+  let user = $('usuarioLogin').value;
+  let senha = $('senhaLogin').value;
+  if(permissoes[user] && permissoes[user].senha == senha){
+    usuarioLogado = user;
+    $('telaLogin').classList.add('hidden');
+    verificarPermissoes();
+  } else {
+    $('erroLogin').innerText = 'Usuário ou Senha inválidos!';
+  }
+}
+
+window.sair=()=>{
+  usuarioLogado = null;
+  $('telaLogin').classList.remove('hidden');
+  $('senhaLogin').value='';
+}
+
+function verificarPermissoes(){
+  // Esconde botão de ESTORNAR se for caixa
+  document.querySelectorAll('[onclick*="estornarVenda"]').forEach(btn=>{
+    btn.classList.toggle('hidden',!permissoes[usuarioLogado].podeEstornar);
+  });
+  // Trava botão de FECHAR CAIXA
+  $('btnConfirmarFech').disabled =!permissoes[usuarioLogado].podeFecharCaixa;
+  if(!permissoes[usuarioLogado].podeFecharCaixa) $('btnConfirmarFech').innerText = 'SÓ GERENTE';
+}
+        window.estornarVenda=async(id)=>{
+  if(!permissoes[usuarioLogado].podeEstornar){ alert('SÓ GERENTE PODE ESTORNAR!'); return; }
+  if(!confirm("TEM CERTEZA? Vai devolver pro estoque e estornar do caixa!"))return;
+  //... resto do código continua igual
+}
 </script>
 </body>
 </html>
