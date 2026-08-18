@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>D2 MINIMERCADO PDV V18.11 FINAL</title>
+<title>D2 MINIMERCADO PDV V18.12 FINAL</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 body{background:#f1f5f9;font-family:'Segoe UI',sans-serif;padding-bottom:90px}
@@ -87,14 +87,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebas
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, setDoc, writeBatch, query, limit, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",
-  authDomain: "web-pdv-6546d.firebaseapp.com",
-  projectId: "web-pdv-6546d",
-  storageBucket: "web-pdv-6546d.appspot.com",
-  messagingSenderId: "1",
-  appId: "1:1:web:1"
-};
+const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -116,7 +109,6 @@ window.entrar=async()=>{
 window.sair=()=>signOut(auth);
 
 onAuthStateChanged(auth,u=>{
-  console.log("Status login:", u)
   if(u){
     $('login').classList.add('hidden');
     $('app').classList.remove('hidden');
@@ -148,8 +140,8 @@ function carregarTudo(){
     $('saldoMes').innerText=(entradasMes+saidasMes).toFixed(2);
   });
 }
-}
-  window.salvarLoja=async()=>{let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value}; if($('lId').value){await setDoc(doc(db,"loja",$('lId').value),data)}else{await addDoc(collection(db,"loja"),data)} alert("Dados salvos!")}
+
+window.salvarLoja=async()=>{let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value}; if($('lId').value){await setDoc(doc(db,"loja",$('lId').value),data)}else{await addDoc(collection(db,"loja"),data)} alert("Dados salvos!")}
 
 window.buscarProd=()=>{$('listaProd').innerHTML=produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase())).map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer hover:bg-gray-100">${p.nome} - R$${Number(p.preco||0).toFixed(2)} [${p.estoque||0}]</div>`).join('')}
 window.listarProdutos=()=>{$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card"><b>${p.nome}</b><br>Cod:${p.cod} | R$${Number(p.preco||0).toFixed(2)} | Est:${p.estoque||0} | Forn:${p.fornecedorNome||''}<div class="mt-2"><button onclick="editarProduto('${p.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirProduto('${p.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
@@ -216,7 +208,7 @@ window.finalizarVenda=async()=>{
 window.relVendasDia=()=>{const hoje=new Date().toLocaleDateString(); const vendasHoje=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000).toLocaleDateString()==hoje);
 $('resultadoRel').innerHTML=vendasHoje.map(v=>`<div class="card"><b>VENDA ${String(v.numVenda).padStart(5,'0')}</b> - R$${Number(v.total).toFixed(2)} - ${v.clienteNome}<br><button onclick='imprimirCupom(${JSON.stringify(v.itens)},${v.subtotal},${v.desconto},${v.total},"${v.forma}",${v.troco},"${v.clienteNome}",${v.numVenda})' class="btn bg-blue-500 text-white text-sm mt-1">IMPRIMIR 2ª VIA</button></div>`).join('') || '<p>Nenhuma venda hoje</p>'}
 window.relVendas=()=>{$('resultadoRel').innerHTML=`<div class="card">Dinheiro: R$${vendas.filter(v=>v.forma=='Dinheiro').reduce((a,b)=>a+(b.total||0),0).toFixed(2)}</div><div class="card">Cartão: R$${vendas.filter(v=>v.forma=='Cartão').reduce((a,b)=>a+(b.total||0),0).toFixed(2)}</div><div class="card">Pix: R$${vendas.filter(v=>v.forma=='Pix').reduce((a,b)=>a+(b.total||0),0).toFixed(2)}</div><div class="card">Prazo: R$${vendas.filter(v=>v.forma=='Prazo').reduce((a,b)=>a+(b.total||0),0).toFixed(2)}</div>`}
-  window.listarReceber=()=>{$('listaReceber').innerHTML=receber.map(r=>`<div class="card border-l-4 border-yellow-500"><b>${r.cliente}</b><br>Saldo: R$${Number(r.saldo||0).toFixed(2)}<div class="mt-2 flex gap-2"><input id="rec${r.id}" type="number" class="input" placeholder="Valor"><button onclick="receberParcial('${r.id}')" class="btn bg-green-600 text-white">RECEBER</button></div></div>`).join('')}
+window.listarReceber=()=>{$('listaReceber').innerHTML=receber.map(r=>`<div class="card border-l-4 border-yellow-500"><b>${r.cliente}</b><br>Saldo: R$${Number(r.saldo||0).toFixed(2)}<div class="mt-2 flex gap-2"><input id="rec${r.id}" type="number" class="input" placeholder="Valor"><button onclick="receberParcial('${r.id}')" class="btn bg-green-600 text-white">RECEBER</button></div></div>`).join('')}
 window.receberParcial=async(id)=>{let r=receber.find(x=>x.id==id); let valor=parseFloat($(`rec${r.id}`).value); if(!valor || valor>(r.saldo||0)) return alert("Valor inválido"); await updateDoc(doc(db,"receber",id),{valorPago:(r.valorPago||0)+valor,saldo:(r.saldo||0)-valor}); await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:valor,desc:`Receb ${r.cliente}`,data:serverTimestamp()});}
 window.salvarContaPagar=async()=>{let forn=fornecedores.find(f=>f.id==$('pgFornecedor').value); let valor=parseFloat($('pgValor').value); let parcelas=parseInt($('pgParcelas').value); if(!valor ||!parcelas) return alert("Preencha valor e parcelas"); for(let i=1;i<=parcelas;i++){await addDoc(collection(db,"pagar"),{desc:`${$('pgDesc').value} - ${i}/${parcelas}`,valor:valor/parcelas,pago:false,fornecedorId:$('pgFornecedor').value,fornecedorNome:forn?.nomeFantasia||'',data:serverTimestamp()})} alert("Conta cadastrada")}
 window.listarPagar=()=>{$('listaPagar').innerHTML=pagar.map(p=>`<div class="card border-l-4 ${p.pago?'border-green-500':'border-red-500'}"><b>${p.desc}</b><br>Forn:${p.fornecedorNome||''}<br>R$${Number(p.valor||0).toFixed(2)} ${!p.pago?`<button onclick="pagarParcela('${p.id}')" class="btn bg-red-600 text-white mt-1">PAGAR</button>`:''}</div>`).join('')}
@@ -225,6 +217,22 @@ window.pagarParcela=async(id)=>{let p=pagar.find(x=>x.id==id); await updateDoc(d
 window.entradaCaixa=async()=>{if(!$('mValor').value) return alert("Digite o valor"); await addDoc(collection(db,"caixa"),{tipo:'entrada',valor:parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 window.saidaCaixa=async()=>{if(!$('mValor').value) return alert("Digite o valor"); await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()})}
 window.fecharCaixa=async()=>{
+  imprimirFechamento();
+  if(saldoCaixa > 0) await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-saldoCaixa,desc:'Fechamento do Caixa',data:serverTimestamp()})
+  alert("Caixa Fechado! Saldo zerado.")
+}
+
+window.imprimirCupom=(itens,subtotal,desconto,total,forma,troco,clienteNome,numVenda)=>{
+  let html=`<div style="width:300px;font-family:monospace;text-align:center"><h2>${loja.nome}</h2><p>${loja.end}</p><p>Tel: ${loja.tel}</p><hr>
+  <p style="text-align:left">VENDA: ${String(numVenda).padStart(5,'0')}</p><p style="text-align:left">CLIENTE: ${clienteNome}</p><p style="text-align:left">PAGTO: ${forma}</p><hr>`;
+  itens.forEach(i=>html+=`<div style="text-align:left">${i.nome} ${i.qtd}x R$${Number(i.preco).toFixed(2)}</div>`);
+  html+=`<hr><div style="text-align:left">Subtotal: R$${Number(subtotal).toFixed(2)}</div>`;
+  if(Number(desconto)>0)html+=`<div style="text-align:left">Desconto: -R$${Number(desconto).toFixed(2)}</div>`;
+  html+=`<h3>TOTAL: R$${Number(total).toFixed(2)}</h3>`;
+  if(forma=='Dinheiro' && Number(troco)>0)html+=`<div>Recebido: R$${(Number(total)+Number(troco)).toFixed(2)}</div><div>Troco: R$${Number(troco).toFixed(2)}</div>`;
+  html+=`<p>Obrigado e Volte Sempre!</p></div>`;
+  let w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
+}
 window.imprimirFechamento=()=>{
   let entradas=movCaixa.filter(m=>m.tipo=='entrada').reduce((a,b)=>a+(b.valor||0),0);
   let saidas=movCaixa.filter(m=>m.tipo=='saida').reduce((a,b)=>a+(b.valor||0),0);
