@@ -26,9 +26,7 @@
 <div id="loja" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">DADOS DA LOJA</h2><input type="hidden" id="lId"><input id="lNome" value="D2 MINIMERCADO" class="input mb-2"><input id="lEnd" value="RUA MANOEL ABRANTES FILHO 210" class="input mb-2"><input id="lTel" value="44997550818" class="input mb-2"><button onclick="salvarLoja()" class="w-full btn bg-blue-600 text-white">SALVAR</button><div id="loja" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">DADOS DA LOJA</h2><input type="hidden" id="lId"><input id="lNome" value="D2 MINIMERCADO" class="input mb-2"><input id="lEnd" value="RUA MANOEL ABRANTES FILHO 210" class="input mb-2"><input id="lTel" value="44997550818" class="input mb-2"><button onclick="salvarLoja()" class="w-full btn bg-blue-600 text-white">SALVAR</button>
 
   <hr class="my-3">
-  <button onclick="zerarSistema()" class="w-full btn bg-red-700 text-white">⚠️ ZERAR SISTEMA</button>
-
-</div></div>
+  <button onclick="zerarSistema()" class="w-full btn bg-red-700 text-white">⚠️ ZERAR SISTEMA</button></div></div>
 
 <div id="receber" class="aba"><div class="card mb-2"><h2 class="font-bold mb-2">CONTAS A RECEBER</h2></div><div id="listaReceber" class="grid gap-2"></div></div>
 
@@ -146,7 +144,7 @@ window.entradaCaixa=async()=>{if(!$('mValor').value) return alert("Digite o valo
 window.saidaCaixa=async()=>{if(!$('mValor').value) return alert("Digite o valor"); await addDoc(collection(db,"caixa"),{tipo:'saida',valor:-parseFloat($('mValor').value),desc:$('mDesc').value,data:serverTimestamp()}); $('mValor').value=''; $('mDesc').value='';}
 
 window.addPrimeiro=()=>{let filtro = produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase()) || p.cod == $('buscaProd').value); if(filtro.length == 1) { addCarrinho(filtro[0].id); $('buscaProd').value=''; $('buscaProd').focus(); }}
-  window.zerarSistema=async()=>{
+window.zerarSistema=async()=>{
   if(usuarioLogado != 'gerente') return alert("Só o GERENTE pode zerar!");
   let senha = prompt("ATENÇÃO! ISSO APAGA TUDO!\nDigite a senha LOLA2025 para confirmar:");
   if(senha != SENHA_ZERAR) return alert("Senha incorreta!");
