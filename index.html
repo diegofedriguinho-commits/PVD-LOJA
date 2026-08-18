@@ -41,14 +41,34 @@
 
   <button onclick="iniciarFechamento()" class="w-full btn bg-orange-500 text-white mt-2">INICIAR FECHAMENTO</button>
   <button onclick="confirmarFechamento()" id="btnConfirmarFech" class="w-full btn bg-red-600 text-white mt-2 hidden">CONFIRMAR E ZERAR CAIXA</button>
-</div></div><div class="card"><h2 class="font-bold mb-2">MOVIMENTAÇÃO</h2><input id="mValor" type="number" class="input mb-2" placeholder="Valor"><input id="mDesc" class="input mb-2" placeholder="Descrição"><button onclick="entradaCaixa()" class="btn bg-green-600 text-white">ENTRADA</button><button onclick="saidaCaixa()" class="btn bg-red-600 text-white">SAÍDA</button></div></div></div></div><nav class="menu"><button onclick="mostrarAba('venda')" id="btn-venda" class="on">VENDAS</button><button onclick="mostrarAba('produtos')" id="btn-produtos">PRODUTOS</button><button onclick="mostrarAba('clientes')" id="btn-clientes">CLIENTES</button><button onclick="mostrarAba('fornecedores')" id="btn-fornecedores">FORNEC</button><button onclick="mostrarAba('loja')" id="btn-loja">LOJA</button><button onclick="mostrarAba('receber')" id="btn-receber">RECEBER</button><button onclick="mostrarAba('pagar')" id="btn-pagar">PAGAR</button><button onclick="mostrarAba('relatorios')" id="btn-relatorios">RELAT</button><button onclick="mostrarAba('caixa')" id="btn-caixa">CAIXA</button></nav>
+</div></div><div class="card"><h2 class="font-bold mb-2">MOVIMENTAÇÃO</h2><input id="mValor" type="number" class="input mb-2" placeholder="Valor"><input id="mDesc" class="input mb-2" placeholder="Descrição"><button onclick="entradaCaixa()" class="btn bg-green-600 text-white">ENTRADA</button><button onclick="saidaCaixa()" class="btn bg-red-600 text-white">SAÍDA</button></div></div></div></div>
+  <nav class="menu">
+  <button onclick="mostrarAba('venda')" id="btn-venda" class="on"><div>VENDAS</div></button>
+  <button onclick="mostrarAba('produtos')" id="btn-produtos"><div>PRODUTOS</div></button>
+  <button onclick="mostrarAba('clientes')" id="btn-clientes"><div>CLIENTES</div></button>
+  <button onclick="mostrarAba('fornecedores')" id="btn-fornecedores"><div>FORNEC</div></button>
+  <button onclick="mostrarAba('loja')" id="btn-loja"><div>LOJA</div></button>
+  <button onclick="mostrarAba('receber')" id="btn-receber"><div>RECEBER</div></button>
+  <button onclick="mostrarAba('pagar')" id="btn-pagar"><div>PAGAR</div></button>
+  <button onclick="mostrarAba('relatorios')" id="btn-relatorios"><div>RELAT</div></button>
+  <button onclick="mostrarAba('caixa')" id="btn-caixa"><div>CAIXA</div></button>
+  <button onclick="sair()" class="p-2"><div>🚪</div><div>SAIR</div></button>
+</nav>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp, getDocs, setDoc, writeBatch, query, limit, orderBy } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
-const app = initializeApp(firebaseConfig); const db = getFirestore(app); 
-let produtos=[], clientes=[], fornecedores=[], vendas=[], receber=[], pagar=[], movCaixa=[], loja={nome:'D2 MINIMERCADO',end:'RUA MANOEL ABRANTES FILHO 210 JD BELA VISTA',tel:'44997550818'}, carrinho=[], subtotal=0, total=0, saldoCaixa=0, ultimoNumVenda=0; const SENHA_ZERAR = "LOLA2025";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const $=id=>document.getElementById(id);
+
+let produtos=[], clientes=[], fornecedores=[], vendas=[], receber=[], pagar=[], movCaixa=[], loja={nome:'D2 MINIMERCADO',end:'RUA MANOEL ABRANTES FILHO 210 JD BELA VISTA',tel:'44997550818'}, carrinho=[], subtotal=0, total=0, saldoCaixa=0, ultimoNumVenda=0, usuarioLogado=null;
+
+const SENHA_ZERAR = "LOLA2025";
+let permissoes = {caixa: {senha: '1234', podeEstornar: false, podeFecharCaixa: false}, gerente: {senha: '9999', podeEstornar: true, podeFecharCaixa: true}}
+
 window.mostrarAba=id=>{document.querySelectorAll('.aba').forEach(a=>a.classList.remove('ativa'));$(id).classList.add('ativa');document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('on'));$(`btn-${id}`).classList.add('on');}
 window.entrar=async()=>{try{await signInWithEmailAndPassword(auth,$('email').value,$('senha').value)}catch(e){alert("Erro login: "+e.message)}}
 window.sair=()=>signOut(auth);
@@ -193,10 +213,37 @@ window.logar=()=>{
     usuarioLogado = user;
     $('telaLogin').classList.add('hidden');
     verificarPermissoes();
+    carregarTudo();
   } else {
     $('erroLogin').innerText = 'Usuário ou Senha inválidos!';
   }
 }
+
+window.sair=()=>{
+  usuarioLogado = null;
+  $('telaLogin').classList.remove('hidden');
+  $('senhaLogin').value='';
+  location.reload();
+}
+
+function verificarPermissoes(){
+  $('btnConfirmarFech').disabled =!permissoes[usuarioLogado].podeFecharCaixa;
+  if(!permissoes[usuarioLogado].podeFecharCaixa) $('btnConfirmarFech').innerText = 'SÓ GERENTE';
+}
+
+function carregarTudo(){
+    function verificarEstoqueBaixo(){let baixos = produtos.filter(p => (p.estoque||0) > 0 && (p.estoque||0) <= 5); if(baixos.length > 0){$('alertaEstoque').classList.remove('hidden'); $('listaAlertaEstoque').innerHTML = baixos.map(p=>`<p>${p.nome}: <b>${p.estoque}</b> un</p>`).join('');} else {$('alertaEstoque').classList.add('hidden');}}
+    onSnapshot(collection(db,"produtos"),snap=>{produtos=snap.docs.map(d=>({id:d.id,...d.data()})); buscarProd(); listarProdutos(); carregarFornecedoresSelect(); verificarEstoqueBaixo();});
+    onSnapshot(collection(db,"clientes"),snap=>{clientes=snap.docs.map(d=>({id:d.id,...d.data()})); listarClientes(); carregarClientesSelect();});
+    onSnapshot(collection(db,"fornecedores"),snap=>{fornecedores=snap.docs.map(d=>({id:d.id,...d.data()})); listarFornecedores(); carregarFornecedoresSelect();});
+    onSnapshot(query(collection(db,"vendas"), orderBy("numVenda","desc"), limit(1)),snap=>{if(!snap.empty){ultimoNumVenda=snap.docs[0].data().numVenda||0}});
+    onSnapshot(collection(db,"vendas"),snap=>{vendas=snap.docs.map(d=>({id:d.id,...d.data()}));});
+    onSnapshot(collection(db,"receber"),snap=>{receber=snap.docs.map(d=>({id:d.id,...d.data()})); listarReceber();});
+    onSnapshot(collection(db,"pagar"),snap=>{pagar=snap.docs.map(d=>({id:d.id,...d.data()})); listarPagar();});
+    onSnapshot(collection(db,"loja"),snap=>{if(!snap.empty){loja=snap.docs[0].data(); $('lId').value=snap.docs[0].id; $('lNome').value=loja.nome; $('lEnd').value=loja.end; $('lTel').value=loja.tel;}});
+    onSnapshot(collection(db,"caixa"),snap=>{movCaixa=snap.docs.map(d=>({id:d.id,...d.data()}));saldoCaixa=movCaixa.reduce((a,d)=>a+(d.valor||0),0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2);const hoje=new Date(); const inicioMes=new Date(hoje.getFullYear(), hoje.getMonth(), 1);const movMes=movCaixa.filter(m=>m.data?.seconds && new Date(m.data.seconds*1000) >= inicioMes && m.tipo!= 'fechamento' && m.tipo!= 'retirada_fechamento');const entradasMes=movMes.filter(m=>m.tipo == 'entrada').reduce((a,b)=>a+(b.valor||0),0);const saidasMes=movMes.filter(m=>m.tipo == 'saida').reduce((a,b)=>a+(b.valor||0),0);$('entradasMes').innerText=entradasMes.toFixed(2);$('saidasMes').innerText=Math.abs(saidasMes).toFixed(2);$('saldoMes').innerText=(entradasMes+saidasMes).toFixed(2);});
+}
+
 
 window.sair=()=>{
   usuarioLogado = null;
