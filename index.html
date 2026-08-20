@@ -167,8 +167,7 @@ function iniciarLeitor(){
             if(leitorAtivo) html5QrCode.start({ facingMode: "environment" }, { fps: 3, qrbox: { width: 250, height: 100 } }, arguments.callee);
           }, 3000);
         }).catch(err => console.log(err));
-
-      },
+},
       (erro) => { }
     ).catch(err => { console.log("Erro câmera: ", err); pararLeitor(); });
   };
