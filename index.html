@@ -6,8 +6,8 @@ let produtos=[], clientes=[], fornecedores=[], vendas=[], receber=[], pagar=[], 
 let usuarioLogado=null; const SENHA_ZERAR = "LOLA2025";
 let permissoes = {caixa: {senha: '1234', podeEstornar: false, podeFecharCaixa: false}, gerente: {senha: '9999', podeEstornar: true, podeFecharCaixa: true}}
 let leitorAtivo = false;
-let ultimoCodigoLido = ""; // TRAVA ANTI DUPLICIDADE
-let timeoutLeitura = null;
+let ultimoCodigoLido = "";
+let travado = false; // NOVA TRAVA ANTI DUPLICIDADE
 
 function toNum(v){ return parseFloat(String(v).replace(',','.')) || 0; }
 function alternarTema(){document.body.classList.toggle('dark')}
@@ -127,10 +127,11 @@ function salvarContaPagar(){let desc = $('pgDesc').value; let valorTotal = toNum
 function carregarExtratoCaixa(){let hoje = new Date().toLocaleDateString(); let movHoje = movCaixa.filter(m => m.data?.seconds && new Date(m.data.seconds*1000).toLocaleDateString() == hoje); $('extratoCaixa').innerHTML = movHoje.map(m=>{let cor = m.tipo=='entrada' || m.tipo=='abertura'? 'text-green-500' : 'text-red-500'; let sinal = m.valor > 0? '+' : ''; return `<div class="flex justify-between border-b py-1"><span>${m.desc}</span><span class="${cor} font-bold">${sinal}R$${Number(m.valor).toFixed(2)}</span></div>`}).join('') || '<p>Nenhuma movimentação hoje</p>';}
 function imprimirRelatorioFechamento(contado, deveria, diferenca){let html = `<h2 style="text-align:center;color:black">${loja.nome}</h2><h3 style="text-align:center;color:black">FECHAMENTO DE CAIXA</h3><p style="color:black">Data: ${new Date().toLocaleString('pt-BR')}</p><hr><p style="color:black">Dinheiro: R$${$('totalDinheiro').innerText}</p><p style="color:black">Cartão: R$${$('totalCartao').innerText}</p><p style="color:black">Pix: R$${$('totalPix').innerText}</p><p style="color:black">Entradas: R$${$('totalEntradas').innerText}</p><p style="color:black">Saídas: R$${$('totalSaidas').innerText}</p><hr><p style="color:black">Deveria Ter: R$${deveria.toFixed(2)}</p><p style="color:black">Foi Contado: R$${contado.toFixed(2)}</p><p style="color:black"><b>Diferença: R$${diferenca.toFixed(2)}</b></p>`; $('areaImpressao').innerHTML=html; $('areaImpressao').style.display='block'; window.print(); $('areaImpressao').style.display='none';}
 
-// FUNÇÕES DO LEITOR DE CÓDIGO COM TRAVA
+// FUNÇÕES DO LEITOR DE CÓDIGO COM TRAVA DE 3 SEGUNDOS
 function iniciarLeitor(){
   if(leitorAtivo) return;
   leitorAtivo = true;
+  travado = false;
   ultimoCodigoLido = "";
   $('btnParar').classList.remove('hidden');
 
@@ -138,13 +139,18 @@ function iniciarLeitor(){
   script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
   script.onload = () => {
     const html5QrCode = new Html5Qrcode("leitor");
+    window.html5QrCodeInstance = html5QrCode;
+
     html5QrCode.start(
       { facingMode: "environment" },
-      { fps: 5, qrbox: { width: 250, height: 100 }, disableFlip: false },
+      { fps: 3, qrbox: { width: 250, height: 100 } },
       (codigo) => {
-        if(codigo === ultimoCodigoLido) return; // IGNORA SE REPETIR
+        if(travado) return;
+        if(codigo === ultimoCodigoLido) return;
 
+        travado = true;
         ultimoCodigoLido = codigo;
+
         let prod = produtos.find(p => p.cod == codigo);
         if(prod){
           addCarrinho(prod.id);
@@ -154,8 +160,14 @@ function iniciarLeitor(){
         } else {
           alert("Produto não encontrado: " + codigo);
         }
-        clearTimeout(timeoutLeitura);
-        timeoutLeitura = setTimeout(() => { ultimoCodigoLido = ""; }, 2000); // Libera em 2s
+
+        html5QrCode.stop().then(() => {
+          setTimeout(() => {
+            travado = false;
+            if(leitorAtivo) html5QrCode.start({ facingMode: "environment" }, { fps: 3, qrbox: { width: 250, height: 100 } }, arguments.callee);
+          }, 3000);
+        }).catch(err => console.log(err));
+
       },
       (erro) => { }
     ).catch(err => { console.log("Erro câmera: ", err); pararLeitor(); });
@@ -163,12 +175,14 @@ function iniciarLeitor(){
   document.head.appendChild(script);
 }
 
-ffunction pararLeitor(){
+function pararLeitor(){
   leitorAtivo = false;
+  travado = false;
   $('btnParar').classList.add('hidden');
+  if(window.html5QrCodeInstance){
+    window.html5QrCodeInstance.stop().catch(err=>{});
+  }
   $('leitor').innerHTML = '';
-  clearTimeout(timeoutLeitura);
-  ultimoCodigoLido = "";
 }
 
 // ATALHO ENTER PRA ADICIONAR PRODUTO
