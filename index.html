@@ -106,18 +106,19 @@ function logar(){let user = $('usuarioLogin').value; let senha = $('senhaLogin')
 function sair(){location.reload();}
 function verificarPermissoes(){if($('btnIniciarFech')){$('btnIniciarFech').disabled =!permissoes[usuarioLogado].podeFecharCaixa;}}
 function carregarTudo(){
-function verificarEstoqueBaixo(){let baixos = produtos.filter(p => (p.estoque||0) > 0 && (p.estoque||0) <= 5); if(baixos.length > 0){$('alertaEstoque').classList.remove('hidden'); $('listaAlertaEstoque').innerHTML = baixos.map(p=>`<p>${p.nome}: <b>${p.estoque}</b> un</p>`).join('');} else {$('alertaEstoque').classList.add('hidden');}}
-function verificarContasVencidas(){let hoje=new Date(); let vencidas=pagar.filter(p=>!p.pago && p.vencimento?.seconds && new Date(p.vencimento.seconds*1000)<hoje); if(vencidas.length>0){$('alertaContas').classList.remove('hidden'); $('listaAlertaContas').innerHTML=vencidas.map(p=>`<p>${p.desc}: R$${Number(p.valor).toFixed(2)}</p>`).join('')}else{$('alertaContas').classList.add('hidden')}}
-db.collection("produtos").onSnapshot(snap=>{produtos=snap.docs.map(d=>({id:d.id,...d.data()})); buscarProd(); listarProdutos(); verificarEstoqueBaixo();});
-db.collection("clientes").onSnapshot(snap=>{clientes=snap.docs.map(d=>({id:d.id,...d.data()})); listarClientes();});
-db.collection("fornecedores").onSnapshot(snap=>{fornecedores=snap.docs.map(d=>({id:d.id,...d.data()})); listarFornecedores();});
-db.collection("vendas").orderBy("numVenda","desc").limit(1).onSnapshot(snap=>{if(!snap.empty){ultimoNumVenda=snap.docs[0].data().numVenda||0}});
-db.collection("vendas").onSnapshot(snap=>{vendas=snap.docs.map(d=>({id:d.id,...d.data()}));});
-db.collection("receber").onSnapshot(snap=>{receber=snap.docs.map(d=>({id:d.id,...d.data()})); listarReceber();});
-db.collection("pagar").onSnapshot(snap=>{pagar=snap.docs.map(d=>({id:d.id,...d.data()})); listarPagar(); verificarContasVencidas();});
-db.collection("loja").onSnapshot(snap=>{if(!snap.empty){let docLoja = snap.docs[0]; loja=docLoja.data(); $('lId').value=docLoja.id; $('lNome').value=loja.nome||'';}});
-db.collection("caixa").onSnapshot(snap=>{movCaixa=snap.docs.map(d=>({id:d.id,...d.data()}));saldoCaixa=movCaixa.reduce((a,d)=>a+(d.valor||0),0); $('saldoCaixa').innerText=saldoCaixa.toFixed(2);});
-} 
+  function verificarEstoqueBaixo(){...}
+  function verificarContasVencidas(){...}
+
+  db.collection("produtos").onSnapshot(...)
+  db.collection("clientes").onSnapshot(...)
+  db.collection("fornecedores").onSnapshot(snap=>{fornecedores=snap.docs.map(d=>({id:d.id,...d.data()})); listarFornecedores(); preencherSelectFornecedor();}); // <- com a função nova
+  db.collection("vendas").orderBy("numVenda","desc").limit(1).onSnapshot(...) // <- 1º vendas
+  db.collection("vendas").onSnapshot(...) // <- 2º vendas
+  db.collection("receber").onSnapshot(...)
+  db.collection("pagar").onSnapshot(...)
+  db.collection("loja").onSnapshot(...)
+  db.collection("caixa").onSnapshot(...)
+}
 function verificarLimiteCliente(){let clienteId=$('clienteVenda').value; if(!clienteId){$('infoCliente').innerHTML=''; return;} let cliente=clientes.find(c=>c.id==clienteId); let dividas=receber.filter(r=>r.clienteId==clienteId).reduce((a,b)=>a+(b.saldo||0),0); let limite=cliente.limite||0; $('infoCliente').innerHTML=`Limite: R$${limite.toFixed(2)} | Devendo: R$${dividas.toFixed(2)}`;}
 function buscarProd(){$('listaProd').innerHTML=produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase())).map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer">${p.nome} - R$${Number(p.preco||0).toFixed(2)} [${p.estoque||0}]</div>`).join('')}
 function listarProdutos(){$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card"><b>${p.nome}</b><br>R$${Number(p.preco||0).toFixed(2)} | Est:${p.estoque||0} | Bloqueia:${p.bloqueiaEstoque?'Sim':'Não'}<div class="mt-2"><button onclick="editarProduto('${p.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirProduto('${p.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
@@ -129,7 +130,13 @@ function salvarCliente(){let data={nome:$('cNome').value,cpf:$('cCpf').value,tel
 function editarCliente(id){let c=clientes.find(x=>x.id==id); $('cId').value=c.id; $('cNome').value=c.nome; $('cCpf').value=c.cpf; $('cTel').value=c.tel; $('cEmail').value=c.email; $('cEnd').value=c.end; $('cLimite').value=c.limite; }
 function excluirCliente(id){if(confirm("Excluir cliente?"))db.collection("clientes").doc(id).delete()}
 function listarFornecedores(){$('listaFornecedores').innerHTML=fornecedores.map(f=>`<div class="card"><b>${f.nomeFantasia}</b><br>Razão: ${f.razao}<br>CNPJ: ${f.cnpj||''} | Tel: ${f.tel||''}<div class="mt-2"><button onclick="editarFornecedor('${f.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirFornecedor('${f.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
-function salvarFornecedor(){let data={razao:$('fRazao').value,nomeFantasia:$('fFantasia').value,cnpj:$('fCnpj').value,tel:$('fTel').value,email:$('fEmail').value,end:$('fEnd').value}; if($('fId').value){db.collection("fornecedores").doc($('fId').value).update(data)}else{db.collection("fornecedores").add(data)} alert("Salvo!"); $('fId').value=''; $('fRazao').value=''; $('fFantasia').value=''; $('fCnpj').value=''; $('fTel').value=''; $('fEmail').value=''; $('fEnd').value='';}
+function preencherSelectFornecedor(){
+  let options = '<option value="">Fornecedor</option>';
+  options += fornecedores.map(f=>`<option value="${f.id}">${f.nomeFantasia}</option>`).join('');
+  $('pFornecedor').innerHTML = options;
+  $('pgFornecedor').innerHTML = options;
+}
+  function salvarFornecedor(){let data={razao:$('fRazao').value,nomeFantasia:$('fFantasia').value,cnpj:$('fCnpj').value,tel:$('fTel').value,email:$('fEmail').value,end:$('fEnd').value}; if($('fId').value){db.collection("fornecedores").doc($('fId').value).update(data)}else{db.collection("fornecedores").add(data)} alert("Salvo!"); $('fId').value=''; $('fRazao').value=''; $('fFantasia').value=''; $('fCnpj').value=''; $('fTel').value=''; $('fEmail').value=''; $('fEnd').value='';}
 function editarFornecedor(id){let f=fornecedores.find(x=>x.id==id); $('fId').value=f.id; $('fRazao').value=f.razao; $('fFantasia').value=f.nomeFantasia; $('fCnpj').value=f.cnpj; $('fTel').value=f.tel; $('fEmail').value=f.email; $('fEnd').value=f.end; }
 function excluirFornecedor(id){if(confirm("Excluir fornecedor?"))db.collection("fornecedores").doc(id).delete()}
 function salvarLoja(){let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value,cnpj:$('lCnpj').value}; if($('lId').value){db.collection("loja").doc($('lId').value).set(data)}else{db.collection("loja").add(data)} alert("Salvo!")}
@@ -188,9 +195,17 @@ function imprimirCupom(venda, reimpressao = false){
   $('areaImpressao').style.display='none';
 }
 function reimprimirCupom(){let num = prompt("Digite o NÚMERO DA VENDA:"); if(!num) return; let venda = vendas.find(v=> v.numVenda == parseInt(num)); if(!venda) return alert("Venda não encontrada!"); imprimirCupom(venda, true);}
-function finalizarVenda(){if(carrinho.length==0)return alert("Carrinho vazio"); let numVenda = ultimoNumVenda + 1; let clienteId = $('clienteVenda').value; let clienteNome = clienteId? clientes.find(c=>c.id==clienteId).nome : 'Avulso'; let vendaData={numVenda, itens:carrinho, subtotal, desconto:toNum($('desconto').value), total, forma:$('formaPag').value, clienteId, clienteNome, troco:toNum($('troco').innerText), status:'ativa', data:firebase.firestore.FieldValue.serverTimestamp()}; db.collection("vendas").add(vendaData).then(()=>{ for(let i of carrinho){let p=produtos.find(x=>x.id==i.id); let novoEstoque = (p.estoque||0) - i.qtd; db.collection("produtos").doc(i.id).update({estoque:novoEstoque})} if($('formaPag').value!='Prazo'){db.collection("caixa").add({tipo:'entrada',valor:total,desc:`Venda ${numVenda}`,data:firebase.firestore.FieldValue.serverTimestamp()});} else {db.collection("receber").add({clienteId, cliente:clienteNome, total, saldo:total, data:firebase.firestore.FieldValue.serverTimestamp()});} imprimirCupom({...vendaData, data:{seconds:Date.now()/1000}}); carrinho=[]; subtotal=0; total=0; atualizarCarrinho(); $('clienteVenda').value=''; $('infoCliente').innerHTML=''; alert("Venda finalizada!")})}
-function addItemNF(){let cod = $('eCod').value; let qtd = parseInt(toNum($('eQtd').value)); let custo = toNum($('eCusto').value); let prod = produtos.find(p=>p.cod==cod); if(!prod) return alert("Produto não encontrado!"); itensNF.push({id:prod.id, nome:prod.nome, qtd, custo}); $('eCod').value='';$('eQtd').value='';$('eCusto').value=''; atualizarListaNF();}
-function atualizarListaNF(){$('listaItensNF').innerHTML = itensNF.map((i,idx)=>`<div class="flex justify-between border-b py-1">${i.nome} - ${i.qtd}un x R$${i.custo.toFixed(2)} <button onclick="itensNF.splice(${idx},1);atualizarListaNF()" class="text-red-500">X</button></div>`).join('');}
+function finalizarVenda(){
+  if(carrinho.length==0)return alert("Carrinho vazio"); 
+  let numVenda = ultimoNumVenda + 1; 
+  let clienteId = $('clienteVenda').value; 
+  let clienteNome = clienteId? clientes.find(c=>c.id==clienteId).nome : 'Avulso'; 
+  let vendaData={
+    numVenda, itens:carrinho, subtotal, desconto:toNum($('desconto').value), total, 
+    forma:$('formaPag').value, clienteId, clienteNome, troco:toNum($('troco').innerText), 
+    status:'ativa', vendedor: usuarioLogado, 
+    data:firebase.firestore.FieldValue.serverTimestamp()
+  };
 function finalizarEntradaNF(){itensNF.forEach(i=>{let p = produtos.find(x=>x.id==i.id); let novoEstoque = (p.estoque||0) + i.qtd; db.collection("produtos").doc(i.id).update({estoque:novoEstoque, custo:i.custo}); db.collection("caixa").add({tipo:'saida',valor:-(i.custo*i.qtd),desc:`Entrada NF ${i.nome}`,data:firebase.firestore.FieldValue.serverTimestamp()});}); itensNF=[]; atualizarListaNF(); alert("Estoque atualizado!");}
 function carregarFinanceiro(){let hoje=new Date(); let inicioMes=new Date(hoje.getFullYear(), hoje.getMonth(), 1); let vendasMes=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000)>=inicioMes && v.status!='estornada'); let receita=vendasMes.reduce((a,b)=>a+b.total,0); let custo=0; vendasMes.forEach(v=>{v.itens.forEach(i=>{let p=produtos.find(x=>x.id==i.id); custo += (p?.custo||0) * i.qtd})}); let despesas=movCaixa.filter(m=>m.tipo=='saida' && m.data?.seconds && new Date(m.data.seconds*1000)>=inicioMes).reduce((a,b)=>a+Math.abs(b.valor||0),0); let lucro = receita - custo - despesas; $('dreReceita').innerText=receita.toFixed(2); $('dreCusto').innerText=custo.toFixed(2); $('dreDespesa').innerText=despesas.toFixed(2); $('dreLucro').innerText=lucro.toFixed(2); let meta=toNum($('metaMes').value); let perc = meta>0? (receita/meta)*100 : 0; $('barraMeta').style.width = perc+'%'; $('valorMeta').innerText=receita.toFixed(2); const ctx = document.getElementById('graficoFluxo'); if(graficoFluxo) graficoFluxo.destroy(); graficoFluxo = new Chart(ctx, {type:'bar',data:{labels:['Entradas','Saídas'],datasets:[{data:[receita,despesas],backgroundColor:['#22c55e','#ef4444']}]},options:{responsive:true,plugins:{legend:{display:false}}}});}
 function relVendasDia(){const hoje=new Date().toLocaleDateString(); const vendasHoje=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000).toLocaleDateString()==hoje && v.status!='estornada'); let html=`<h2 class="font-bold">VENDAS DO DIA ${hoje}</h2>`+vendasHoje.map(v=>`<div class="card"><b>VENDA ${String(v.numVenda).padStart(5,'0')}</b> - R$${Number(v.total).toFixed(2)}</div>`).join('') || '<p>Nenhuma venda</p>'; $('resultadoRel').innerHTML=html;}
@@ -206,8 +221,37 @@ function addPrimeiro(){let filtro = produtos.filter(p=>p.nome.toLowerCase().incl
 function baixarBackup(){let backup={produtos,clientes,fornecedores,vendas}; let blob=new Blob([JSON.stringify(backup)],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`backup_d2.json`; a.click();}
 function restaurarBackup(event){let file=event.target.files[0]; let reader=new FileReader(); reader.onload=(e)=>{alert("Backup carregado! Recarregue a pagina.");}; reader.readAsText(file);}
 function gerarEtiquetas(){let html='<h2 style="color:black;text-align:center">ETIQUETAS</h2>'; produtos.forEach(p=>{html+=`<div style="border:1px dashed #000;padding:5px;margin:5px;display:inline-block;color:black"><b>${p.nome}</b><br>R$${Number(p.preco).toFixed(2)}</div>`}); $('areaImpressao').innerHTML=html; $('areaImpressao').style.display='block'; window.print(); $('areaImpressao').style.display='none';}
-function salvarContaPagar(){let data={desc:$('pgDesc').value,valor:toNum($('pgValor').value),parcelas:parseInt($('pgParcelas').value)||1,fornecedorId:$('pgFornecedor').value,pago:false}; db.collection("pagar").add(data); alert("Conta a pagar salva!");}
-async function zerarSistema(){ 
+function salvarContaPagar(){
+  let desc = $('pgDesc').value;
+  let valorTotal = toNum($('pgValor').value);
+  let parcelas = parseInt($('pgParcelas').value)||1;
+  let fornecedorId = $('pgFornecedor').value;
+  let fornecedorNome = fornecedorId ? fornecedores.find(f=>f.id==fornecedorId).nomeFantasia : 'Geral';
+  
+  if(valorTotal<=0 || !desc) return alert("Preencha Descrição e Valor");
+
+  let valorParcela = valorTotal / parcelas;
+  let dataAtual = new Date();
+
+  for(let i=1; i<=parcelas; i++){
+    let vencimento = new Date(dataAtual);
+    vencimento.setMonth(dataAtual.getMonth() + i - 1); // Vence todo dia 1 mês
+
+    db.collection("pagar").add({
+      desc: `${desc} - Parcela ${i}/${parcelas}`,
+      valor: valorParcela,
+      saldo: valorParcela,
+      vencimento: firebase.firestore.Timestamp.fromDate(vencimento),
+      fornecedorId: fornecedorId,
+      fornecedorNome: fornecedorNome,
+      pago: false,
+      parcela: i,
+      totalParcelas: parcelas
+    });
+  }
+  alert(`${parcelas} parcela(s) gerada(s) com sucesso!`);
+  $('pgDesc').value=''; $('pgValor').value=''; $('pgParcelas').value='1';
+}
   if(usuarioLogado!= 'gerente') return alert("Só o GERENTE pode zerar"); 
   let senha = prompt("DIGITE A SENHA PARA ZERAR: LOLA2025");
   if(senha != SENHA_ZERAR) return alert("Senha incorreta");
