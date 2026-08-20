@@ -207,7 +207,22 @@ function baixarBackup(){let backup={produtos,clientes,fornecedores,vendas}; let 
 function restaurarBackup(event){let file=event.target.files[0]; let reader=new FileReader(); reader.onload=(e)=>{alert("Backup carregado! Recarregue a pagina.");}; reader.readAsText(file);}
 function gerarEtiquetas(){let html='<h2 style="color:black;text-align:center">ETIQUETAS</h2>'; produtos.forEach(p=>{html+=`<div style="border:1px dashed #000;padding:5px;margin:5px;display:inline-block;color:black"><b>${p.nome}</b><br>R$${Number(p.preco).toFixed(2)}</div>`}); $('areaImpressao').innerHTML=html; $('areaImpressao').style.display='block'; window.print(); $('areaImpressao').style.display='none';}
 function salvarContaPagar(){let data={desc:$('pgDesc').value,valor:toNum($('pgValor').value),parcelas:parseInt($('pgParcelas').value)||1,fornecedorId:$('pgFornecedor').value,pago:false}; db.collection("pagar").add(data); alert("Conta a pagar salva!");}
-function zerarSistema(){ if(usuarioLogado!= 'gerente') return alert("Só o GERENTE"); if(!confirm("APAGAR TUDO?")) return; alert("Sistema zerado!"); location.reload();}
+async function zerarSistema(){ 
+  if(usuarioLogado!= 'gerente') return alert("Só o GERENTE pode zerar"); 
+  let senha = prompt("DIGITE A SENHA PARA ZERAR: LOLA2025");
+  if(senha != SENHA_ZERAR) return alert("Senha incorreta");
+  if(!confirm("APAGAR TUDO MESMO? ISSO NÃO TEM VOLTA!")) return; 
+  
+  let collections = ["produtos","clientes","fornecedores","vendas","receber","pagar","caixa","loja"];
+  for(let col of collections){
+    let snap = await db.collection(col).get();
+    let batch = db.batch();
+    snap.docs.forEach(doc=>{batch.delete(doc.ref);});
+    await batch.commit();
+  }
+  alert("Sistema zerado com sucesso!");
+  location.reload();
+}
 
 </script>
 </body>
