@@ -1,196 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDV D2 v18.52</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body{font-family:'Segoe UI',sans-serif;background:#f1f5f9}.dark{background:#0f172a;color:white}
-.card{background:white;padding:16px;border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,.1)}.dark.card{background:#1e293b}
-.btn{padding:10px 16px;border-radius:8px;font-weight:bold;cursor:pointer;border:none}
-.input{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px}.dark.input{background:#334155;border-color:#475569}
-.menu button{padding:8px 12px;border-radius:8px}.menu button.on{background:#2563eb;color:white}
-.aba{display:none}.aba.ativa{display:block}
-.pdv-cheio.menu,.pdv-cheio header{display:none}
-.hidden{display:none}
-@media print {body * {visibility: hidden;} #areaImpressao, #areaImpressao * {visibility: visible;} #areaImpressao {position: absolute; left: 0; top: 0;}}
-</style>
-</head>
-<body>
-<header class="p-4 bg-white dark:bg-slate-800 shadow flex justify-between">
-  <h1 class="font-bold text-xl">PDV D2 v18.52</h1>
-  <div><button onclick="alternarTema()" class="btn bg-slate-500 text-white">Tema</button> <button onclick="alternarTelaCheia()" class="btn bg-slate-500 text-white">Tela Cheia</button> <span id="userLogado" class="font-bold ml-2"></span> <button onclick="sair()" class="btn bg-red-500 text-white">SAIR</button></div>
-</header>
-
-<div id="telaLogin" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-  <div class="card w-80"><h2 class="font-bold text-center mb-4">LOGIN</h2>
-  <input id="usuarioLogin" class="input mb-2" placeholder="Usuário: caixa ou gerente">
-  <input id="senhaLogin" type="password" class="input mb-2" placeholder="Senha">
-  <p id="erroLogin" class="text-red-500 text-sm"></p>
-  <button onclick="logar()" class="btn bg-blue-600 text-white w-full">ENTRAR</button></div>
-</div>
-
-<div class="menu p-2 flex gap-2 flex-wrap bg-white dark:bg-slate-800">
-  <button id="btn-pdv" onclick="mostrarAba('pdv')" class="on">PDV</button>
-  <button id="btn-produtos" onclick="mostrarAba('produtos')">PRODUTOS</button>
-  <button id="btn-clientes" onclick="mostrarAba('clientes')">CLIENTES</button>
-  <button id="btn-fornecedores" onclick="mostrarAba('fornecedores')">FORNECEDORES</button>
-  <button id="btn-caixa" onclick="mostrarAba('caixa')">CAIXA</button>
-  <button id="btn-financeiro" onclick="mostrarAba('financeiro')">FINANCEIRO</button>
-  <button id="btn-relatorios" onclick="mostrarAba('relatorios')">RELATÓRIOS</button>
-  <button id="btn-config" onclick="mostrarAba('config')">CONFIG</button>
-</div>
-
-<div class="p-4">
-
-  <div id="alertaEstoque" class="card bg-yellow-100 dark:bg-yellow-900 mb-2 hidden"><b>ALERTA ESTOQUE BAIXO</b><div id="listaAlertaEstoque"></div></div>
-  <div id="alertaContas" class="card bg-red-100 dark:bg-red-900 mb-2 hidden"><b>CONTAS VENCIDAS</b><div id="listaAlertaContas"></div></div>
-
-  <div id="pdv" class="aba ativa">
-    <div class="grid md:grid-cols-3 gap-4">
-      <div class="md:col-span-2 card">
-        <select id="clienteVenda" onchange="verificarLimiteCliente()" class="input mb-2"></select>
-        <div id="infoCliente" class="text-sm mb-2"></div>
-        <input id="buscaProd" type="text" class="input" placeholder="Digite o código ou nome">
-        <div id="listaProd"></div>
-
-        <button onclick="iniciarLeitor()" class="btn bg-purple-600 text-white w-full mt-2 mb-2">📷 ESCANEAR CÓDIGO</button>
-        <button onclick="pararLeitor()" class="btn bg-red-600 text-white w-full mb-2 hidden" id="btnParar">PARAR CÂMERA</button>
-        <div id="leitor" style="width:100%; border-radius:8px; overflow:hidden;"></div>
-
-      </div>
-      <div class="card">
-        <h2 class="font-bold mb-2">CARRINHO</h2>
-        <div id="carrinho" class="h-60 overflow-y-auto"></div>
-        <p>Subtotal: R$<span id="subtotal">0.00</span></p>
-        <input id="desconto" type="text" inputmode="decimal" class="input my-1" placeholder="Desconto R$" onkeyup="calcularTotal()">
-        <input id="descontoP" type="text" inputmode="decimal" class="input my-1" placeholder="Desconto %" onkeyup="calcularTotalP()">
-        <p class="font-bold text-xl">TOTAL: R$<span id="total">0.00</span></p>
-        <select id="formaPag" class="input my-1" onchange="mostrarTroco()"><option>Dinheiro</option><option>Cartão</option><option>Pix</option><option>Prazo</option></select>
-        <div id="divTroco" style="display:none">
-          <input id="valorRecebido" type="text" inputmode="decimal" class="input" placeholder="Valor Recebido" onkeyup="calcularTroco()">
-          <p>Troco: R$<span id="troco">0.00</span></p>
-        </div>
-        <button onclick="finalizarVenda()" class="btn bg-green-600 text-white w-full mt-2">FINALIZAR VENDA F10</button>
-        <button onclick="reimprimirCupom()" class="btn bg-gray-600 text-white w-full mt-1">REIMPRIMIR</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="produtos" class="aba"><div class="card">
-    <h2 class="font-bold">CADASTRO PRODUTO</h2>
-    <input type="hidden" id="pId"><input id="pNome" class="input" placeholder="Nome">
-    <input id="pCod" class="input" placeholder="Código de Barras">
-    <input id="pCusto" type="text" inputmode="decimal" class="input" placeholder="Custo">
-    <input id="pPreco" type="text" inputmode="decimal" class="input" placeholder="Preço">
-    <input id="pEstoque" type="text" inputmode="numeric" class="input" placeholder="Estoque">
-    <input id="pValidade" type="date" class="input">
-    <select id="pFornecedor" class="input"></select>
-    <label><input type="checkbox" id="pBloqueiaEstoque"> Bloquear venda sem estoque</label>
-    <button onclick="salvarProduto()" class="btn bg-blue-600 text-white mt-2">SALVAR</button>
-  </div><div id="listaProdutos" class="mt-4"></div></div>
-
-  <div id="clientes" class="aba"><div class="card">
-    <h2 class="font-bold">CADASTRO CLIENTE</h2>
-    <input type="hidden" id="cId"><input id="cNome" class="input" placeholder="Nome">
-    <input id="cCpf" class="input" placeholder="CPF">
-    <input id="cTel" class="input" placeholder="Telefone">
-    <input id="cEmail" class="input" placeholder="Email">
-    <input id="cEnd" class="input" placeholder="Endereço">
-    <input id="cLimite" type="text" inputmode="decimal" class="input" placeholder="Limite de Crédito">
-    <button onclick="salvarCliente()" class="btn bg-blue-600 text-white mt-2">SALVAR</button>
-  </div><div id="listaClientes" class="mt-4"></div></div>
-
-  <div id="fornecedores" class="aba"><div class="card">
-    <h2 class="font-bold">CADASTRO FORNECEDOR</h2>
-    <input type="hidden" id="fId"><input id="fRazao" class="input" placeholder="Razão Social">
-    <input id="fFantasia" class="input" placeholder="Nome Fantasia">
-    <input id="fCnpj" class="input" placeholder="CNPJ">
-    <input id="fTel" class="input" placeholder="Telefone">
-    <input id="fEmail" class="input" placeholder="Email">
-    <input id="fEnd" class="input" placeholder="Endereço">
-    <button onclick="salvarFornecedor()" class="btn bg-blue-600 text-white mt-2">SALVAR</button>
-  </div><div id="listaFornecedores" class="mt-4"></div></div>
-
-  <div id="caixa" class="aba"><div class="grid md:grid-cols-2 gap-4">
-    <div class="card"><h2 class="font-bold">CAIXA</h2>
-      <div id="divAbertura"><p>Saldo: R$<span id="saldoCaixa">0.00</span></p>
-      <input id="valorInicial" type="text" inputmode="decimal" class="input" placeholder="Fundo de Troco">
-      <button onclick="abrirCaixa()" class="btn bg-green-600 text-white w-full mt-2">ABRIR CAIXA</button></div>
-      <button id="btnIniciarFech" onclick="iniciarFechamento()" class="btn bg-red-600 text-white w-full mt-2">INICIAR FECHAMENTO</button>
-      <div id="divFechamento" class="hidden">
-        <p>Dinheiro: R$<span id="totalDinheiro">0</span></p><p>Cartão: R$<span id="totalCartao">0</span></p><p>Pix: R$<span id="totalPix">0</span></p>
-        <p>Entradas: R$<span id="totalEntradas">0</span></p><p>Saídas: R$<span id="totalSaidas">0</span></p>
-        <p>Deveria Ter: R$<span id="valorDeveriaTer">0</span></p>
-        <input id="valorContado" type="text" inputmode="decimal" class="input" placeholder="Valor Contado">
-        <button onclick="confirmarFechamento()" class="btn bg-blue-600 text-white w-full mt-2">CONFIRMAR FECHAMENTO</button>
-        <p id="resultadoConferencia"></p>
-      </div>
-    </div>
-    <div class="card"><h2 class="font-bold">MOVIMENTAÇÃO</h2>
-      <input id="mValor" type="text" inputmode="decimal" class="input" placeholder="Valor">
-      <input id="mDesc" class="input" placeholder="Descrição">
-      <button onclick="entradaCaixa()" class="btn bg-green-600 text-white">ENTRADA</button>
-      <button onclick="saidaCaixa()" class="btn bg-red-600 text-white">SAÍDA</button>
-      <h3 class="font-bold mt-4">Extrato de Hoje</h3><div id="extratoCaixa"></div>
-    </div>
-  </div></div>
-
-  <div id="financeiro" class="aba"><div class="grid md:grid-cols-2 gap-4">
-    <div class="card"><h2 class="font-bold">CONTAS A RECEBER</h2><div id="listaReceber"></div></div>
-    <div class="card"><h2 class="font-bold">CONTAS A PAGAR</h2>
-      <input id="pgDesc" class="input" placeholder="Descrição">
-      <input id="pgValor" type="text" inputmode="decimal" class="input" placeholder="Valor Total">
-      <input id="pgParcelas" type="text" inputmode="numeric" class="input" placeholder="Nº Parcelas" value="1">
-      <select id="pgFornecedor" class="input"></select>
-      <button onclick="salvarContaPagar()" class="btn bg-red-600 text-white mt-2">GERAR CONTAS</button>
-      <div id="listaPagar" class="mt-2"></div>
-    </div>
-    <div class="card md:col-span-2"><h2 class="font-bold">DRE DO MÊS</h2>
-      <p>Receita: R$<span id="dreReceita">0</span></p><p>Custo: R$<span id="dreCusto">0</span></p><p>Despesa: R$<span id="dreDespesa">0</span></p><p class="font-bold">Lucro: R$<span id="dreLucro">0</span></p>
-      <input id="metaMes" type="text" inputmode="decimal" class="input" placeholder="Meta do Mês" onkeyup="carregarFinanceiro()">
-      <div class="w-full bg-gray-200 rounded-full h-4"><div id="barraMeta" class="bg-green-500 h-4 rounded-full"></div></div><p>Atingido: R$<span id="valorMeta">0</span></p>
-      <canvas id="graficoFluxo"></canvas>
-    </div>
-  </div></div>
-
-  <div id="relatorios" class="aba"><div class="card">
-    <h2 class="font-bold">RELATÓRIOS</h2>
-    <button onclick="relVendasDia()" class="btn bg-blue-600 text-white">VENDAS DO DIA</button>
-    <input id="dataIni" type="date" class="input"><input id="dataFim" type="date" class="input">
-    <button onclick="relLucroPeriodo()" class="btn bg-blue-600 text-white">LUCRO PERÍODO</button>
-    <button onclick="imprimirRelatorio()" class="btn bg-gray-600 text-white">IMPRIMIR</button>
-    <div id="resultadoRel" class="mt-4"></div>
-  </div></div>
-
-  <div id="config" class="aba"><div class="card">
-    <h2 class="font-bold">CONFIGURAÇÕES DA LOJA</h2>
-    <input type="hidden" id="lId"><input id="lNome" class="input" placeholder="Nome da Loja">
-    <input id="lEnd" class="input" placeholder="Endereço">
-    <input id="lTel" class="input" placeholder="Telefone">
-    <input id="lCnpj" class="input" placeholder="CNPJ">
-    <button onclick="salvarLoja()" class="btn bg-blue-600 text-white mt-2">SALVAR</button>
-    <hr class="my-4">
-    <button onclick="gerarEtiquetas()" class="btn bg-purple-600 text-white">GERAR ETIQUETAS</button>
-    <button onclick="baixarBackup()" class="btn bg-green-600 text-white">BACKUP</button>
-    <input type="file" id="arquivoBackup" onchange="restaurarBackup(event)" class="hidden"><button onclick="$('arquivoBackup').click()" class="btn bg-yellow-600 text-white">RESTAURAR</button>
-  </div></div>
-
-</div>
-
-<div id="areaImpressao" style="display:none"></div>
-
 <script>
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 firebase.initializeApp(firebaseConfig); const db = firebase.firestore(); const $=id=>document.getElementById(id);
+
 let produtos=[], clientes=[], fornecedores=[], vendas=[], receber=[], pagar=[], movCaixa=[], loja={}, carrinho=[], subtotal=0, total=0, saldoCaixa=0, ultimoNumVenda=0, itensNF=[], graficoFluxo, caixaAberto=false;
 let usuarioLogado=null; const SENHA_ZERAR = "LOLA2025";
 let permissoes = {caixa: {senha: '1234', podeEstornar: false, podeFecharCaixa: false}, gerente: {senha: '9999', podeEstornar: true, podeFecharCaixa: true}}
 let leitorAtivo = false;
+let ultimoCodigoLido = ""; // TRAVA ANTI DUPLICIDADE
+let timeoutLeitura = null;
 
 function toNum(v){ return parseFloat(String(v).replace(',','.')) || 0; }
 function alternarTema(){document.body.classList.toggle('dark')}
@@ -199,9 +16,11 @@ function mostrarAba(id){document.querySelectorAll('.aba').forEach(a=>a.classList
 function logar(){let user = $('usuarioLogin').value; let senha = $('senhaLogin').value; if(permissoes[user] && permissoes[user].senha == senha){usuarioLogado = user; $('userLogado').innerText=user.toUpperCase(); $('telaLogin').classList.add('hidden'); verificarPermissoes(); carregarTudo(); $('buscaProd').focus();} else {$('erroLogin').innerText = 'Usuário ou Senha inválidos!';}}
 function sair(){location.reload();}
 function verificarPermissoes(){if($('btnIniciarFech')){$('btnIniciarFech').disabled =!permissoes[usuarioLogado].podeFecharCaixa;}}
+
 function carregarTudo(){
   function verificarEstoqueBaixo(){let baixos = produtos.filter(p => (p.estoque||0) > 0 && (p.estoque||0) <= 5); if(baixos.length > 0){$('alertaEstoque').classList.remove('hidden'); $('listaAlertaEstoque').innerHTML = baixos.map(p=>`<p>${p.nome}: <b>${p.estoque}</b> un</p>`).join('');} else {$('alertaEstoque').classList.add('hidden');}}
   function verificarContasVencidas(){let hoje=new Date(); let vencidas=pagar.filter(p=>!p.pago && p.vencimento?.seconds && new Date(p.vencimento.seconds*1000)<hoje); if(vencidas.length>0){$('alertaContas').classList.remove('hidden'); $('listaAlertaContas').innerHTML=vencidas.map(p=>`<p>${p.desc}: R$${Number(p.valor).toFixed(2)}</p>`).join('')}else{$('alertaContas').classList.add('hidden')}}
+
   db.collection("produtos").onSnapshot(snap=>{produtos=snap.docs.map(d=>({id:d.id,...d.data()})); buscarProd(); listarProdutos(); verificarEstoqueBaixo();});
   db.collection("clientes").onSnapshot(snap=>{clientes=snap.docs.map(d=>({id:d.id,...d.data()})); listarClientes();});
   db.collection("fornecedores").onSnapshot(snap=>{fornecedores=snap.docs.map(d=>({id:d.id,...d.data()})); listarFornecedores(); preencherSelectFornecedor();});
@@ -218,9 +37,10 @@ function carregarTudo(){
     let hoje=new Date();
     let inicioMes=new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     let entradasMes=movCaixa.filter(m=>m.tipo=='entrada' && m.data?.seconds && new Date(m.data.seconds*1000)>=inicioMes).reduce((a,b)=>a+b.valor,0);
-    $('entradasMes').innerText=entradasMes.toFixed(2);
+    if($('entradasMes')) $('entradasMes').innerText=entradasMes.toFixed(2);
   });
 }
+
 function verificarLimiteCliente(){let clienteId=$('clienteVenda').value; if(!clienteId){$('infoCliente').innerHTML=''; return;} let cliente=clientes.find(c=>c.id==clienteId); let dividas=receber.filter(r=>r.clienteId==clienteId).reduce((a,b)=>a+(b.saldo||0),0); let limite=cliente.limite||0; $('infoCliente').innerHTML=`Limite: R$${limite.toFixed(2)} | Devendo: R$${dividas.toFixed(2)}`;}
 function buscarProd(){$('listaProd').innerHTML=produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase())).map(p=>`<div onclick="addCarrinho('${p.id}')" class="p-2 border-b cursor-pointer">${p.nome} - R$${Number(p.preco||0).toFixed(2)} [${p.estoque||0}]</div>`).join('')}
 function listarProdutos(){$('listaProdutos').innerHTML=produtos.map(p=>`<div class="card"><b>${p.nome}</b><br>R$${Number(p.preco||0).toFixed(2)} | Est:${p.estoque||0} | Bloqueia:${p.bloqueiaEstoque?'Sim':'Não'}<div class="mt-2"><button onclick="editarProduto('${p.id}')" class="btn bg-yellow-500 text-white text-sm">EDITAR</button> <button onclick="excluirProduto('${p.id}')" class="btn bg-red-500 text-white text-sm">EXCLUIR</button></div></div>`).join('')}
@@ -238,7 +58,7 @@ function editarFornecedor(id){let f=fornecedores.find(x=>x.id==id); $('fId').val
 function excluirFornecedor(id){if(confirm("Excluir fornecedor?"))db.collection("fornecedores").doc(id).delete()}
 function salvarLoja(){let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value,cnpj:$('lCnpj').value}; if($('lId').value){db.collection("loja").doc($('lId').value).set(data)}else{db.collection("loja").add(data)} alert("Salvo!")}
 function listarReceber(){$('listaReceber').innerHTML=receber.filter(r=>(r.saldo||0)>0).map(r=>`<div class="card"><b>${r.cliente}</b><br>Saldo: R$${Number(r.saldo||0).toFixed(2)}<input id="baixa_${r.id}" type="text" inputmode="decimal" class="input mt-2 mb-2" placeholder="Valor da baixa"><button onclick="darBaixaReceber('${r.id}')" class="btn bg-green-600 text-white w-full">DAR BAIXA</button></div>`).join('') || '<p>Sem contas</p>'}
-function darBaixaReceber(id){let valor=toNum($(`baixa_${r.id}`).value); if(valor<=0) return alert("Digite um valor"); let conta=receber.find(r=>r.id==id); let novoSaldo = (conta.saldo||0) - valor; db.collection("caixa").add({tipo:'entrada',valor:valor,desc:`Receb. ${conta.cliente}`,data:firebase.firestore.FieldValue.serverTimestamp()}); if(novoSaldo<=0){db.collection("receber").doc(id).delete();}else{db.collection("receber").doc(id).update({saldo:novoSaldo});}}
+function darBaixaReceber(id){let valor=toNum($(`baixa_${id}`).value); if(valor<=0) return alert("Digite um valor"); let conta=receber.find(r=>r.id==id); let novoSaldo = (conta.saldo||0) - valor; db.collection("caixa").add({tipo:'entrada',valor:valor,desc:`Receb. ${conta.cliente}`,data:firebase.firestore.FieldValue.serverTimestamp()}); if(novoSaldo<=0){db.collection("receber").doc(id).delete();}else{db.collection("receber").doc(id).update({saldo:novoSaldo});}}
 function listarPagar(){$('listaPagar').innerHTML=pagar.filter(p=>!p.pago).map(p=>{let dataVenc = p.vencimento?.seconds? new Date(p.vencimento.seconds*1000).toLocaleDateString('pt-BR') : 'Sem data'; return `<div class="card"><b>${p.desc}</b><br>R$${Number(p.valor||0).toFixed(2)}<br><span class="text-xs">Venc: ${dataVenc}</span><button onclick="pagarParcela('${p.id}')" class="btn bg-red-600 text-white w-full mt-2">PAGAR</button></div>`}).join('') || '<p>Sem contas</p>'}
 function pagarParcela(id){let conta=pagar.find(p=>p.id==id); db.collection("pagar").doc(id).update({pago:true}); db.collection("caixa").add({tipo:'saida',valor:-conta.valor,desc:`Pag. ${conta.desc}`,data:firebase.firestore.FieldValue.serverTimestamp()});}
 function addCarrinho(id){let p=produtos.find(x=>x.id==id); if(!p) return; if((p.estoque||0)<=0 && p.bloqueiaEstoque){return alert("PRODUTO SEM ESTOQUE E BLOQUEADO PARA VENDA!")} let item=carrinho.find(i=>i.id==id); if(item){item.qtd++; item.total=item.qtd*p.preco}else{carrinho.push({id:p.id,nome:p.nome,preco:p.preco,qtd:1,total:p.preco})}atualizarCarrinho();}
@@ -248,28 +68,19 @@ function calcularTotal(){let desc=toNum($('desconto').value); total=subtotal-des
 function calcularTotalP(){let perc=toNum($('descontoP').value); let valorDesc = subtotal * (perc/100); $('desconto').value = valorDesc.toFixed(2); calcularTotal();}
 function mostrarTroco(){if($('formaPag').value=='Dinheiro'){$('divTroco').style.display = 'block'} else {$('divTroco').style.display = 'none'}}
 function calcularTroco(){let recebido=toNum($('valorRecebido').value); $('troco').innerText=(recebido-total).toFixed(2);}
+
 function imprimirCupom(venda, reimpressao = false){
   let dataVenda = venda.data?.seconds? new Date(venda.data.seconds*1000) : new Date();
-  let dataStr = dataVenda.toLocaleDateString('pt-BR');
-  let horaStr = dataVenda.toLocaleTimeString('pt-BR');
+  let dataStr = dataVenda.toLocaleDateString('pt-BR'); let horaStr = dataVenda.toLocaleTimeString('pt-BR');
   let itensHTML = venda.itens.map(i=>`<div style="display:flex;justify-content:space-between"><span>${i.qtd}x ${i.nome.substring(0,18)}</span><span>R$${Number(i.total).toFixed(2)}</span></div><div style="font-size:10px">R$${Number(i.preco).toFixed(2)} un</div>`).join('');
   let rodape = reimpressao? '<p style="text-align:center">*** 2ª VIA ***</p>' : '';
   let descontoTxt = venda.desconto>0? `<p>Desconto: R$${Number(venda.desconto).toFixed(2)}</p>` : '';
   let trocoTxt = venda.forma=='Dinheiro'? `<p>Valor Recebido: R$${(venda.total+venda.troco).toFixed(2)}</p><p>Troco: R$${Number(venda.troco).toFixed(2)}</p>` : '';
   let html=`<div style="width:80mm;font-family:'Courier New',monospace;font-size:12px;color:black;padding:5px"><h2 style="text-align:center">${loja.nome}</h2><p style="text-align:center">${loja.end||''} | ${loja.tel||''}</p><p>----------------------------------------</p><p>VENDA: ${String(venda.numVenda).padStart(5,'0')} ${rodape}</p><p>DATA: ${dataStr} ${horaStr}</p><p>CLIENTE: ${venda.clienteNome}</p><p>FORMA: ${venda.forma}</p><p>VENDEDOR: ${usuarioLogado.toUpperCase()}</p><p>----------------------------------------</p>${itensHTML}<p>----------------------------------------</p><p>Subtotal: R$${Number(venda.subtotal).toFixed(2)}</p>${descontoTxt}<h3>TOTAL: R$${Number(venda.total).toFixed(2)}</h3>${trocoTxt}<p>----------------------------------------</p><p style="text-align:center">OBRIGADO PELA PREFERÊNCIA!</p><p style="text-align:center">D2 SISTEMAS V18.52</p></div>`;
-  $('areaImpressao').innerHTML=html;
-  $('areaImpressao').style.display='block';
-  window.print();
-  $('areaImpressao').style.display='none';
+  $('areaImpressao').innerHTML=html; $('areaImpressao').style.display='block'; window.print(); $('areaImpressao').style.display='none';
 }
 
-function reimprimirCupom(){
-  let num = prompt("Digite o NÚMERO DA VENDA:");
-  if(!num) return;
-  let venda = vendas.find(v=> v.numVenda == parseInt(num));
-  if(!venda) return alert("Venda não encontrada!");
-  imprimirCupom(venda, true);
-}
+function reimprimirCupom(){let num = prompt("Digite o NÚMERO DA VENDA:"); if(!num) return; let venda = vendas.find(v=> v.numVenda == parseInt(num)); if(!venda) return alert("Venda não encontrada!"); imprimirCupom(venda, true);}
 
 function finalizarVenda(){
   if(carrinho.length==0)return alert("Carrinho vazio");
@@ -278,212 +89,49 @@ function finalizarVenda(){
   let clienteNome = clienteId? clientes.find(c=>c.id==clienteId).nome : 'Avulso';
   let vendaData={numVenda, itens:carrinho, subtotal, desconto:toNum($('desconto').value), total, forma:$('formaPag').value, clienteId, clienteNome, troco:toNum($('troco').innerText), status:'ativa', vendedor: usuarioLogado, data:firebase.firestore.FieldValue.serverTimestamp()};
   db.collection("vendas").add(vendaData).then(()=>{
-    for(let i of carrinho){
-      let p=produtos.find(x=>x.id==i.id);
-      let novoEstoque = (p.estoque||0) - i.qtd;
-      db.collection("produtos").doc(i.id).update({estoque:novoEstoque})
-    }
-    if($('formaPag').value=='Prazo'){
-      db.collection("receber").add({clienteId, cliente:clienteNome, total, saldo:total, numVenda, data:firebase.firestore.FieldValue.serverTimestamp()});
-    } else {
-      db.collection("caixa").add({tipo:'entrada',valor:total,desc:`Venda ${numVenda}`, forma:$('formaPag').value, data:firebase.firestore.FieldValue.serverTimestamp()});
-    }
+    for(let i of carrinho){let p=produtos.find(x=>x.id==i.id); let novoEstoque = (p.estoque||0) - i.qtd; db.collection("produtos").doc(i.id).update({estoque:novoEstoque})}
+    if($('formaPag').value=='Prazo'){db.collection("receber").add({clienteId, cliente:clienteNome, total, saldo:total, numVenda, data:firebase.firestore.FieldValue.serverTimestamp()});}
+    else {db.collection("caixa").add({tipo:'entrada',valor:total,desc:`Venda ${numVenda}`, forma:$('formaPag').value, data:firebase.firestore.FieldValue.serverTimestamp()});}
     imprimirCupom({...vendaData, data:{seconds:Date.now()/1000}});
-    carrinho=[]; subtotal=0; total=0; atualizarCarrinho();
-    $('clienteVenda').value=''; $('infoCliente').innerHTML='';
-    alert("Venda finalizada!")
+    carrinho=[]; subtotal=0; total=0; atualizarCarrinho(); $('clienteVenda').value=''; $('infoCliente').innerHTML=''; alert("Venda finalizada!")
   })
 }
 
-function addItemNF(){
-  let cod = $('eCod').value;
-  let qtd = parseInt(toNum($('eQtd').value));
-  let custo = toNum($('eCusto').value);
-  let prod = produtos.find(p=>p.cod==cod);
-  if(!prod) return alert("Produto não encontrado!");
-  itensNF.push({id:prod.id, nome:prod.nome, qtd, custo});
-  $('eCod').value='';$('eQtd').value='';$('eCusto').value='';
-  atualizarListaNF();
-}
-
-function atualizarListaNF(){
-  $('listaItensNF').innerHTML = itensNF.map((i,idx)=>`<div class="flex justify-between border-b py-1">${i.nome} - ${i.qtd}un x R$${i.custo.toFixed(2)} <button onclick="itensNF.splice(${idx},1);atualizarListaNF()" class="text-red-500">X</button></div>`).join('');
-}
-
-function finalizarEntradaNF(){
-  itensNF.forEach(i=>{
-    let p = produtos.find(x=>x.id==i.id);
-    let novoEstoque = (p.estoque||0) + i.qtd;
-    db.collection("produtos").doc(i.id).update({estoque:novoEstoque, custo:i.custo});
-  });
-  itensNF=[];
-  atualizarListaNF();
-  alert("Estoque atualizado! A conta vai pra CONTAS A PAGAR");
-}
-
 function carregarFinanceiro(){
-  let hoje=new Date();
-  let inicioMes=new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  let hoje=new Date(); let inicioMes=new Date(hoje.getFullYear(), hoje.getMonth(), 1);
   let vendasMes=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000)>=inicioMes && v.status!='estornada');
   let receita=vendasMes.reduce((a,b)=>a+b.total,0);
   let custo=0; vendasMes.forEach(v=>{v.itens.forEach(i=>{let p=produtos.find(x=>x.id==i.id); custo += (p?.custo||0) * i.qtd})});
   let despesas=movCaixa.filter(m=>m.tipo=='saida' && m.data?.seconds && new Date(m.data.seconds*1000)>=inicioMes).reduce((a,b)=>a+Math.abs(b.valor||0),0);
   let lucro = receita - custo - despesas;
-  $('dreReceita').innerText=receita.toFixed(2);
-  $('dreCusto').innerText=custo.toFixed(2);
-  $('dreDespesa').innerText=despesas.toFixed(2);
-  $('dreLucro').innerText=lucro.toFixed(2);
-  let meta=toNum($('metaMes').value);
-  let perc = meta>0? (receita/meta)*100 : 0;
-  $('barraMeta').style.width = perc+'%';
-  $('valorMeta').innerText=receita.toFixed(2);
-  const ctx = document.getElementById('graficoFluxo');
-  if(graficoFluxo) graficoFluxo.destroy();
+  $('dreReceita').innerText=receita.toFixed(2); $('dreCusto').innerText=custo.toFixed(2); $('dreDespesa').innerText=despesas.toFixed(2); $('dreLucro').innerText=lucro.toFixed(2);
+  let meta=toNum($('metaMes').value); let perc = meta>0? (receita/meta)*100 : 0; $('barraMeta').style.width = perc+'%'; $('valorMeta').innerText=receita.toFixed(2);
+  const ctx = document.getElementById('graficoFluxo'); if(graficoFluxo) graficoFluxo.destroy();
   graficoFluxo = new Chart(ctx, {type:'bar',data:{labels:['Entradas','Saídas'],datasets:[{data:[receita,despesas],backgroundColor:['#22c55e','#ef4444']}]},options:{responsive:true,plugins:{legend:{display:false}}}});
 }
 
-function relVendasDia(){
-  const hoje=new Date().toLocaleDateString();
-  const vendasHoje=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000).toLocaleDateString()==hoje && v.status!='estornada');
-  let html=`<h2 class="font-bold">VENDAS DO DIA ${hoje}</h2>`+vendasHoje.map(v=>`<div class="card"><b>VENDA ${String(v.numVenda).padStart(5,'0')}</b> - R$${Number(v.total).toFixed(2)}</div>`).join('') || '<p>Nenhuma venda</p>';
-  $('resultadoRel').innerHTML=html;
-}
+function relVendasDia(){const hoje=new Date().toLocaleDateString(); const vendasHoje=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000).toLocaleDateString()==hoje && v.status!='estornada'); let html=`<h2 class="font-bold">VENDAS DO DIA ${hoje}</h2>`+vendasHoje.map(v=>`<div class="card"><b>VENDA ${String(v.numVenda).padStart(5,'0')}</b> - R$${Number(v.total).toFixed(2)}</div>`).join('') || '<p>Nenhuma venda</p>'; $('resultadoRel').innerHTML=html;}
+function relLucroPeriodo(){if(!$('dataIni').value ||!$('dataFim').value) return alert("Selecione Data Início e Fim"); let ini=new Date($('dataIni').value + 'T00:00:00'); let fim=new Date($('dataFim').value + 'T23:59:59'); const vendasPeriodo=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000)>=ini && new Date(v.data.seconds*1000)<=fim && v.status!='estornada'); let faturamento = vendasPeriodo.reduce((a,b)=>a+b.total,0); let custo = 0; vendasPeriodo.forEach(v=>{v.itens.forEach(i=>{let p=produtos.find(x=>x.id==i.id); custo += (p?.custo||0) * i.qtd})}); let lucro = faturamento - custo; $('resultadoRel').innerHTML=`<div class="card"><h2 class="font-bold">PERÍODO: ${ini.toLocaleDateString()} até ${fim.toLocaleDateString()}</h2><p>Faturamento: R$${faturamento.toFixed(2)}</p><p>Custo: R$${custo.toFixed(2)}</p><p class="font-bold">Lucro Bruto: R$${lucro.toFixed(2)}</p></div>`}
+function imprimirRelatorio(){let conteudo = $('resultadoRel').innerHTML; if(conteudo=='') return alert("Gere um relatório primeiro"); $('areaImpressao').innerHTML = `<h2 style="text-align:center;color:black">${loja.nome} - RELATÓRIO</h2>`+conteudo; $('areaImpressao').style.display='block'; window.print(); $('areaImpressao').style.display='none';}
 
-function relLucroPeriodo(){
-  if(!$('dataIni').value ||!$('dataFim').value) return alert("Selecione Data Início e Fim");
-  let ini=new Date($('dataIni').value + 'T00:00:00');
-  let fim=new Date($('dataFim').value + 'T23:59:59');
-  const vendasPeriodo=vendas.filter(v=>v.data?.seconds && new Date(v.data.seconds*1000)>=ini && new Date(v.data.seconds*1000)<=fim && v.status!='estornada');
-  let faturamento = vendasPeriodo.reduce((a,b)=>a+b.total,0);
-  let custo = 0; vendasPeriodo.forEach(v=>{v.itens.forEach(i=>{let p=produtos.find(x=>x.id==i.id); custo += (p?.custo||0) * i.qtd})});
-  let lucro = faturamento - custo;
-  $('resultadoRel').innerHTML=`<div class="card"><h2 class="font-bold">PERÍODO: ${ini.toLocaleDateString()} até ${fim.toLocaleDateString()}</h2><p>Faturamento: R$${faturamento.toFixed(2)}</p><p>Custo: R$${custo.toFixed(2)}</p><p class="font-bold">Lucro Bruto: R$${lucro.toFixed(2)}</p></div>`
-}
+function abrirCaixa(){let valor=toNum($('valorInicial').value); db.collection("caixa").add({tipo:'abertura',valor:valor,desc:'Abertura',data:firebase.firestore.FieldValue.serverTimestamp()}); $('divAbertura').classList.add('hidden'); $('btnIniciarFech').innerText='CAIXA ABERTO';}
+function iniciarFechamento(){let vendasDinheiro = vendas.filter(v=>v.forma=='Dinheiro' && v.status!='estornada').reduce((a,b)=>a+b.total,0); let vendasCartao = vendas.filter(v=>v.forma=='Cartão' && v.status!='estornada').reduce((a,b)=>a+b.total,0); let vendasPix = vendas.filter(v=>v.forma=='Pix' && v.status!='estornada').reduce((a,b)=>a+b.total,0); let entradas = movCaixa.filter(m=>m.tipo=='entrada').reduce((a,b)=>a+b.valor,0); let saidas = movCaixa.filter(m=>m.tipo=='saida').reduce((a,b)=>a+Math.abs(b.valor),0); $('totalDinheiro').innerText=vendasDinheiro.toFixed(2); $('totalCartao').innerText=vendasCartao.toFixed(2); $('totalPix').innerText=vendasPix.toFixed(2); $('totalEntradas').innerText=entradas.toFixed(2); $('totalSaidas').innerText=saidas.toFixed(2); let deveriaTer = toNum($('valorInicial').value) + vendasDinheiro + entradas - saidas; $('valorDeveriaTer').innerText = deveriaTer.toFixed(2); $('divFechamento').classList.remove('hidden'); carregarExtratoCaixa();}
+function confirmarFechamento(){let contado=toNum($('valorContado').value); let deveria=toNum($('valorDeveriaTer').innerText); let diferenca = contado - deveria; $('resultadoConferencia').innerText = diferenca==0?'CAIXA OK':diferenca>0?`SOBRA: R$${diferenca.toFixed(2)}`:`FALTA: R$${Math.abs(diferenca).toFixed(2)}`; db.collection("caixa").add({tipo:'fechamento',valor:-saldoCaixa,desc:`Fechamento. Dif: ${diferenca.toFixed(2)}`,data:firebase.firestore.FieldValue.serverTimestamp()}); $('divFechamento').classList.add('hidden'); $('divAbertura').classList.remove('hidden'); $('btnIniciarFech').innerText='INICIAR FECHAMENTO'; alert("Caixa Fechado! Gerando relatório..."); imprimirRelatorioFechamento(contado, deveria, diferenca);}
+function entradaCaixa(){if(!$('mValor').value) return alert("Digite o valor"); db.collection("caixa").add({tipo:'entrada',valor:toNum($('mValor').value),desc:$('mDesc').value,data:firebase.firestore.FieldValue.serverTimestamp()}); $('mValor').value=''; $('mDesc').value='';}
+function saidaCaixa(){if(!$('mValor').value) return alert("Digite o valor"); db.collection("caixa").add({tipo:'saida',valor:-toNum($('mValor').value),desc:$('mDesc').value,data:firebase.firestore.FieldValue.serverTimestamp()}); $('mValor').value=''; $('mDesc').value='';}
+function addPrimeiro(){let filtro = produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase())); if(filtro.length == 1) { addCarrinho(filtro[0].id); $('buscaProd').value='';}}
+function baixarBackup(){let backup={produtos,clientes,fornecedores,vendas}; let blob=new Blob([JSON.stringify(backup)],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`backup_d2.json`; a.click();}
+function restaurarBackup(event){let file=event.target.files[0]; let reader=new FileReader(); reader.onload=(e)=>{alert("Backup carregado! Recarregue a pagina.");}; reader.readAsText(file);}
+function gerarEtiquetas(){let html='<h2 style="color:black;text-align:center">ETIQUETAS</h2>'; produtos.forEach(p=>{html+=`<div style="border:1px dashed #000;padding:5px;margin:5px;display:inline-block;color:black"><b>${p.nome}</b><br>R$${Number(p.preco).toFixed(2)}</div>`}); $('areaImpressao').innerHTML=html; $('areaImpressao').style.display='block'; window.print(); $('areaImpressao').style.display='none';}
+function salvarContaPagar(){let desc = $('pgDesc').value; let valorTotal = toNum($('pgValor').value); let parcelas = parseInt($('pgParcelas').value)||1; let fornecedorId = $('pgFornecedor').value; let fornecedorNome = fornecedorId? fornecedores.find(f=>f.id==fornecedorId).nomeFantasia : 'Geral'; if(valorTotal<=0 ||!desc) return alert("Preencha Descrição e Valor"); let valorParcela = valorTotal / parcelas; let dataAtual = new Date(); for(let i=1; i<=parcelas; i++){let vencimento = new Date(dataAtual); vencimento.setMonth(dataAtual.getMonth() + i - 1); db.collection("pagar").add({desc: `${desc} - Parcela ${i}/${parcelas}`, valor: valorParcela, saldo: valorParcela, vencimento: firebase.firestore.Timestamp.fromDate(vencimento), fornecedorId: fornecedorId, fornecedorNome: fornecedorNome, pago: false});} alert(`${parcelas} parcela(s) gerada(s) com sucesso!`); $('pgDesc').value=''; $('pgValor').value=''; $('pgParcelas').value='1';}
+function carregarExtratoCaixa(){let hoje = new Date().toLocaleDateString(); let movHoje = movCaixa.filter(m => m.data?.seconds && new Date(m.data.seconds*1000).toLocaleDateString() == hoje); $('extratoCaixa').innerHTML = movHoje.map(m=>{let cor = m.tipo=='entrada' || m.tipo=='abertura'? 'text-green-500' : 'text-red-500'; let sinal = m.valor > 0? '+' : ''; return `<div class="flex justify-between border-b py-1"><span>${m.desc}</span><span class="${cor} font-bold">${sinal}R$${Number(m.valor).toFixed(2)}</span></div>`}).join('') || '<p>Nenhuma movimentação hoje</p>';}
+function imprimirRelatorioFechamento(contado, deveria, diferenca){let html = `<h2 style="text-align:center;color:black">${loja.nome}</h2><h3 style="text-align:center;color:black">FECHAMENTO DE CAIXA</h3><p style="color:black">Data: ${new Date().toLocaleString('pt-BR')}</p><hr><p style="color:black">Dinheiro: R$${$('totalDinheiro').innerText}</p><p style="color:black">Cartão: R$${$('totalCartao').innerText}</p><p style="color:black">Pix: R$${$('totalPix').innerText}</p><p style="color:black">Entradas: R$${$('totalEntradas').innerText}</p><p style="color:black">Saídas: R$${$('totalSaidas').innerText}</p><hr><p style="color:black">Deveria Ter: R$${deveria.toFixed(2)}</p><p style="color:black">Foi Contado: R$${contado.toFixed(2)}</p><p style="color:black"><b>Diferença: R$${diferenca.toFixed(2)}</b></p>`; $('areaImpressao').innerHTML=html; $('areaImpressao').style.display='block'; window.print(); $('areaImpressao').style.display='none';}
 
-function imprimirRelatorio(){
-  let conteudo = $('resultadoRel').innerHTML;
-  if(conteudo=='') return alert("Gere um relatório primeiro");
-  $('areaImpressao').innerHTML = `<h2 style="text-align:center;color:black">${loja.nome} - RELATÓRIO</h2>`+conteudo;
-  $('areaImpressao').style.display='block';
-  window.print();
-  $('areaImpressao').style.display='none';
-}
-
-function abrirCaixa(){
-  let valor=toNum($('valorInicial').value);
-  db.collection("caixa").add({tipo:'abertura',valor:valor,desc:'Abertura',data:firebase.firestore.FieldValue.serverTimestamp()});
-  $('divAbertura').classList.add('hidden');
-  $('btnIniciarFech').innerText='CAIXA ABERTO';
-}
-
-function iniciarFechamento(){
-  let vendasDinheiro = vendas.filter(v=>v.forma=='Dinheiro' && v.status!='estornada').reduce((a,b)=>a+b.total,0);
-  let vendasCartao = vendas.filter(v=>v.forma=='Cartão' && v.status!='estornada').reduce((a,b)=>a+b.total,0);
-  let vendasPix = vendas.filter(v=>v.forma=='Pix' && v.status!='estornada').reduce((a,b)=>a+b.total,0);
-  let entradas = movCaixa.filter(m=>m.tipo=='entrada').reduce((a,b)=>a+b.valor,0);
-  let saidas = movCaixa.filter(m=>m.tipo=='saida').reduce((a,b)=>a+Math.abs(b.valor),0);
-  $('totalDinheiro').innerText=vendasDinheiro.toFixed(2);
-  $('totalCartao').innerText=vendasCartao.toFixed(2);
-  $('totalPix').innerText=vendasPix.toFixed(2);
-  $('totalEntradas').innerText=entradas.toFixed(2);
-  $('totalSaidas').innerText=saidas.toFixed(2);
-  let deveriaTer = toNum($('valorInicial').value) + vendasDinheiro + entradas - saidas;
-  $('valorDeveriaTer').innerText = deveriaTer.toFixed(2);
-  $('divFechamento').classList.remove('hidden');
-  carregarExtratoCaixa();
-}
-
-function confirmarFechamento(){
-  let contado=toNum($('valorContado').value);
-  let deveria=toNum($('valorDeveriaTer').innerText);
-  let diferenca = contado - deveria;
-  $('resultadoConferencia').innerText = diferenca==0?'CAIXA OK':diferenca>0?`SOBRA: R$${diferenca.toFixed(2)}`:`FALTA: R$${Math.abs(diferenca).toFixed(2)}`;
-  db.collection("caixa").add({tipo:'fechamento',valor:-saldoCaixa,desc:`Fechamento. Dif: ${diferenca.toFixed(2)}`,data:firebase.firestore.FieldValue.serverTimestamp()});
-  $('divFechamento').classList.add('hidden');
-  $('divAbertura').classList.remove('hidden');
-  $('btnIniciarFech').innerText='INICIAR FECHAMENTO';
-  alert("Caixa Fechado! Gerando relatório...");
-  imprimirRelatorioFechamento(contado, deveria, diferenca);
-}
-
-function entradaCaixa(){
-  if(!$('mValor').value) return alert("Digite o valor");
-  db.collection("caixa").add({tipo:'entrada',valor:toNum($('mValor').value),desc:$('mDesc').value,data:firebase.firestore.FieldValue.serverTimestamp()});
-  $('mValor').value=''; $('mDesc').value='';
-}
-
-function saidaCaixa(){
-  if(!$('mValor').value) return alert("Digite o valor");
-  db.collection("caixa").add({tipo:'saida',valor:-toNum($('mValor').value),desc:$('mDesc').value,data:firebase.firestore.FieldValue.serverTimestamp()});
-  $('mValor').value=''; $('mDesc').value='';
-}
-
-function addPrimeiro(){
-  let filtro = produtos.filter(p=>p.nome.toLowerCase().includes($('buscaProd').value.toLowerCase()));
-  if(filtro.length == 1) { addCarrinho(filtro[0].id); $('buscaProd').value='';}
-}
-
-function baixarBackup(){
-  let backup={produtos,clientes,fornecedores,vendas};
-  let blob=new Blob([JSON.stringify(backup)],{type:'application/json'});
-  let a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`backup_d2.json`;
-  a.click();
-}
-
-function restaurarBackup(event){
-  let file=event.target.files[0];
-  let reader=new FileReader();
-  reader.onload=(e)=>{alert("Backup carregado! Recarregue a pagina.");};
-  reader.readAsText(file);
-}
-
-function gerarEtiquetas(){
-  let html='<h2 style="color:black;text-align:center">ETIQUETAS</h2>';
-  produtos.forEach(p=>{html+=`<div style="border:1px dashed #000;padding:5px;margin:5px;display:inline-block;color:black"><b>${p.nome}</b><br>R$${Number(p.preco).toFixed(2)}</div>`});
-  $('areaImpressao').innerHTML=html;
-  $('areaImpressao').style.display='block';
-  window.print();
-  $('areaImpressao').style.display='none';
-}
-
-function salvarContaPagar(){
-  let desc = $('pgDesc').value;
-  let valorTotal = toNum($('pgValor').value);
-  let parcelas = parseInt($('pgParcelas').value)||1;
-  let fornecedorId = $('pgFornecedor').value;
-  let fornecedorNome = fornecedorId? fornecedores.find(f=>f.id==fornecedorId).nomeFantasia : 'Geral';
-  if(valorTotal<=0 ||!desc) return alert("Preencha Descrição e Valor");
-  let valorParcela = valorTotal / parcelas;
-  let dataAtual = new Date();
-  for(let i=1; i<=parcelas; i++){
-    let vencimento = new Date(dataAtual);
-    vencimento.setMonth(dataAtual.getMonth() + i - 1);
-    db.collection("pagar").add({desc: `${desc} - Parcela ${i}/${parcelas}`, valor: valorParcela, saldo: valorParcela, vencimento: firebase.firestore.Timestamp.fromDate(vencimento), fornecedorId: fornecedorId, fornecedorNome: fornecedorNome, pago: false});
-  }
-  alert(`${parcelas} parcela(s) gerada(s) com sucesso!`);
-  $('pgDesc').value=''; $('pgValor').value=''; $('pgParcelas').value='1';
-}
-
-function carregarExtratoCaixa(){
-  let hoje = new Date().toLocaleDateString();
-  let movHoje = movCaixa.filter(m => m.data?.seconds && new Date(m.data.seconds*1000).toLocaleDateString() == hoje);
-  $('extratoCaixa').innerHTML = movHoje.map(m=>{let cor = m.tipo=='entrada' || m.tipo=='abertura'? 'text-green-500' : 'text-red-500'; let sinal = m.valor > 0? '+' : ''; return `<div class="flex justify-between border-b py-1"><span>${m.desc}</span><span class="${cor} font-bold">${sinal}R$${Number(m.valor).toFixed(2)}</span></div>`}).join('') || '<p>Nenhuma movimentação hoje</p>';
-}
-
-function imprimirRelatorioFechamento(contado, deveria, diferenca){
-  let html = `<h2 style="text-align:center;color:black">${loja.nome}</h2><h3 style="text-align:center;color:black">FECHAMENTO DE CAIXA</h3><p style="color:black">Data: ${new Date().toLocaleString('pt-BR')}</p><hr><p style="color:black">Dinheiro: R$${$('totalDinheiro').innerText}</p><p style="color:black">Cartão: R$${$('totalCartao').innerText}</p><p style="color:black">Pix: R$${$('totalPix').innerText}</p><p style="color:black">Entradas: R$${$('totalEntradas').innerText}</p><p style="color:black">Saídas: R$${$('totalSaidas').innerText}</p><hr><p style="color:black">Deveria Ter: R$${deveria.toFixed(2)}</p><p style="color:black">Foi Contado: R$${contado.toFixed(2)}</p><p style="color:black"><b>Diferença: R$${diferenca.toFixed(2)}</b></p>`;
-  $('areaImpressao').innerHTML=html;
-  $('areaImpressao').style.display='block';
-  window.print();
-  $('areaImpressao').style.display='none';
-}
-
-// FUNÇÕES DO LEITOR DE CÓDIGO
+// FUNÇÕES DO LEITOR DE CÓDIGO COM TRAVA
 function iniciarLeitor(){
   if(leitorAtivo) return;
   leitorAtivo = true;
+  ultimoCodigoLido = "";
   $('btnParar').classList.remove('hidden');
 
   const script = document.createElement('script');
@@ -492,31 +140,38 @@ function iniciarLeitor(){
     const html5QrCode = new Html5Qrcode("leitor");
     html5QrCode.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 100 } },
+      { fps: 5, qrbox: { width: 250, height: 100 }, disableFlip: false },
       (codigo) => {
+        if(codigo === ultimoCodigoLido) return; // IGNORA SE REPETIR
+
+        ultimoCodigoLido = codigo;
         let prod = produtos.find(p => p.cod == codigo);
         if(prod){
           addCarrinho(prod.id);
           navigator.vibrate(200);
+          let beep = new Audio('https://actions.google.com/sounds/v1/cart_checkout/digital_payment_01.ogg');
+          beep.play();
         } else {
           alert("Produto não encontrado: " + codigo);
         }
-        html5QrCode.stop();
-        pararLeitor();
+        clearTimeout(timeoutLeitura);
+        timeoutLeitura = setTimeout(() => { ultimoCodigoLido = ""; }, 2000); // Libera em 2s
       },
       (erro) => { }
-    );
+    ).catch(err => { console.log("Erro câmera: ", err); pararLeitor(); });
   };
   document.head.appendChild(script);
 }
 
-function pararLeitor(){
+ffunction pararLeitor(){
   leitorAtivo = false;
   $('btnParar').classList.add('hidden');
   $('leitor').innerHTML = '';
+  clearTimeout(timeoutLeitura);
+  ultimoCodigoLido = "";
 }
 
-// ATALHO ENTER
+// ATALHO ENTER PRA ADICIONAR PRODUTO
 $('buscaProd').addEventListener('keyup', function(e){
   if(e.key === 'Enter'){ addPrimeiro(); }
 });
