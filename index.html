@@ -133,7 +133,8 @@ function salvarFornecedor(){let data={razao:$('fRazao').value,nomeFantasia:$('fF
 function editarFornecedor(id){let f=fornecedores.find(x=>x.id==id); $('fId').value=f.id; $('fRazao').value=f.razao; $('fFantasia').value=f.nomeFantasia; $('fCnpj').value=f.cnpj; $('fTel').value=f.tel; $('fEmail').value=f.email; $('fEnd').value=f.end; }
 function excluirFornecedor(id){if(confirm("Excluir fornecedor?"))db.collection("fornecedores").doc(id).delete()}
 function salvarLoja(){let data={nome:$('lNome').value,end:$('lEnd').value,tel:$('lTel').value,cnpj:$('lCnpj').value}; if($('lId').value){db.collection("loja").doc($('lId').value).set(data)}else{db.collection("loja").add(data)} alert("Salvo!")}
-function listarReceber(){$('listaReceber').innerHTML=receber.filter(r=>(r.saldo||0)>0).map(r=>`<div class="card"><b>${r.cliente}</b><br>Saldo: R$${Number(r.saldo||0).toFixed(2)}</div>`).join('') || '<p>Sem contas</p>'}
+function listarReceber(){$('listaReceber').innerHTML=receber.filter(r=>(r.saldo||0)>0).map(r=>`<div class="card"><b>${r.cliente}</b><br>Saldo: R$${Number(r.saldo||0).toFixed(2)}<input id="baixa_${r.id}" type="text" inputmode="decimal" class="input mt-2 mb-2" placeholder="Valor da baixa"><button onclick="darBaixaReceber('${r.id}')" class="btn bg-green-600 text-white w-full">DAR BAIXA</button></div>`).join('') || '<p>Sem contas</p>'}
+function darBaixaReceber(id){let valor=toNum($(`baixa_${id}`).value); if(valor<=0) return alert("Digite um valor"); let conta=receber.find(r=>r.id==id); let novoSaldo = (conta.saldo||0) - valor; db.collection("caixa").add({tipo:'entrada',valor:valor,desc:`Receb. ${conta.cliente}`,data:firebase.firestore.FieldValue.serverTimestamp()}); if(novoSaldo<=0){db.collection("receber").doc(id).delete();}else{db.collection("receber").doc(id).update({saldo:novoSaldo});}}
 function listarPagar(){$('listaPagar').innerHTML=pagar.filter(p=>!p.pago).map(p=>`<div class="card"><b>${p.desc}</b><br>R$${Number(p.valor||0).toFixed(2)}<button onclick="pagarParcela('${p.id}')" class="btn bg-red-600 text-white w-full mt-2">PAGAR</button></div>`).join('') || '<p>Sem contas</p>'}
 function pagarParcela(id){let conta=pagar.find(p=>p.id==id); db.collection("pagar").doc(id).update({pago:true}); db.collection("caixa").add({tipo:'saida',valor:-conta.valor,desc:`Pag. ${conta.desc}`,data:firebase.firestore.FieldValue.serverTimestamp()});}
 function addCarrinho(id){let p=produtos.find(x=>x.id==id); if(!p) return; if((p.estoque||0)<=0 && p.bloqueiaEstoque){return alert("PRODUTO SEM ESTOQUE E BLOQUEADO PARA VENDA!")} let item=carrinho.find(i=>i.id==id); if(item){item.qtd++; item.total=item.qtd*p.preco}else{carrinho.push({id:p.id,nome:p.nome,preco:p.preco,qtd:1,total:p.preco})}atualizarCarrinho();}
@@ -143,7 +144,49 @@ function calcularTotal(){let desc=toNum($('desconto').value); total=subtotal-des
 function calcularTotalP(){let perc=toNum($('descontoP').value); let valorDesc = subtotal * (perc/100); $('desconto').value = valorDesc.toFixed(2); calcularTotal();}
 function mostrarTroco(){if($('formaPag').value=='Dinheiro'){$('divTroco').style.display = 'block'} else {$('divTroco').style.display = 'none'}}
 function calcularTroco(){let recebido=toNum($('valorRecebido').value); $('troco').innerText=(recebido-total).toFixed(2);}
-function imprimirCupom(venda, reimpressao = false){let itensHTML = venda.itens.map(i=>`${i.nome.substring(0,20)} ${i.qtd}x${Number(i.preco).toFixed(2)} ${Number(i.total).toFixed(2)}`).join('<br>'); let rodape = reimpressao? '<p style="text-align:center">*** 2ª VIA ***</p>' : ''; let html=`<div style="width:80mm;font-family:'Courier New',monospace;font-size:12px;color:black;padding:5px"><h2 style="text-align:center">${loja.nome}</h2><p>VENDA: ${String(venda.numVenda).padStart(5,'0')} ${rodape}</p>${itensHTML}<h3>TOTAL: R$${Number(venda.total).toFixed(2)}</h3></div>`; $('areaImpressao').innerHTML=html; $('areaImpressao').style.display='block'; window.print(); $('areaImpressao').style.display='none';}
+function imprimirCupom(venda, reimpressao = false){
+  let dataVenda = venda.data?.seconds ? new Date(venda.data.seconds*1000) : new Date();
+  let dataStr = dataVenda.toLocaleDateString('pt-BR');
+  let horaStr = dataVenda.toLocaleTimeString('pt-BR');
+  
+  let itensHTML = venda.itens.map(i=>`
+    <div style="display:flex;justify-content:space-between">
+      <span>${i.qtd}x ${i.nome.substring(0,18)}</span>
+      <span>R$${Number(i.total).toFixed(2)}</span>
+    </div>
+    <div style="font-size:10px">R$${Number(i.preco).toFixed(2)} un</div>
+  `).join('');
+  
+  let rodape = reimpressao? '<p style="text-align:center">*** 2ª VIA ***</p>' : ''; 
+  let descontoTxt = venda.desconto>0 ? `<p>Desconto: R$${Number(venda.desconto).toFixed(2)}</p>` : '';
+  let trocoTxt = venda.forma=='Dinheiro' ? `<p>Valor Recebido: R$${(venda.total+venda.troco).toFixed(2)}</p><p>Troco: R$${Number(venda.troco).toFixed(2)}</p>` : '';
+  
+  let html=`<div style="width:80mm;font-family:'Courier New',monospace;font-size:12px;color:black;padding:5px">
+    <h2 style="text-align:center">${loja.nome}</h2>
+    <p style="text-align:center">${loja.end||''} | ${loja.tel||''}</p>
+    <p>----------------------------------------</p>
+    <p>VENDA: ${String(venda.numVenda).padStart(5,'0')} ${rodape}</p>
+    <p>DATA: ${dataStr} ${horaStr}</p>
+    <p>CLIENTE: ${venda.clienteNome}</p>
+    <p>FORMA: ${venda.forma}</p>
+    <p>VENDEDOR: ${usuarioLogado.toUpperCase()}</p>
+    <p>----------------------------------------</p>
+    ${itensHTML}
+    <p>----------------------------------------</p>
+    <p>Subtotal: R$${Number(venda.subtotal).toFixed(2)}</p>
+    ${descontoTxt}
+    <h3>TOTAL: R$${Number(venda.total).toFixed(2)}</h3>
+    ${trocoTxt}
+    <p>----------------------------------------</p>
+    <p style="text-align:center">OBRIGADO PELA PREFERÊNCIA!</p>
+    <p style="text-align:center">D2 SISTEMAS V18.52</p>
+  </div>`; 
+  
+  $('areaImpressao').innerHTML=html; 
+  $('areaImpressao').style.display='block'; 
+  window.print(); 
+  $('areaImpressao').style.display='none';
+}
 function reimprimirCupom(){let num = prompt("Digite o NÚMERO DA VENDA:"); if(!num) return; let venda = vendas.find(v=> v.numVenda == parseInt(num)); if(!venda) return alert("Venda não encontrada!"); imprimirCupom(venda, true);}
 function finalizarVenda(){if(carrinho.length==0)return alert("Carrinho vazio"); let numVenda = ultimoNumVenda + 1; let clienteId = $('clienteVenda').value; let clienteNome = clienteId? clientes.find(c=>c.id==clienteId).nome : 'Avulso'; let vendaData={numVenda, itens:carrinho, subtotal, desconto:toNum($('desconto').value), total, forma:$('formaPag').value, clienteId, clienteNome, troco:toNum($('troco').innerText), status:'ativa', data:firebase.firestore.FieldValue.serverTimestamp()}; db.collection("vendas").add(vendaData).then(()=>{ for(let i of carrinho){let p=produtos.find(x=>x.id==i.id); let novoEstoque = (p.estoque||0) - i.qtd; db.collection("produtos").doc(i.id).update({estoque:novoEstoque})} if($('formaPag').value!='Prazo'){db.collection("caixa").add({tipo:'entrada',valor:total,desc:`Venda ${numVenda}`,data:firebase.firestore.FieldValue.serverTimestamp()});} else {db.collection("receber").add({clienteId, cliente:clienteNome, total, saldo:total, data:firebase.firestore.FieldValue.serverTimestamp()});} imprimirCupom({...vendaData, data:{seconds:Date.now()/1000}}); carrinho=[]; subtotal=0; total=0; atualizarCarrinho(); $('clienteVenda').value=''; $('infoCliente').innerHTML=''; alert("Venda finalizada!")})}
 function addItemNF(){let cod = $('eCod').value; let qtd = parseInt(toNum($('eQtd').value)); let custo = toNum($('eCusto').value); let prod = produtos.find(p=>p.cod==cod); if(!prod) return alert("Produto não encontrado!"); itensNF.push({id:prod.id, nome:prod.nome, qtd, custo}); $('eCod').value='';$('eQtd').value='';$('eCusto').value=''; atualizarListaNF();}
