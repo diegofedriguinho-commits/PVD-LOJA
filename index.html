@@ -1,3 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D2 PDV V18.52</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<style>
+body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+.dark { background-color: #111827; color: white; }
+.dark .card { background-color: #1f2937; border-color: #374151; }
+.card { background: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+.btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 600; cursor: pointer; }
+.input { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
+.hidden { display: none; }
+.aba { display: none; }
+.aba.ativa { display: block; }
+.menu button.on { background: #2563eb; color: white; }
+#leitor { width: 100%; border: 2px dashed #ccc; border-radius: 8px; }
+.pdv-cheio .menu, .pdv-cheio header { display: none; }
+@media print { body * { visibility: hidden; } #areaImpressao, #areaImpressao * { visibility: visible; } #areaImpressao { position: absolute; left: 0; top: 0; } }
+</style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="telaLogin" class="fixed inset-0 bg-gray-800 flex items-center justify-center z-50">
+  <div class="card w-80">
+    <h2 class="text-2xl font-bold text-center mb-4">D2 PDV</h2>
+    <input id="usuarioLogin" class="input mb-2" placeholder="Usuário: caixa ou gerente">
+    <input id="senhaLogin" type="password" class="input mb-2" placeholder="Senha">
+    <button onclick="logar()" class="btn bg-blue-600 text-white w-full">ENTRAR</button>
+    <p id="erroLogin" class="text-red-500 text-sm mt-2"></p>
+  </div>
+</div>
+
+<header class="p-2 bg-white dark:bg-gray-800 shadow flex justify-between items-center">
+  <h1 class="font-bold text-lg">D2 PDV V18.52</h1>
+  <div>
+    <span id="userLogado" class="font-bold"></span>
+    <button onclick="alternarTema()" class="btn bg-gray-300 dark:bg-gray-600 ml-2">Tema</button>
+    <button onclick="alternarTelaCheia()" class="btn bg-gray-300 dark:bg-gray-600 ml-2">Tela Cheia</button>
+    <button onclick="sair()" class="btn bg-red-500 text-white ml-2">SAIR</button>
+  </div>
+</header>
+
+<div class="menu p-2 bg-white dark:bg-gray-800 flex gap-2 overflow-x-auto">
+  <button id="btn-pdv" onclick="mostrarAba('pdv')" class="btn on">PDV</button>
+  <button id="btn-produtos" onclick="mostrarAba('produtos')" class="btn">Produtos</button>
+  <button id="btn-clientes" onclick="mostrarAba('clientes')" class="btn">Clientes</button>
+  <button id="btn-financeiro" onclick="mostrarAba('financeiro')" class="btn">Financeiro</button>
+  <button id="btn-relatorios" onclick="mostrarAba('relatorios')" class="btn">Relatórios</button>
+  <button id="btn-config" onclick="mostrarAba('config')" class="btn">Config</button>
+</div>
+
+<main class="p-2">
+  <!-- ABAS VÃO AQUI... -->
+</main>
+
+<div id="areaImpressao" style="display:none"></div>
+
 <script>
 const firebaseConfig = {apiKey: "AIzaSyBaR2gOjcWkQ625WuVPFFcZndrsKk3MqGY",authDomain: "web-pdv-6546d.firebaseapp.com",projectId: "web-pdv-6546d"};
 firebase.initializeApp(firebaseConfig); const db = firebase.firestore(); const $=id=>document.getElementById(id);
